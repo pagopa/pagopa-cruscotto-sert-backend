@@ -1,0 +1,24 @@
+# ===================================================================
+# Activate this profile to enable Oauth Client
+# ===================================================================
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://sts.windows.net/0b7c2eae-bcaf-4491-9283-ba67075b2790/
+      client:
+        provider:
+          azure:
+            issuer-uri: https://login.microsoftonline.com/0b7c2eae-bcaf-4491-9283-ba67075b2790/v2.0
+            user-name-attribute: preferred_username
+        registration:
+          azure:
+            provider: azure
+            client-id: f4f68f15-3d55-43dc-a0e3-5e5a1307e223
+            redirect-uri: '{baseUrl}/login/oauth2/code/{registrationId}'
+            scope:
+              - openid
+              - profile
+              - email
+              - api://f4f68f15-3d55-43dc-a0e3-5e5a1307e223/monitoring
