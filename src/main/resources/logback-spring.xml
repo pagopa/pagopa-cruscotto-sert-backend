@@ -63,8 +63,6 @@
     <logger name="Validator" level="INFO"/>
     <logger name="_org.springframework.web.servlet.HandlerMapping.Mappings" level="INFO"/>
     <logger name="org.springframework.boot.docker" level="WARN"/>
-    <logger name="liquibase" level="WARN"/>
-    <logger name="LiquibaseSchemaResolver" level="INFO"/>
     <logger name="org.quartz" level="INFO"/>
     <springProperty name="log.level" source="logging.level.root" defaultValue="INFO" />
     <root level="${log.level}">

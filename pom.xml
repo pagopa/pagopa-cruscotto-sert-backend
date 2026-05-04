@@ -40,9 +40,6 @@
     <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
     <jhipster-framework.version>8.9.0</jhipster-framework.version>
     <lifecycle-mapping.version>1.0.0</lifecycle-mapping.version>
-    <liquibase-plugin.password/>
-    <liquibase-plugin.url/>
-    <liquibase-plugin.username/>
     <mapstruct.version>1.6.3</mapstruct.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <maven-clean-plugin.version>3.4.0</maven-clean-plugin.version>
@@ -72,6 +69,7 @@
     <lombok.version>1.18.30</lombok.version>
     <p6spy.version>1.11.0</p6spy.version>
     <spring-cloud-aws-dependencies.version>3.0.1</spring-cloud-aws-dependencies.version>
+    <querydsl.version>5.1.0</querydsl.version>
   </properties>
 
   <dependencyManagement>
@@ -201,7 +199,7 @@
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>${springdoc-openapi-starter-webmvc-api.version}</version>
     </dependency>
     <dependency>
@@ -325,15 +323,20 @@
     <dependency>
       <groupId>com.querydsl</groupId>
       <artifactId>querydsl-apt</artifactId>
-      <version>5.1.0</version>
+      <version>${querydsl.version}</version>
       <scope>provided</scope>
       <classifier>jakarta</classifier>
     </dependency>
     <dependency>
       <groupId>com.querydsl</groupId>
       <artifactId>querydsl-jpa</artifactId>
-      <version>5.1.0</version>
+      <version>${querydsl.version}</version>
       <classifier>jakarta</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.querydsl</groupId>
+      <artifactId>querydsl-core</artifactId>
+      <version>${querydsl.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

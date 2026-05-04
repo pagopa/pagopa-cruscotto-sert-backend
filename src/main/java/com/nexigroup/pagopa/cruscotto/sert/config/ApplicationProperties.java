@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = true)
 public class ApplicationProperties {
 
-    private final Liquibase liquibase = new Liquibase();
 
     @Setter
     private boolean enableCsrf;
@@ -27,16 +26,6 @@ public class ApplicationProperties {
     private final PagoPaClient pagoPaClient = new PagoPaClient();
 
     private final AuthGroup authGroup = new AuthGroup();
-
-
-    @Setter
-    @Getter
-    public static class Liquibase {
-
-        private Boolean asyncStart = true;
-
-        private String dbVersion;
-    }
 
     @Setter
     @Getter
