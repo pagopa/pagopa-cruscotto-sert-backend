@@ -1,5 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.errors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
@@ -16,9 +18,11 @@ import org.springframework.http.ProblemDetail;
 @Schema(description = "Rappresentazione dettagliata di un problema con causa")
 @Setter
 @Getter
+@JsonIncludeProperties({"title", "status", "detail"})
 public class ProblemDetailWithCause extends ProblemDetail {
 
-    @Schema(description = "Causa del problema, se presente")
+    @JsonIgnore
+    @Schema(hidden = true)
     private ProblemDetailWithCause cause;
 
     ProblemDetailWithCause(int rawStatus) {
@@ -127,13 +131,15 @@ public class ProblemDetailWithCause extends ProblemDetail {
     }
 
     @Override
-    @Schema(description = "URI dell'istanza specifica del problema", example = "/api/instances")
+    @JsonIgnore
+    @Schema(hidden = true)
     public URI getInstance() {
         return super.getInstance();
     }
 
     @Override
-    @Schema(description = "Tipo di problema")
+    @JsonIgnore
+    @Schema(hidden = true)
     public @NotNull URI getType() {
         return super.getType();
     }
@@ -154,5 +160,12 @@ public class ProblemDetailWithCause extends ProblemDetail {
     @Schema(description = "Dettaglio del problema")
     public String getDetail() {
         return super.getDetail();
+    }
+
+    @Override
+    @JsonIgnore
+    @Schema(hidden = true)
+    public Map<String, Object> getProperties() {
+        return super.getProperties();
     }
 }

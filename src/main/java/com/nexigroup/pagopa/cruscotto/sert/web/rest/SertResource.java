@@ -6,12 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.http.MediaType;
 
 /**
  * REST controller for SERT APIs.
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class SertResource {
 
     private final Logger log = LoggerFactory.getLogger(SertResource.class);
@@ -23,63 +25,67 @@ public class SertResource {
     }
 
     /**
-     * {@code GET  /search/nav/{nav}} : Ricerca per Codice Avviso.
+     * {@code GET  /search} : Unified search API.
      *
+     * @param pa the Codice Fiscale Ente Creditore.
      * @param nav the Codice Avviso.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the searchResultsResponse.
-     */
-    @GetMapping("/search/nav/{nav}")
-    public ResponseEntity<SearchResultsResponseDTO> searchByNav(@PathVariable("nav") String nav) {
-        log.debug("REST request to search by NAV : {}", nav);
-        return ResponseEntity.ok(sertService.searchByNav(nav));
-    }
-
-    /**
-     * {@code GET  /search/iuv/{iuv}} : Ricerca per IUV o Creditor Reference ID.
-     *
      * @param iuv the IUV o Creditor Reference ID.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the searchResultsResponse.
-     */
-    @GetMapping("/search/iuv/{iuv}")
-    public ResponseEntity<SearchResultsResponseDTO> searchByIuv(@PathVariable("iuv") String iuv) {
-        log.debug("REST request to search by IUV : {}", iuv);
-        return ResponseEntity.ok(sertService.searchByIuv(iuv));
-    }
-
-    /**
-     * {@code GET  /search/cart/{id_cart}} : Ricerca per ID CARRELLO.
-     *
-     * @param idCart the ID Carrello.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the searchResultsResponse.
-     */
-    @GetMapping("/search/cart/{id_cart}")
-    public ResponseEntity<SearchResultsResponseDTO> searchByCart(@PathVariable("id_cart") String idCart) {
-        log.debug("REST request to search by Cart : {}", idCart);
-        return ResponseEntity.ok(sertService.searchByCart(idCart));
-    }
-
-    /**
-     * {@code GET  /search/token/{token}} : Ricerca per Token.
-     *
      * @param token the Token di pagamento.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the searchResultsResponse.
+     * @param idCarrello the ID Carrello.
+     * @param info the Valore per ricerca extra.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the unifiedSearchResponse.
      */
-    @GetMapping("/search/token/{token}")
-    public ResponseEntity<SearchResultsResponseDTO> searchByToken(@PathVariable("token") String token) {
-        log.debug("REST request to search by Token : {}", token);
-        return ResponseEntity.ok(sertService.searchByToken(token));
-    }
+    @GetMapping("/search")
+    @Operation(tags = "Ricerca delle posizioni debitorie")
+    public ResponseEntity<UnifiedSearchResponseDTO> search(
+        @RequestParam(required = false) String pa,
+        @RequestParam(required = false) String nav,
+        @RequestParam(required = false) String iuv,
+        @RequestParam(required = false) String token,
+        @RequestParam(required = false, name = "idCarrello") String idCarrello,
+        @RequestParam(required = false) String info
+    ) {
+        log.debug("REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
 
-    /**
-     * {@code GET  /search/extra/{searchValue}} : Ricerca per rrn/pspTransactionId ed altro.
-     *
-     * @param searchValue the Valore da ricercare.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the searchResultsExtraResponse.
-     */
-    @GetMapping("/search/extra/{searchValue}")
-    public ResponseEntity<SearchResultsExtraResponseDTO> searchExtra(@PathVariable("searchValue") String searchValue) {
-        log.debug("REST request to search extra : {}", searchValue);
-        return ResponseEntity.ok(sertService.searchExtra(searchValue));
+        int presentGroups = 0;
+
+        if (iuv != null) presentGroups++;
+        if (token != null) presentGroups++;
+        if (idCarrello != null) presentGroups++;
+        if (info != null) presentGroups++;
+
+        if (presentGroups > 1) {
+            log.error("Invalid search parameters: exactly one search group must be provided.");
+            return ResponseEntity.badRequest().build();
+        }
+
+
+        if (presentGroups == 0){
+            if (pa != null ||  nav != null) {
+                return ResponseEntity.ok(sertService.searchByNav(nav, pa));
+            } else  {
+                log.error("Provide PA or NAV for PA+NAV search.");
+                return ResponseEntity.badRequest().build();
+            }
+        }
+
+        if (iuv != null) {
+            return ResponseEntity.ok(sertService.searchByIuv(pa, nav, iuv));
+        }
+
+        if (token != null) {
+            return ResponseEntity.ok(sertService.searchByToken(pa, nav, token));
+        }
+
+        if (idCarrello != null) {
+            return ResponseEntity.ok(sertService.searchByCart(pa, nav, idCarrello));
+        }
+
+        if (info != null) {
+            return ResponseEntity.ok(sertService.searchExtra(pa, nav, info));
+        }
+
+        return ResponseEntity.badRequest().build();
     }
 
     /**
@@ -90,6 +96,7 @@ public class SertResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the positionPayment.
      */
     @GetMapping("/position/{nav}/{pa-emittente}")
+    @Operation(tags = "Visualizzazione posizione debitoria")
     public ResponseEntity<PositionPaymentDTO> getPosition(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente
@@ -105,6 +112,7 @@ public class SertResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the tokenInfo.
      */
     @GetMapping("/token/{token}")
+    @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
         log.debug("REST request to get Token Info : {}", token);
         return ResponseEntity.ok(sertService.getTokenInfo(token));
@@ -119,6 +127,7 @@ public class SertResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the transferPayment.
      */
     @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
+    @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<TransferPaymentDTO> getTransfers(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
@@ -136,6 +145,7 @@ public class SertResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the workflowResponse.
      */
     @GetMapping("/workflows/{nav}/{pa-emittente}")
+    @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<WorkflowResponseDTO> getWorkflows(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente
@@ -151,6 +161,7 @@ public class SertResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the extraInfoResponse.
      */
     @GetMapping("/extra/{token}")
+    @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(@PathVariable("token") String token) {
         log.debug("REST request to get Extra Info : {}", token);
         return ResponseEntity.ok(sertService.getExtraInfo(token));

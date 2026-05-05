@@ -4,7 +4,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,66 +18,66 @@ public class SertServiceImpl implements SertService {
     private final Logger log = LoggerFactory.getLogger(SertServiceImpl.class);
 
     @Override
-    public SearchResultsResponseDTO searchByNav(String nav) {
-        log.debug("Request to search by NAV: {}", nav);
-        BasicPositionObjectDTO result = BasicPositionObjectDTO.builder()
+    public UnifiedSearchResponseDTO searchByNav(String nav, String pa) {
+        log.debug("Request to search by NAV: {}, PA: {}", nav, pa);
+        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
             .nav(nav)
-            .paEmittente("12345678901")
+            .paEmittente(pa != null ? pa : "12345678901")
             .build();
-        return SearchResultsResponseDTO.builder()
+        return UnifiedSearchResponseDTO.builder()
             .results(Collections.singletonList(result))
             .count(1)
             .build();
     }
 
     @Override
-    public SearchResultsResponseDTO searchByIuv(String iuv) {
-        log.debug("Request to search by IUV: {}", iuv);
-        BasicPositionObjectDTO result = BasicPositionObjectDTO.builder()
-            .nav("123456789012345678")
-            .paEmittente("12345678901")
+    public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv) {
+        log.debug("Request to search by IUV: {}, PA: {}, NAV: {}", iuv, pa, nav);
+        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
+            .nav(nav != null ? nav : "123456789012345678")
+            .paEmittente(pa != null ? pa : "12345678901")
             .build();
-        return SearchResultsResponseDTO.builder()
+        return UnifiedSearchResponseDTO.builder()
             .results(Collections.singletonList(result))
             .count(1)
             .build();
     }
 
     @Override
-    public SearchResultsResponseDTO searchByCart(String idCart) {
+    public UnifiedSearchResponseDTO searchByCart(String pa, String nav, String idCart) {
         log.debug("Request to search by Cart: {}", idCart);
-        BasicPositionObjectDTO result = BasicPositionObjectDTO.builder()
+        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
             .nav("123456789012345678")
             .paEmittente("12345678901")
             .build();
-        return SearchResultsResponseDTO.builder()
+        return UnifiedSearchResponseDTO.builder()
             .results(Collections.singletonList(result))
             .count(1)
             .build();
     }
 
     @Override
-    public SearchResultsResponseDTO searchByToken(String token) {
+    public UnifiedSearchResponseDTO searchByToken( String pa, String nav,String token) {
         log.debug("Request to search by Token: {}", token);
-        BasicPositionObjectDTO result = BasicPositionObjectDTO.builder()
+        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
             .nav("123456789012345678")
             .paEmittente("12345678901")
             .build();
-        return SearchResultsResponseDTO.builder()
+        return UnifiedSearchResponseDTO.builder()
             .results(Collections.singletonList(result))
             .count(1)
             .build();
     }
 
     @Override
-    public SearchResultsExtraResponseDTO searchExtra(String searchValue) {
+    public UnifiedSearchResponseDTO searchExtra(String pa, String nav, String searchValue) {
         log.debug("Request to search extra: {}", searchValue);
         PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
             .nav("123456789012345678")
             .paEmittente("12345678901")
             .match(Collections.singletonList("rrn: " + searchValue))
             .build();
-        return SearchResultsExtraResponseDTO.builder()
+        return UnifiedSearchResponseDTO.builder()
             .results(Collections.singletonList(result))
             .count(1)
             .build();
