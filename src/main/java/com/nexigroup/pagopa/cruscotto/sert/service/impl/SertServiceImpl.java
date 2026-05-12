@@ -1,9 +1,14 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
+import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
+import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,70 +22,163 @@ public class SertServiceImpl implements SertService {
 
     private final Logger log = LoggerFactory.getLogger(SertServiceImpl.class);
 
+    private final PositionRepository positionRepository;
+
+    public SertServiceImpl(PositionRepository positionRepository) {
+        this.positionRepository = positionRepository;
+    }
+
     @Override
     public UnifiedSearchResponseDTO searchByNav(String nav, String pa) {
         log.debug("Request to search by NAV: {}, PA: {}", nav, pa);
-        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
-            .nav(nav)
-            .paEmittente(pa != null ? pa : "12345678901")
-            .build();
+
+        List<Position> positions = positionRepository.findByNavOrPa(nav, pa);
+        if (positions == null || positions.isEmpty()) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        List<PositionPaymentExtraDTO> results = positions.stream()
+            .map(pos -> PositionPaymentExtraDTO.builder()
+                .nav(pos.getNav())
+                .paEmittente(pos.getPaEmittente())
+                .build())
+            .collect(Collectors.toList());
+
         return UnifiedSearchResponseDTO.builder()
-            .results(Collections.singletonList(result))
-            .count(1)
+            .results(results)
+            .count(results.size())
             .build();
     }
 
     @Override
     public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}", iuv, pa, nav);
-        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
-            .nav(nav != null ? nav : "123456789012345678")
-            .paEmittente(pa != null ? pa : "12345678901")
-            .build();
+        List<Position> positions = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa);
+        
+        if (positions == null || positions.isEmpty()) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        List<PositionPaymentExtraDTO> results = positions.stream()
+            .map(pos -> PositionPaymentExtraDTO.builder()
+                .nav(pos.getNav())
+                .paEmittente(pos.getPaEmittente())
+                .build())
+            .collect(Collectors.toList());
+
         return UnifiedSearchResponseDTO.builder()
-            .results(Collections.singletonList(result))
-            .count(1)
+            .results(results)
+            .count(results.size())
             .build();
     }
 
     @Override
     public UnifiedSearchResponseDTO searchByCart(String pa, String nav, String idCart) {
         log.debug("Request to search by Cart: {}", idCart);
-        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
-            .nav("123456789012345678")
-            .paEmittente("12345678901")
-            .build();
+        List<Position> positions = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa);
+
+        if (positions == null || positions.isEmpty()) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        List<PositionPaymentExtraDTO> results = positions.stream()
+            .map(pos -> PositionPaymentExtraDTO.builder()
+                .nav(pos.getNav())
+                .paEmittente(pos.getPaEmittente())
+                .build())
+            .collect(Collectors.toList());
+
         return UnifiedSearchResponseDTO.builder()
-            .results(Collections.singletonList(result))
-            .count(1)
+            .results(results)
+            .count(results.size())
             .build();
     }
 
     @Override
     public UnifiedSearchResponseDTO searchByToken( String pa, String nav,String token) {
         log.debug("Request to search by Token: {}", token);
-        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
-            .nav("123456789012345678")
-            .paEmittente("12345678901")
-            .build();
+        List<Position> positions = positionRepository.findByTokenAndOptionalNavAndPa(token, nav, pa);
+
+        if (positions == null || positions.isEmpty()) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        List<PositionPaymentExtraDTO> results = positions.stream()
+            .map(pos -> PositionPaymentExtraDTO.builder()
+                .nav(pos.getNav())
+                .paEmittente(pos.getPaEmittente())
+                .build())
+            .collect(Collectors.toList());
+
         return UnifiedSearchResponseDTO.builder()
-            .results(Collections.singletonList(result))
-            .count(1)
+            .results(results)
+            .count(results.size())
             .build();
     }
 
     @Override
     public UnifiedSearchResponseDTO searchExtra(String pa, String nav, String searchValue) {
         log.debug("Request to search extra: {}", searchValue);
-        PositionPaymentExtraDTO result = PositionPaymentExtraDTO.builder()
-            .nav("123456789012345678")
-            .paEmittente("12345678901")
-            .match(Collections.singletonList("rrn: " + searchValue))
-            .build();
+
+        if (searchValue == null) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        List<Object[]> groupedRows = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+            searchValue,
+            nav,
+            pa
+        );
+
+        if (groupedRows == null || groupedRows.isEmpty()) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        List<PositionPaymentExtraDTO> results = groupedRows.stream()
+            .map(row -> PositionPaymentExtraDTO.builder()
+                .nav((String) row[0])
+                .paEmittente((String) row[1])
+                .match(parseInfoMatch(row[2]))
+                .build())
+            .collect(Collectors.toList());
+
         return UnifiedSearchResponseDTO.builder()
-            .results(Collections.singletonList(result))
-            .count(1)
+            .results(results)
+            .count(results.size())
             .build();
+    }
+
+
+    private List<String> parseInfoMatch(Object aggregatedInfoNames) {
+        if (aggregatedInfoNames == null) {
+            return Collections.emptyList();
+        }
+        String value = aggregatedInfoNames.toString().trim();
+        if (value.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(value.split(","))
+            .map(String::trim)
+            .filter(part -> !part.isEmpty())
+            .collect(Collectors.toList());
     }
 
     @Override
