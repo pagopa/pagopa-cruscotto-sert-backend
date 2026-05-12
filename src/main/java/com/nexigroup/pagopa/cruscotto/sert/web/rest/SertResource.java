@@ -142,7 +142,11 @@ public class SertResource {
         @PathVariable("token") String token
     ) {
         log.debug("REST request to get Transfers : {}, {}, {}", nav, paEmittente, token);
-        return ResponseEntity.ok(sertService.getTransfers(nav, paEmittente, token));
+        TransferPaymentDTO transferPayment = sertService.getTransfers(nav, paEmittente, token);
+        if (transferPayment == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(transferPayment);
     }
 
     /**

@@ -292,19 +292,35 @@ public class SertServiceImpl implements SertService {
     @Override
     public TransferPaymentDTO getTransfers(String nav, String paEmittente, String token) {
         log.debug("Request to get transfers for: {}, {}, {}", nav, paEmittente, token);
+
+        if (nav == null || paEmittente == null || token == null || token.trim().isEmpty()) {
+            return null;
+        }
+
+        List<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim());
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+
+        Object[] latestRow = rows.get(0);
+
         return TransferPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(nav)
-                .paEmittente(paEmittente)
+                .nav(asString(latestRow[0]))
+                .paEmittente(asString(latestRow[1]))
+                .iuv(asString(latestRow[3]))
+                .creditorReferenceId(asString(latestRow[4]))
+                .lastEvent(toInstant(latestRow[2]))
+                .isCached(false)
                 .build())
-            .token(token)
-            .transfersCount(1.0)
+            .token(asString(latestRow[5]))
+            .transfersCount(toDouble(latestRow[6]))
             .transfers(TransferObjectDTO.builder()
-                .idTransfer(1)
-                .typeTransfer("sepa")
-                .iban("IT00X0123456789012345678901")
-                .amount(100.0)
-                .paFiscalCode(paEmittente)
+                .idTransfer(latestRow[7] == null ? null : Integer.valueOf(asString(latestRow[7])))
+                .typeTransfer(Boolean.TRUE.equals(latestRow[8]) ? "bollo" : "sepa")
+                .iban(asString(latestRow[9]))
+                .amount(toDouble(latestRow[10]))
+                .paFiscalCode(asString(latestRow[11]))
                 .build())
             .build();
     }
@@ -312,40 +328,86 @@ public class SertServiceImpl implements SertService {
     @Override
     public WorkflowResponseDTO getWorkflows(String nav, String paEmittente) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
-        WorkflowObjectDTO eventPos = WorkflowObjectDTO.builder()
-            .insertedtimestamp(Instant.now())
-            .tipoevento("POS_EVENT")
-            .outcome("OK")
-            .eventId("evt1")
-            .build();
-        WorkflowTokenObjectDTO eventTok = WorkflowTokenObjectDTO.builder()
-            .insertedtimestamp(Instant.now())
-            .tipoevento("TOKEN_EVENT")
-            .outcome("OK")
-            .token("abcde12345abcde12345abcde1234512")
-            .eventId("evt2")
-            .build();
+
+        if (nav == null || paEmittente == null) {
+            return WorkflowResponseDTO.builder()
+                .count(0.0)
+                .eventsPosition(Collections.emptyList())
+                .eventsToken(Collections.emptyList())
+                .build();
+        }
+
+        List<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente);
+        List<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente);
+
+        List<WorkflowObjectDTO> eventsPositionList = positionEvents != null && !positionEvents.isEmpty()
+            ? positionEvents.stream()
+                .map(row -> WorkflowObjectDTO.builder()
+                    .insertedtimestamp(toInstant(row[0]))
+                    .tipoevento(asString(row[1]))
+                    .outcome(asString(row[2]))
+                    .eventId(asString(row[3]))
+                    .faultcode(row[4] != null ? String.valueOf(row[4]) : null)
+                    .build())
+                .collect(Collectors.toList())
+            : Collections.emptyList();
+
+        List<WorkflowTokenObjectDTO> eventsTokenList = tokenEvents != null && !tokenEvents.isEmpty()
+            ? tokenEvents.stream()
+                .map(row -> WorkflowTokenObjectDTO.builder()
+                    .insertedtimestamp(toInstant(row[0]))
+                    .tipoevento(asString(row[1]))
+                    .outcome(asString(row[2]))
+                    .eventId(asString(row[3]))
+                    .faultcode(row[4] != null ? String.valueOf(row[4]) : null)
+                    .token(asString(row[5]))
+                    .build())
+                .collect(Collectors.toList())
+            : Collections.emptyList();
+
+        double totalCount = eventsPositionList.size() + eventsTokenList.size();
+
         return WorkflowResponseDTO.builder()
-            .count(2.0)
-            .eventsPosition(Collections.singletonList(eventPos))
-            .eventsToken(Collections.singletonList(eventTok))
+            .count(totalCount)
+            .eventsPosition(eventsPositionList)
+            .eventsToken(eventsTokenList)
             .build();
     }
 
     @Override
     public ExtraInfoResponseDTO getExtraInfo(String token) {
         log.debug("Request to get extra info for token: {}", token);
-        ExtraInfoObjectDTO extra = ExtraInfoObjectDTO.builder()
-            .nav("123456789012345678")
-            .paEmittente("12345678901")
-            .token(token)
-            .name("Extra Param")
-            .value("Extra Value")
-            .tipoevento("EXTRA_EVENT")
-            .build();
+
+        if (token == null || token.trim().isEmpty()) {
+            return ExtraInfoResponseDTO.builder()
+                .count(0)
+                .results(Collections.emptyList())
+                .build();
+        }
+
+        List<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim());
+        if (rows == null || rows.isEmpty()) {
+            return ExtraInfoResponseDTO.builder()
+                .count(0)
+                .results(Collections.emptyList())
+                .build();
+        }
+
+        List<ExtraInfoObjectDTO> results = rows.stream()
+            .filter(row -> row[3] != null)
+            .map(row -> ExtraInfoObjectDTO.builder()
+                .nav(asString(row[0]))
+                .paEmittente(asString(row[1]))
+                .token(asString(row[2]))
+                .name(asString(row[3]))
+                .value(asString(row[4]))
+                .tipoevento(asString(row[5]))
+                .build())
+            .collect(Collectors.toList());
+
         return ExtraInfoResponseDTO.builder()
-            .count(1)
-            .results(Collections.singletonList(extra))
+            .count(results.size())
+            .results(results)
             .build();
     }
 }
