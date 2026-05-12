@@ -102,7 +102,11 @@ public class SertResource {
         @PathVariable("pa-emittente") String paEmittente
     ) {
         log.debug("REST request to get Position : {}, {}", nav, paEmittente);
-        return ResponseEntity.ok(sertService.getPosition(nav, paEmittente));
+        PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente);
+        if (positionPayment == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(positionPayment);
     }
 
     /**
@@ -115,7 +119,11 @@ public class SertResource {
     @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
         log.debug("REST request to get Token Info : {}", token);
-        return ResponseEntity.ok(sertService.getTokenInfo(token));
+        TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
+        if (tokenInfo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(tokenInfo);
     }
 
     /**

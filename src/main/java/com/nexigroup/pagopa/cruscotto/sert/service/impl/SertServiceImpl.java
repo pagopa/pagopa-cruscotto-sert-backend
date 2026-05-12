@@ -1,13 +1,20 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.asString;
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.parseInfoMatch;
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toDouble;
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstant;
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstantFromDate;
+
 import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -166,76 +173,119 @@ public class SertServiceImpl implements SertService {
             .build();
     }
 
-
-    private List<String> parseInfoMatch(Object aggregatedInfoNames) {
-        if (aggregatedInfoNames == null) {
-            return Collections.emptyList();
-        }
-        String value = aggregatedInfoNames.toString().trim();
-        if (value.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(value.split(","))
-            .map(String::trim)
-            .filter(part -> !part.isEmpty())
-            .collect(Collectors.toList());
-    }
-
     @Override
     public PositionPaymentDTO getPosition(String nav, String paEmittente) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
+
+        List<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente);
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+
+        Object[] firstRow = rows.get(0);
+        Object[] preferredRow = rows.stream().filter(row -> row[5] != null).findFirst().orElse(firstRow);
+        Object[] payedRow = rows.stream().filter(row -> row[7] != null && row[5] != null).findFirst().orElse(null);
+
+        List<String> allTokens = rows.stream()
+            .map(row -> asString(row[5]))
+            .filter(Objects::nonNull)
+            .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
+
+        long distinctOutcomes = rows.stream().map(row -> asString(row[8])).filter(Objects::nonNull).distinct().count();
+
         return PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(nav)
-                .paEmittente(paEmittente)
-                .iuv("iuv123")
-                .creditorReferenceId("refId123")
-                .lastEvent(Instant.now())
-                .isCached(true)
+                .nav(asString(firstRow[0]))
+                .paEmittente(asString(firstRow[1]))
+                .iuv(asString(preferredRow[3]))
+                .creditorReferenceId(asString(preferredRow[4]))
+                .lastEvent(toInstant(firstRow[2]))
+                .isCached(false)
                 .build())
-            .tokens(1)
-            .allTokens(Collections.singletonList("abcde12345abcde12345abcde1234512"))
-            .payed(PayedDTO.builder()
-                .token("abcde12345abcde12345abcde1234512")
-                .paymentBorn(Instant.now().minusSeconds(3600))
-                .payedDate(Instant.now())
-                .multiOutcome(false)
-                .build())
+            .tokens(allTokens.size())
+            .allTokens(allTokens)
+            .payed(
+                payedRow == null
+                    ? null
+                    : PayedDTO.builder()
+                        .token(asString(payedRow[5]))
+                        .paymentBorn(toInstantFromDate(payedRow[6]))
+                        .payedDate(toInstant(payedRow[7]))
+                        .multiOutcome(distinctOutcomes > 1)
+                        .build()
+            )
             .actors(ActorsDTO.builder()
-                .psp("PSP Test")
-                .ptPa("PT PA")
-                .station("Station 1")
+                .psp(asString(preferredRow[11]))
+                .ptPa(asString(preferredRow[12]))
+                .ptPsp(asString(preferredRow[13]))
+                .station(asString(preferredRow[14]))
+                .channel(asString(preferredRow[15]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(100.0)
-                .fee(1.5)
+                .amount(toDouble(preferredRow[9]))
+                .fee(toDouble(preferredRow[10]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint("Checkout")
-                .paymentMethod("Credit Card")
-                .isCart(false)
+                .touchpoint(asString(preferredRow[16]))
+                .paymentMethod(asString(preferredRow[17]))
+                .isCart(preferredRow[18] != null)
                 .build())
             .build();
     }
 
+
     @Override
     public TokenInfoDTO getTokenInfo(String token) {
         log.debug("Request to get token info: {}", token);
+
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
+
+        List<Object[]> rows = positionRepository.findTokenDetailRow(token.trim());
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+
+        Object[] row = rows.get(0);
+        boolean isPayed = row[7] != null;
+
         return TokenInfoDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav("123456789012345678")
-                .paEmittente("12345678901")
-                .iuv("iuv123")
-                .lastEvent(Instant.now())
+                .nav(asString(row[0]))
+                .paEmittente(asString(row[1]))
+                .iuv(asString(row[3]))
+                .creditorReferenceId(asString(row[4]))
+                .lastEvent(toInstant(row[2]))
+                .isCached(false)
                 .build())
-            .isPayedToken(true)
-            .payed(PayedDTO.builder()
-                .token(token)
-                .payedDate(Instant.now())
+            .isPayedToken(isPayed)
+            .payed(
+                !isPayed
+                    ? null
+                    : PayedDTO.builder()
+                        .token(asString(row[5]))
+                        .paymentBorn(toInstantFromDate(row[6]))
+                        .payedDate(toInstant(row[7]))
+                        .multiOutcome(false)
+                        .build()
+            )
+            .actors(ActorsDTO.builder()
+                .psp(asString(row[11]))
+                .ptPa(asString(row[12]))
+                .ptPsp(asString(row[13]))
+                .station(asString(row[14]))
+                .channel(asString(row[15]))
                 .build())
-            .actors(ActorsDTO.builder().psp("PSP Test").build())
-            .amount(AmountDTO.builder().amount(50.0).fee(0.5).build())
-            .paymentInfo(PaymentInfoDTO.builder().touchpoint("Redirect").build())
+            .amount(AmountDTO.builder()
+                .amount(toDouble(row[9]))
+                .fee(toDouble(row[10]))
+                .build())
+            .paymentInfo(PaymentInfoDTO.builder()
+                .touchpoint(asString(row[16]))
+                .paymentMethod(asString(row[17]))
+                .isCart(row[18] != null)
+                .build())
             .build();
     }
 

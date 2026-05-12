@@ -50,4 +50,28 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                    "AND (:pa IS NULL OR p.PA_EMITTENTE = :pa) " +
                    "GROUP BY p.NAV, p.PA_EMITTENTE", nativeQuery = true)
     List<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(@Param("searchValue") String searchValue, @Param("nav") String nav, @Param("pa") String pa);
+
+    @Query(value = "SELECT p.NAV AS nav, p.PA_EMITTENTE AS paEmittente, p.LAST_EVENT AS lastEvent, " +
+                   "pt.IUV AS iuv, pt.CREDITOR_REF_ID AS creditorReferenceId, ENCODE(pt.TOKEN, 'hex') AS tokenHex, " +
+                   "pt.DATE_EVENT AS tokenDateEvent, pt.PAYMENT_DATE AS paymentDate, pt.OUTCOME AS outcome, " +
+                   "pt.AMOUNT AS amount, pt.FEE AS fee, pt.PSP AS psp, pt.INTERMEDIARIO_PA AS ptPa, " +
+                   "pt.INTERMEDIARIO_PSP AS ptPsp, pt.STAZIONE AS station, pt.CANALE AS channel, " +
+                   "pt.TOUCHPOINT AS touchpoint, pt.PAYMENT_METHOD AS paymentMethod, pt.ID_CARRELLO AS idCarrello " +
+                   "FROM POSITION p LEFT JOIN POSITION_TOKENS pt ON p.ID = pt.FK_POSITION " +
+                   "WHERE p.NAV = :nav AND p.PA_EMITTENTE = :paEmittente " +
+                   "ORDER BY pt.PAYMENT_DATE DESC NULLS LAST, pt.DATE_EVENT DESC NULLS LAST, pt.ID DESC", nativeQuery = true)
+    List<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
+
+    @Query(value = "SELECT p.NAV AS nav, p.PA_EMITTENTE AS paEmittente, p.LAST_EVENT AS lastEvent, " +
+                   "pt.IUV AS iuv, pt.CREDITOR_REF_ID AS creditorReferenceId, ENCODE(pt.TOKEN, 'hex') AS tokenHex, " +
+                   "pt.DATE_EVENT AS tokenDateEvent, pt.PAYMENT_DATE AS paymentDate, pt.OUTCOME AS outcome, " +
+                   "pt.AMOUNT AS amount, pt.FEE AS fee, pt.PSP AS psp, pt.INTERMEDIARIO_PA AS ptPa, " +
+                   "pt.INTERMEDIARIO_PSP AS ptPsp, pt.STAZIONE AS station, pt.CANALE AS channel, " +
+                   "pt.TOUCHPOINT AS touchpoint, pt.PAYMENT_METHOD AS paymentMethod, pt.ID_CARRELLO AS idCarrello " +
+                   "FROM POSITION_TOKENS pt " +
+                   "JOIN POSITION p ON p.ID = pt.FK_POSITION " +
+                   "WHERE LOWER(ENCODE(pt.TOKEN, 'hex')) = LOWER(:token) " +
+                   "ORDER BY pt.PAYMENT_DATE DESC NULLS LAST, pt.DATE_EVENT DESC NULLS LAST, pt.ID DESC " +
+                   "LIMIT 1", nativeQuery = true)
+    List<Object[]> findTokenDetailRow(@Param("token") String token);
 }
