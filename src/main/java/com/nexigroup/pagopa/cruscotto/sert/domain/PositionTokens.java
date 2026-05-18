@@ -31,7 +31,7 @@ public class PositionTokens {
     private Integer fkPosition;
 
     @Column(name = "TOKEN")
-    private byte[] token;
+    private String token;
 
     @Column(name = "AMOUNT")
     private BigDecimal amount;

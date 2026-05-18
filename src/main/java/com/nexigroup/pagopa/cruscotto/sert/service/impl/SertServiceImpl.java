@@ -113,7 +113,17 @@ public class SertServiceImpl implements SertService {
     @Override
     public UnifiedSearchResponseDTO searchByToken( String pa, String nav,String token) {
         log.debug("Request to search by Token: {}", token);
-        List<Position> positions = positionRepository.findByTokenAndOptionalNavAndPa(token, nav, pa);
+
+        if (token == null || token.trim().isEmpty()) {
+            return UnifiedSearchResponseDTO.builder()
+                .results(Collections.emptyList())
+                .count(0)
+                .build();
+        }
+
+        String normalizedToken = token.trim();
+
+        List<Position> positions = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa);
 
         if (positions == null || positions.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()

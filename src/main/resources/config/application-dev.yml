@@ -36,6 +36,8 @@ spring:
     properties:
       hibernate:
         generate_statistics: false
+        default_schema: sert_ingestor
+        globally_quoted_identifiers: true
     show-sql: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
