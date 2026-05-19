@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface PositionRepository extends JpaRepository<Position, Integer> {
 
-    @Query(value = "SELECT p FROM Position p WHERE (:nav IS NOT NULL AND p.nav = :nav) OR (:pa IS NOT NULL AND p.paEmittente = :pa)")
+    @Query(value = "SELECT p FROM Position p WHERE (:nav IS  NULL OR p.nav = :nav) AND (:pa IS  NULL OR p.paEmittente = :pa)")
     List<Position> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa);
 
     @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt " +

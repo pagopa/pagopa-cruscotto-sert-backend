@@ -1,10 +1,12 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest;
 
+import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.MediaType;
@@ -37,6 +39,7 @@ public class SertResource {
      */
     @GetMapping("/search")
     @Operation(tags = "Ricerca delle posizioni debitorie")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<UnifiedSearchResponseDTO> search(
         @RequestParam(required = false) String pa,
         @RequestParam(required = false) String nav,
@@ -97,6 +100,7 @@ public class SertResource {
      */
     @GetMapping("/position/{nav}/{pa-emittente}")
     @Operation(tags = "Visualizzazione posizione debitoria")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_POSITION_DETAIL + "\")")
     public ResponseEntity<PositionPaymentDTO> getPosition(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente
@@ -117,6 +121,7 @@ public class SertResource {
      */
     @GetMapping("/token/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TOKEN_DETAIL + "\")")
     public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
         log.debug("REST request to get Token Info : {}", token);
         TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
@@ -136,6 +141,7 @@ public class SertResource {
      */
     @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TRANSFER_DETAIL + "\")")
     public ResponseEntity<TransferPaymentDTO> getTransfers(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
@@ -158,6 +164,7 @@ public class SertResource {
      */
     @GetMapping("/workflows/{nav}/{pa-emittente}")
     @Operation(tags = "Visualizzazione Dettagli")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_WORKFLOW_DETAIL + "\")")
     public ResponseEntity<WorkflowResponseDTO> getWorkflows(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente
@@ -174,6 +181,7 @@ public class SertResource {
      */
     @GetMapping("/extra/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_EXTRA_DETAIL + "\")")
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(@PathVariable("token") String token) {
         log.debug("REST request to get Extra Info : {}", token);
         return ResponseEntity.ok(sertService.getExtraInfo(token));
