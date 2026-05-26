@@ -1,5 +1,5 @@
 apiVersion: v2
-name: pagopacruscottobackend
+name: pagopacruscottosertbackend
 description: Microservice description
 type: application
 version: 0.232.0

@@ -32,7 +32,7 @@ public class PagopaCruscottoSertApp {
     }
 
     /**
-     * Initializes PagoPaCruscottoBackendApp.
+     * Initializes PagoPaCruscottoSertBackendApp.
      * <p>
      * Spring profiles can be configured with a program argument --spring.profiles.active=your-active-profile
      * <p>

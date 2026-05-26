@@ -59,7 +59,7 @@ public class ProblemDetailWithCause extends ProblemDetail {
                 "path": "/api/instances",
                 "fieldErrors": [
                     {
-                        "applicationName": "pagopaCruscottoBackendApp",
+                        "applicationName": "pagopaCruscottoSertBackendApp",
                         "field": "predictedDateAnalysis",
                         "message": "non deve essere spazio",
                         "objectName": "instanceRequestBean",

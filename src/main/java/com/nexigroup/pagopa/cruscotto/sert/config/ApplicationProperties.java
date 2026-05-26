@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Properties specific to PagoPa Cruscotto Backend.
+ * Properties specific to PagoPa Cruscotto Sert Backend.
  * <p>
  * Properties are configured in the {@code application.yml} file.
  */

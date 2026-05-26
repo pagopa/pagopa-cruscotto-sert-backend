@@ -1,0 +1,151 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "PagoPa Cruscotto Sert Backend API",
+    "description": "PagoPa Cruscotto Sert Backend API documentation",
+    "license": {
+      "name": "unlicensed"
+    },
+    "version": "0.0.1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "SERT",
+      "description": "API di consultazione SERT"
+    }
+  ],
+  "paths": {
+    "/api/search": {
+      "get": {
+        "tags": ["SERT"],
+        "operationId": "search",
+        "parameters": [
+          { "name": "pa", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "nav", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "iuv", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "token", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "idCarrello", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "info", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UnifiedSearchResponseDTO" } } } },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/position/{nav}/{pa-emittente}": {
+      "get": {
+        "tags": ["SERT"],
+        "operationId": "getPosition",
+        "parameters": [
+          { "name": "nav", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "pa-emittente", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PositionPaymentDTO" } } } },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Not Found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/token/{token}": {
+      "get": {
+        "tags": ["SERT"],
+        "operationId": "getTokenInfo",
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TokenInfoDTO" } } } },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Not Found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/transfers/{nav}/{pa-emittente}/{token}": {
+      "get": {
+        "tags": ["SERT"],
+        "operationId": "getTransfers",
+        "parameters": [
+          { "name": "nav", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "pa-emittente", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TransferPaymentDTO" } } } },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Not Found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/workflows/{nav}/{pa-emittente}": {
+      "get": {
+        "tags": ["SERT"],
+        "operationId": "getWorkflows",
+        "parameters": [
+          { "name": "nav", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "pa-emittente", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkflowResponseDTO" } } } },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/extra/{token}": {
+      "get": {
+        "tags": ["SERT"],
+        "operationId": "getExtraInfo",
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExtraInfoResponseDTO" } } } },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UnifiedSearchResponseDTO": { "type": "object", "additionalProperties": true },
+      "PositionPaymentDTO": { "type": "object", "additionalProperties": true },
+      "TokenInfoDTO": { "type": "object", "additionalProperties": true },
+      "TransferPaymentDTO": { "type": "object", "additionalProperties": true },
+      "WorkflowResponseDTO": { "type": "object", "additionalProperties": true },
+      "ExtraInfoResponseDTO": { "type": "object", "additionalProperties": true }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
+

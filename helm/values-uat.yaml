@@ -71,7 +71,7 @@ microservice-chart:
   envConfig:
     SPRING_PROFILES_ACTIVE: 'devpagopa'
     ASPNETCORE_URLS: "http://*:8080"
-    WEBSITE_SITE_NAME: "pagopacruscottobackend" # required to show cloud role name in application insights
+    WEBSITE_SITE_NAME: "pagopacruscottosertbackend" # required to show cloud role name in application insights
     FUNCTIONS_WORKER_RUNTIME: "java"
     ENVIRONMENT: "uat"
     ENV_TAXONOMY_URL: 'https://api.uat.platform.pagopa.it/taxonomy/service/v1' # /taxonomy ...
@@ -81,7 +81,7 @@ microservice-chart:
     ENV_CACHE_API_KEY_NAME: 'ocp-apim-subscription-key'
     ENV_STAND_IN_URL: 'https://api.uat.platform.pagopa.it/technical-support/stand-in/api/v1' # /events ...
     ENV_STAND_IN_API_KEY_NAME: 'ocp-apim-subscription-key'
-    ENV_DATASOURCE_URL: 'jdbc:postgresql://pagopa-u-itn-crusc8-flexible-postgresql.postgres.database.azure.com:5432/cruscotto?sslmode=require&prepareThreshold=0&currentSchema=cruscotto'
+    ENV_DATASOURCE_URL: 'jdbc:postgresql://pagopa-u-itn-crusc8-flexible-postgresql.postgres.database.azure.com:5432/cruscotto?sslmode=require&prepareThreshold=0&currentSchema=sert_ingestor,public'
     ENV_DATASOURCE_USERNAME: 'cruscotto'
     SITE_BASE_URL: 'https://crusc8.uat.platform.pagopa.it/'
     AWS_REGION: 'eu-south-1'
