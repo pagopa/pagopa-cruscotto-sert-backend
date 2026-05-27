@@ -1,0 +1,87 @@
+# ===================================================================
+# Spring Boot configuration for the "devpagopa" profile.
+# Used by Azure/AKS deployments through Helm values.
+# ===================================================================
+
+logging:
+  level:
+    ROOT: INFO
+    com.nexigroup.pagopa.cruscotto: INFO
+
+spring:
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ${AWS_REGION}
+  jackson:
+    serialization:
+      indent-output: true
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: ${ENV_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cruscotto}
+    username: ${ENV_DATASOURCE_USERNAME:username}
+    password: ${ENV_DATASOURCE_PASSWORD:password}
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: false
+    show-sql: false
+  liquibase:
+    enabled: false
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+
+jhipster:
+  cache:
+    ehcache:
+      time-to-live-seconds: 3600
+      max-entries: 100
+  security:
+    authentication:
+      jwt:
+        base64-secret: ${ENV_JWT_KEY:key}
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000
+  logging:
+    use-json-format: false
+    logstash:
+      enabled: false
+      host: localhost
+      port: 5000
+      ring-buffer-size: 512
+
+application:
+  mail:
+    base-url: ${SITE_BASE_URL:http://localhost:8080/}
+  aws:
+    ses:
+      user: ${AWS_SES_USER:awsSesUser}
+  enable-csrf: false
+  password:
+    day-password-expired: 60
+    failed-login-attempts: 4
+    hours-key-reset-password-expired: 1
+  auth-group:
+    super-admin: NEXI
+
+decorator:
+  datasource:
+    p6spy:
+      multiline: true
+      logging: slf4j
+      enable-logging: false
+
+azure:
+  blob:
+    connection-string: ${AZURE_BLOB_CONNECTION_STRING}
+    container-name: ${AZURE_BLOB_CONTAINER_NAME:report}
+
