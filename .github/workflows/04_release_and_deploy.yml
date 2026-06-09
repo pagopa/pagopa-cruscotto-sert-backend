@@ -138,7 +138,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ needs.release.outputs.version }}
-          build_args: APP_NAME=cruscotto-sert-backend
+          build_args: APP_NAME=pagopa-cruscotto-sert-backend
 
   deploy_aks:
     name: Deploy on AKS
