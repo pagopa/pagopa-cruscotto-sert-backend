@@ -6,7 +6,7 @@
 
   <groupId>com.nexigroup.pagopa.cruscotto</groupId>
   <artifactId>pagopa-cruscotto-sert-backend</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.3</version>
   <packaging>jar</packaging>
   <name>PagoPa Ingestor View Backend</name>
   <description>PagoPa Ingestor View  Backend</description>

@@ -6,7 +6,7 @@
     "license": {
       "name": "unlicensed"
     },
-    "version": "0.2.2"
+    "version": "0.2.3"
   },
   "servers": [
     {
@@ -2272,12 +2272,54 @@
         ],
         "operationId": "search",
         "parameters": [
-          { "name": "pa", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "nav", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "iuv", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "token", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "idCarrello", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "info", "in": "query", "required": false, "schema": { "type": "string" } }
+          {
+            "name": "pa",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nav",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iuv",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "idCarrello",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "info",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "4XX": {
@@ -3539,7 +3581,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -3756,7 +3798,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -3894,7 +3936,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
