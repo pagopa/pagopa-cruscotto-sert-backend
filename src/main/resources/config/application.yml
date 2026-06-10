@@ -179,9 +179,12 @@ server:
 springdoc:
   api-docs:
     path: /api-docs
+    groups:
+      enabled: false
   show-actuator: true
-  packages-to-scan: com.nexigroup.pagopa.cruscotto.sert.web.rest
-  paths-to-match: /api/**, /management/**
+  paths-to-match: /api/**, /management/**, /info
+  swagger-ui:
+    urls-primary-name: default
 
 # Properties to be exposed on the /info management endpoint
 info:
@@ -198,8 +201,8 @@ jhipster:
   clientApp:
     name: 'pagopaCruscottoSertBackendApp'
   api-docs:
-    default-include-pattern: /api/**
-    management-include-pattern: /management/**
+    default-include-pattern: /api/**,/management/**,/info
+    management-include-pattern:
     title: PagoPa Cruscotto Sert Backend API
     description: PagoPa Cruscotto Sert Backend API documentation
     version: 0.0.1
