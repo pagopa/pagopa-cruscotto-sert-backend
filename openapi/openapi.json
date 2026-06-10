@@ -1,9 +1,12 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "PagopaCruscottoSertBackend Management API",
-    "description": "Management endpoints documentation",
-    "version": "0.0.1"
+    "title": "PagoPa Cruscotto Sert Backend API",
+    "description": "PagoPa Cruscotto Sert Backend API documentation",
+    "license": {
+      "name": "unlicensed"
+    },
+    "version": "0.2.2"
   },
   "servers": [
     {
@@ -2269,54 +2272,12 @@
         ],
         "operationId": "search",
         "parameters": [
-          {
-            "name": "pa",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "nav",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "iuv",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "idCarrello",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "info",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "pa", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "nav", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "iuv", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "token", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "idCarrello", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "info", "in": "query", "required": false, "schema": { "type": "string" } }
         ],
         "responses": {
           "4XX": {
