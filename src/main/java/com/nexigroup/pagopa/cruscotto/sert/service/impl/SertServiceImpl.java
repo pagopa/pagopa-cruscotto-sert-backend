@@ -64,7 +64,7 @@ public class SertServiceImpl implements SertService {
     public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}", iuv, pa, nav);
         List<Position> positions = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa);
-        
+
         if (positions == null || positions.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
@@ -274,7 +274,7 @@ public class SertServiceImpl implements SertService {
                 !isPayed
                     ? null
                     : PayedDTO.builder()
-                        .token(asString(row[5]))
+                        .token(token)
                         .paymentBorn(toInstantFromDate(row[6]))
                         .payedDate(toInstant(row[7]))
                         .multiOutcome(false)
