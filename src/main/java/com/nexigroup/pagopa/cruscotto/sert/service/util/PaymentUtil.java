@@ -1,6 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.util;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,28 @@ public final class PaymentUtil {
 
     public static String asString(Object value) {
         return value == null ? null : value.toString();
+    }
+
+    public static String tokenAsHex(Object value) {
+        String token = asString(value);
+        if (token == null || token.isBlank() || !isHex(token) || token.length() % 2 != 0) {
+            return token;
+        }
+
+        try {
+            String decodedToken = new String(HexFormat.of().parseHex(token), StandardCharsets.UTF_8);
+            return isHex(decodedToken) ? decodedToken : token;
+        } catch (IllegalArgumentException e) {
+            return token;
+        }
+    }
+
+    private static boolean isHex(String value) {
+        return value.chars().allMatch(character ->
+            (character >= '0' && character <= '9') ||
+            (character >= 'a' && character <= 'f') ||
+            (character >= 'A' && character <= 'F')
+        );
     }
 
     public static Double toDouble(Object value) {
