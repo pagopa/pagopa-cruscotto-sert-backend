@@ -2,6 +2,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.asString;
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.parseInfoMatch;
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.tokenAsHex;
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toDouble;
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstant;
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstantFromDate;
@@ -10,7 +11,6 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -64,7 +64,7 @@ public class SertServiceImpl implements SertService {
     public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}", iuv, pa, nav);
         List<Position> positions = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa);
-        
+
         if (positions == null || positions.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
@@ -197,7 +197,7 @@ public class SertServiceImpl implements SertService {
         Object[] payedRow = rows.stream().filter(row -> row[7] != null && row[5] != null).findFirst().orElse(null);
 
         List<String> allTokens = rows.stream()
-            .map(row -> asString(row[5]))
+            .map(row -> tokenAsHex(row[5]))
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
@@ -218,7 +218,7 @@ public class SertServiceImpl implements SertService {
                 payedRow == null
                     ? null
                     : PayedDTO.builder()
-                        .token(asString(payedRow[5]))
+                        .token(tokenAsHex(payedRow[5]))
                         .paymentBorn(toInstantFromDate(payedRow[6]))
                         .payedDate(toInstant(payedRow[7]))
                         .multiOutcome(distinctOutcomes > 1)
@@ -274,7 +274,7 @@ public class SertServiceImpl implements SertService {
                 !isPayed
                     ? null
                     : PayedDTO.builder()
-                        .token(asString(row[5]))
+                        .token(tokenAsHex(row[5]))
                         .paymentBorn(toInstantFromDate(row[6]))
                         .payedDate(toInstant(row[7]))
                         .multiOutcome(false)
@@ -323,7 +323,7 @@ public class SertServiceImpl implements SertService {
                 .lastEvent(toInstant(latestRow[2]))
                 .isCached(false)
                 .build())
-            .token(asString(latestRow[5]))
+            .token(tokenAsHex(latestRow[5]))
             .transfersCount(toDouble(latestRow[6]))
             .transfers(TransferObjectDTO.builder()
                 .idTransfer(latestRow[7] == null ? null : Integer.valueOf(asString(latestRow[7])))
@@ -370,7 +370,7 @@ public class SertServiceImpl implements SertService {
                     .outcome(asString(row[2]))
                     .eventId(asString(row[3]))
                     .faultcode(row[4] != null ? String.valueOf(row[4]) : null)
-                    .token(asString(row[5]))
+                    .token(tokenAsHex(row[5]))
                     .build())
                 .collect(Collectors.toList())
             : Collections.emptyList();
@@ -408,7 +408,7 @@ public class SertServiceImpl implements SertService {
             .map(row -> ExtraInfoObjectDTO.builder()
                 .nav(asString(row[0]))
                 .paEmittente(asString(row[1]))
-                .token(asString(row[2]))
+                .token(tokenAsHex(row[2]))
                 .name(asString(row[3]))
                 .value(asString(row[4]))
                 .tipoevento(asString(row[5]))
