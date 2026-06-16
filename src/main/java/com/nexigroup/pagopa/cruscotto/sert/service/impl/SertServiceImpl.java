@@ -384,7 +384,7 @@ public class SertServiceImpl implements SertService {
                 .collect(Collectors.toList())
             : Collections.emptyList();
 
-        double totalCount = eventsPositionList.size() + eventsTokenList.size();
+        double totalCount = eventsPositionList.size() ;
 
         return WorkflowResponseDTO.builder()
             .count(totalCount)
