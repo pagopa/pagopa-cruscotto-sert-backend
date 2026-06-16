@@ -101,16 +101,16 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "ORDER BY ptr.dateEvent DESC, ptr.id DESC")
      List<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token);
 
-    @Query(value = "SELECT ew.insertedTimestampReq, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, afc.codice, " +
+    @Query(value = "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, afc.codice, " +
                     "ew.fkTokens, NULL " +
-                    "FROM Position p LEFT JOIN EventsWf ew ON ew.fkPosition = p.id AND ew.fkTokens IS NULL " +
+                    "FROM Position p LEFT JOIN EventsWf ew ON ew.fkPosition = p.id  " +
                     "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
                     "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
                     "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
                     "ORDER BY ew.insertedTimestampReq DESC")
     List<Object[]> findEventsPositionByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
 
-    @Query(value = "SELECT ew.insertedTimestampReq, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, afc.codice, " +
+    @Query(value = "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, afc.codice, " +
                     "FUNCTION('ENCODE', pt.token, 'hex') AS token " +
                     "FROM EventsWf ew LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
                     "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode, PositionTokens pt, Position p " +

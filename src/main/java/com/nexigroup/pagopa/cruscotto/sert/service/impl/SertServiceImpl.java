@@ -362,9 +362,10 @@ public class SertServiceImpl implements SertService {
                 .map(row -> WorkflowObjectDTO.builder()
                     .insertedtimestamp(toInstant(row[0]))
                     .tipoevento(asString(row[1]))
-                    .outcome(asString(row[2]))
-                    .eventId(asString(row[3]))
-                    .faultcode(row[4] != null ? String.valueOf(row[4]) : null)
+                    .sottotipoevento(asString(row[2]))
+                    .outcome(asString(row[3]))
+                    .eventId(asString(row[4]))
+                    .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
                     .build())
                 .collect(Collectors.toList())
             : Collections.emptyList();
@@ -374,15 +375,16 @@ public class SertServiceImpl implements SertService {
                 .map(row -> WorkflowTokenObjectDTO.builder()
                     .insertedtimestamp(toInstant(row[0]))
                     .tipoevento(asString(row[1]))
-                    .outcome(asString(row[2]))
-                    .eventId(asString(row[3]))
-                    .faultcode(row[4] != null ? String.valueOf(row[4]) : null)
-                    .token(tokenAsHex(row[5]))
+                    .sottotipoevento(asString(row[2]))
+                    .outcome(asString(row[3]))
+                    .eventId(asString(row[4]))
+                    .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
+                    .token(tokenAsHex(row[6]))
                     .build())
                 .collect(Collectors.toList())
             : Collections.emptyList();
 
-        double totalCount = eventsPositionList.size() + eventsTokenList.size();
+        double totalCount = eventsPositionList.size() ;
 
         return WorkflowResponseDTO.builder()
             .count(totalCount)
