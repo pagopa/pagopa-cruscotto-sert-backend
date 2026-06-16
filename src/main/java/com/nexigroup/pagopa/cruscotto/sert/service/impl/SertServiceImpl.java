@@ -313,6 +313,9 @@ public class SertServiceImpl implements SertService {
         }
 
         Object[] latestRow = rows.get(0);
+        List<TransferObjectDTO> transfers = rows.stream()
+            .map(this::toTransferObject)
+            .collect(Collectors.toList());
 
         return TransferPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
@@ -325,13 +328,17 @@ public class SertServiceImpl implements SertService {
                 .build())
             .token(tokenAsHex(latestRow[5]))
             .transfersCount(toDouble(latestRow[6]))
-            .transfers(TransferObjectDTO.builder()
-                .idTransfer(latestRow[7] == null ? null : Integer.valueOf(asString(latestRow[7])))
-                .typeTransfer(Boolean.TRUE.equals(latestRow[8]) ? "bollo" : "sepa")
-                .iban(asString(latestRow[9]))
-                .amount(toDouble(latestRow[10]))
-                .paFiscalCode(asString(latestRow[11]))
-                .build())
+            .transfers(transfers)
+            .build();
+    }
+
+    private TransferObjectDTO toTransferObject(Object[] row) {
+        return TransferObjectDTO.builder()
+            .idTransfer(row[7] == null ? null : Integer.valueOf(asString(row[7])))
+            .typeTransfer(Boolean.TRUE.equals(row[8]) ? "bollo" : "sepa")
+            .iban(asString(row[9]))
+            .amount(toDouble(row[10]))
+            .paFiscalCode(asString(row[11]))
             .build();
     }
 
