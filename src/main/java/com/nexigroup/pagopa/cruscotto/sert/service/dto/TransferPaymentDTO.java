@@ -1,6 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.dto;
 
 import java.io.Serializable;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,5 +24,5 @@ public class TransferPaymentDTO implements Serializable {
     @JsonProperty("transfers-count")
     private Double transfersCount;
 
-    private TransferObjectDTO transfers;
+    private List<TransferObjectDTO> transfers;
 }

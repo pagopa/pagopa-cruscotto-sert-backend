@@ -4194,7 +4194,10 @@
             "type": "string"
           },
           "transfers": {
-            "$ref": "#/components/schemas/TransferObjectDTO"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferObjectDTO"
+            }
           },
           "position-info": {
             "$ref": "#/components/schemas/PositionPaymentInfoDTO"

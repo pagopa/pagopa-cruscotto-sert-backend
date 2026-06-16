@@ -16,10 +16,10 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
 
     @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt " +
                    "WHERE pt.fkPosition = p.id " +
-                   "AND pt.iuv = :iuv " +
+                   "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
                    "AND (:nav IS NULL OR p.nav = :nav) " +
                    "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    List<Position> findByIuvAndOptionalNavAndPa(@Param("iuv") String iuv, @Param("nav") String nav, @Param("pa") String pa);
+    List<Position> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa);
 
     @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt " +
                    "WHERE pt.fkPosition = p.id " +
