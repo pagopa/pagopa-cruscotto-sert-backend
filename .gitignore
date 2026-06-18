@@ -184,3 +184,4 @@ analisi/*
 test-data/
 .vscode
 /doc/*
+/src/main/resources/config/application-devpapa.yml

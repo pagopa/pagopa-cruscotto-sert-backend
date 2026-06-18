@@ -17,4 +17,6 @@ import lombok.NoArgsConstructor;
 public class UnifiedSearchResponseDTO implements Serializable {
     private List<PositionPaymentExtraDTO> results;
     private Integer count;
+    private Long totalElements;
+    private Integer totalPages;
 }

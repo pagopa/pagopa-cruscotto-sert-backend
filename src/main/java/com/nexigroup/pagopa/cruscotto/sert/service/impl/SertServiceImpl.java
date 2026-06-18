@@ -16,6 +16,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,18 +39,21 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByNav(String nav, String pa) {
-        log.debug("Request to search by NAV: {}, PA: {}", nav, pa);
+    public UnifiedSearchResponseDTO searchByNav(String nav, String pa, int offset, int limit) {
+        log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, offset, limit);
+        Pageable pageable = PageRequest.of(offset, limit);
 
-        List<Position> positions = positionRepository.findByNavOrPa(nav, pa);
-        if (positions == null || positions.isEmpty()) {
+        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
+        if (positionsPage == null || positionsPage.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
-        List<PositionPaymentExtraDTO> results = positions.stream()
+        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
             .map(pos -> PositionPaymentExtraDTO.builder()
                 .nav(pos.getNav())
                 .paEmittente(pos.getPaEmittente())
@@ -57,22 +63,27 @@ public class SertServiceImpl implements SertService {
         return UnifiedSearchResponseDTO.builder()
             .results(results)
             .count(results.size())
+            .totalElements(positionsPage.getTotalElements())
+            .totalPages(positionsPage.getTotalPages())
             .build();
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv) {
-        log.debug("Request to search by IUV: {}, PA: {}, NAV: {}", iuv, pa, nav);
-        List<Position> positions = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa);
+    public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv, int offset, int limit) {
+        log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, offset, limit);
+        Pageable pageable = PageRequest.of(offset, limit);
+        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
 
-        if (positions == null || positions.isEmpty()) {
+        if (positionsPage == null || positionsPage.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
-        List<PositionPaymentExtraDTO> results = positions.stream()
+        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
             .map(pos -> PositionPaymentExtraDTO.builder()
                 .nav(pos.getNav())
                 .paEmittente(pos.getPaEmittente())
@@ -82,22 +93,27 @@ public class SertServiceImpl implements SertService {
         return UnifiedSearchResponseDTO.builder()
             .results(results)
             .count(results.size())
+            .totalElements(positionsPage.getTotalElements())
+            .totalPages(positionsPage.getTotalPages())
             .build();
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByCart(String pa, String nav, String idCart) {
-        log.debug("Request to search by Cart: {}", idCart);
-        List<Position> positions = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa);
+    public UnifiedSearchResponseDTO searchByCart(String pa, String nav, String idCart, int offset, int limit) {
+        log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, offset, limit);
+        Pageable pageable = PageRequest.of(offset, limit);
+        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
 
-        if (positions == null || positions.isEmpty()) {
+        if (positionsPage == null || positionsPage.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
-        List<PositionPaymentExtraDTO> results = positions.stream()
+        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
             .map(pos -> PositionPaymentExtraDTO.builder()
                 .nav(pos.getNav())
                 .paEmittente(pos.getPaEmittente())
@@ -107,32 +123,39 @@ public class SertServiceImpl implements SertService {
         return UnifiedSearchResponseDTO.builder()
             .results(results)
             .count(results.size())
+            .totalElements(positionsPage.getTotalElements())
+            .totalPages(positionsPage.getTotalPages())
             .build();
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByToken( String pa, String nav,String token) {
-        log.debug("Request to search by Token: {}", token);
+    public UnifiedSearchResponseDTO searchByToken( String pa, String nav,String token, int offset, int limit) {
+        log.debug("Request to search by Token: {}, offset: {}, limit: {}", token, offset, limit);
 
         if (token == null || token.trim().isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
         String normalizedToken = token.trim();
+        Pageable pageable = PageRequest.of(offset, limit);
 
-        List<Position> positions = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa);
+        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
 
-        if (positions == null || positions.isEmpty()) {
+        if (positionsPage == null || positionsPage.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
-        List<PositionPaymentExtraDTO> results = positions.stream()
+        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
             .map(pos -> PositionPaymentExtraDTO.builder()
                 .nav(pos.getNav())
                 .paEmittente(pos.getPaEmittente())
@@ -142,34 +165,42 @@ public class SertServiceImpl implements SertService {
         return UnifiedSearchResponseDTO.builder()
             .results(results)
             .count(results.size())
+            .totalElements(positionsPage.getTotalElements())
+            .totalPages(positionsPage.getTotalPages())
             .build();
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchExtra(String pa, String nav, String searchValue) {
-        log.debug("Request to search extra: {}", searchValue);
+    public UnifiedSearchResponseDTO searchExtra(String pa, String nav, String searchValue, int offset, int limit) {
+        log.debug("Request to search extra: {}, offset: {}, limit: {}", searchValue, offset, limit);
 
         if (searchValue == null) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
-        List<Object[]> groupedRows = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+        Pageable pageable = PageRequest.of(offset, limit);
+        Page<Object[]> groupedRowsPage = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
-            pa
+            pa,
+            pageable
         );
 
-        if (groupedRows == null || groupedRows.isEmpty()) {
+        if (groupedRowsPage == null || groupedRowsPage.isEmpty()) {
             return UnifiedSearchResponseDTO.builder()
                 .results(Collections.emptyList())
                 .count(0)
+                .totalElements(0L)
+                .totalPages(0)
                 .build();
         }
 
-        List<PositionPaymentExtraDTO> results = groupedRows.stream()
+        List<PositionPaymentExtraDTO> results = groupedRowsPage.getContent().stream()
             .map(row -> PositionPaymentExtraDTO.builder()
                 .nav((String) row[0])
                 .paEmittente((String) row[1])
@@ -180,6 +211,8 @@ public class SertServiceImpl implements SertService {
         return UnifiedSearchResponseDTO.builder()
             .results(results)
             .count(results.size())
+            .totalElements(groupedRowsPage.getTotalElements())
+            .totalPages(groupedRowsPage.getTotalPages())
             .build();
     }
 
