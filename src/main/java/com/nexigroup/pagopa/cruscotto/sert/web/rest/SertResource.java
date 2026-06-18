@@ -46,7 +46,9 @@ public class SertResource {
         @RequestParam(required = false) String iuv,
         @RequestParam(required = false) String token,
         @RequestParam(required = false, name = "idCarrello") String idCarrello,
-        @RequestParam(required = false) String info
+        @RequestParam(required = false) String info,
+        @RequestParam(defaultValue = "0") int offset,
+        @RequestParam(defaultValue = "10") int limit
     ) {
         log.debug("REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
 
@@ -65,7 +67,7 @@ public class SertResource {
 
         if (presentGroups == 0){
             if (pa != null ||  nav != null) {
-                return ResponseEntity.ok(sertService.searchByNav(nav, pa));
+                return ResponseEntity.ok(sertService.searchByNav(nav, pa, offset, limit));
             } else  {
                 log.error("Provide PA or NAV for PA+NAV search.");
                 return ResponseEntity.badRequest().build();
@@ -73,19 +75,19 @@ public class SertResource {
         }
 
         if (iuv != null) {
-            return ResponseEntity.ok(sertService.searchByIuv(pa, nav, iuv));
+            return ResponseEntity.ok(sertService.searchByIuv(pa, nav, iuv, offset, limit));
         }
 
         if (token != null) {
-            return ResponseEntity.ok(sertService.searchByToken(pa, nav, token));
+            return ResponseEntity.ok(sertService.searchByToken(pa, nav, token, offset, limit));
         }
 
         if (idCarrello != null) {
-            return ResponseEntity.ok(sertService.searchByCart(pa, nav, idCarrello));
+            return ResponseEntity.ok(sertService.searchByCart(pa, nav, idCarrello, offset, limit));
         }
 
         if (info != null) {
-            return ResponseEntity.ok(sertService.searchExtra(pa, nav, info));
+            return ResponseEntity.ok(sertService.searchExtra(pa, nav, info, offset, limit));
         }
 
         return ResponseEntity.badRequest().build();
