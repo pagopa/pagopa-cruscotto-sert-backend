@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,182 +39,100 @@ public class SertServiceImpl implements SertService {
         this.positionRepository = positionRepository;
     }
 
-    @Override
-    public UnifiedSearchResponseDTO searchByNav(String nav, String pa, int offset, int limit) {
-        log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, offset, limit);
-        Pageable pageable = PageRequest.of(offset, limit);
-
-        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
-        if (positionsPage == null || positionsPage.isEmpty()) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
+    /**
+     * Helper method to get pageable with default sort if not specified.
+     * Default sort is by paEmittente in ascending order.
+     */
+    private Pageable ensureDefaultSort(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            return pageable;
         }
-
-        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
-            .map(pos -> PositionPaymentExtraDTO.builder()
-                .nav(pos.getNav())
-                .paEmittente(pos.getPaEmittente())
-                .build())
-            .collect(Collectors.toList());
-
-        return UnifiedSearchResponseDTO.builder()
-            .results(results)
-            .count(results.size())
-            .totalElements(positionsPage.getTotalElements())
-            .totalPages(positionsPage.getTotalPages())
-            .build();
+        return PageRequest.of(
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            Sort.by(Sort.Order.asc("paEmittente"))
+        );
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByIuv(String pa, String nav, String iuv, int offset, int limit) {
-        log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, offset, limit);
-        Pageable pageable = PageRequest.of(offset, limit);
-        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
+    public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, Pageable pageable) {
+        log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        if (positionsPage == null || positionsPage.isEmpty()) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
-        }
+        Pageable effectivePageable = ensureDefaultSort(pageable);
+        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, effectivePageable);
 
-        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
-            .map(pos -> PositionPaymentExtraDTO.builder()
-                .nav(pos.getNav())
-                .paEmittente(pos.getPaEmittente())
-                .build())
-            .collect(Collectors.toList());
-
-        return UnifiedSearchResponseDTO.builder()
-            .results(results)
-            .count(results.size())
-            .totalElements(positionsPage.getTotalElements())
-            .totalPages(positionsPage.getTotalPages())
-            .build();
+        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
+            .nav(pos.getNav())
+            .paEmittente(pos.getPaEmittente())
+            .build());
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByCart(String pa, String nav, String idCart, int offset, int limit) {
-        log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, offset, limit);
-        Pageable pageable = PageRequest.of(offset, limit);
-        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
+    public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv,Pageable pageable) {
+        log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        if (positionsPage == null || positionsPage.isEmpty()) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
-        }
+        Pageable effectivePageable = ensureDefaultSort(pageable);
+        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, effectivePageable);
 
-        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
-            .map(pos -> PositionPaymentExtraDTO.builder()
-                .nav(pos.getNav())
-                .paEmittente(pos.getPaEmittente())
-                .build())
-            .collect(Collectors.toList());
-
-        return UnifiedSearchResponseDTO.builder()
-            .results(results)
-            .count(results.size())
-            .totalElements(positionsPage.getTotalElements())
-            .totalPages(positionsPage.getTotalPages())
-            .build();
+        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
+            .nav(pos.getNav())
+            .paEmittente(pos.getPaEmittente())
+            .build());
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchByToken( String pa, String nav,String token, int offset, int limit) {
-        log.debug("Request to search by Token: {}, offset: {}, limit: {}", token, offset, limit);
+    public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, Pageable pageable) {
+        log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
+
+        Pageable effectivePageable = ensureDefaultSort(pageable);
+        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, effectivePageable);
+
+        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
+            .nav(pos.getNav())
+            .paEmittente(pos.getPaEmittente())
+            .build());
+    }
+
+    @Override
+    public Page<PositionPaymentExtraDTO> searchByToken( String pa, String nav,String token, Pageable pageable) {
+        log.debug("Request to search by Token: {}, offset: {}, limit: {}", token, pageable.getOffset(), pageable.getPageSize());
 
         if (token == null || token.trim().isEmpty()) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
+            return Page.empty(pageable);
         }
 
         String normalizedToken = token.trim();
-        Pageable pageable = PageRequest.of(offset, limit);
 
-        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
+        Pageable effectivePageable = ensureDefaultSort(pageable);
+        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, effectivePageable);
 
-        if (positionsPage == null || positionsPage.isEmpty()) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
-        }
-
-        List<PositionPaymentExtraDTO> results = positionsPage.getContent().stream()
-            .map(pos -> PositionPaymentExtraDTO.builder()
-                .nav(pos.getNav())
-                .paEmittente(pos.getPaEmittente())
-                .build())
-            .collect(Collectors.toList());
-
-        return UnifiedSearchResponseDTO.builder()
-            .results(results)
-            .count(results.size())
-            .totalElements(positionsPage.getTotalElements())
-            .totalPages(positionsPage.getTotalPages())
-            .build();
+        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
+            .nav(pos.getNav())
+            .paEmittente(pos.getPaEmittente())
+            .build());
     }
 
     @Override
-    public UnifiedSearchResponseDTO searchExtra(String pa, String nav, String searchValue, int offset, int limit) {
-        log.debug("Request to search extra: {}, offset: {}, limit: {}", searchValue, offset, limit);
+    public Page<PositionPaymentExtraDTO> searchExtra(String pa, String nav, String searchValue, Pageable pageable) {
+        log.debug("Request to search extra: {}, offset: {}, limit: {}", searchValue, pageable.getOffset(), pageable.getPageSize());
 
         if (searchValue == null) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
+            return Page.empty(pageable);
         }
 
-        Pageable pageable = PageRequest.of(offset, limit);
+        Pageable effectivePageable = ensureDefaultSort(pageable);
         Page<Object[]> groupedRowsPage = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
             pa,
-            pageable
+            effectivePageable
         );
 
-        if (groupedRowsPage == null || groupedRowsPage.isEmpty()) {
-            return UnifiedSearchResponseDTO.builder()
-                .results(Collections.emptyList())
-                .count(0)
-                .totalElements(0L)
-                .totalPages(0)
-                .build();
-        }
-
-        List<PositionPaymentExtraDTO> results = groupedRowsPage.getContent().stream()
-            .map(row -> PositionPaymentExtraDTO.builder()
-                .nav((String) row[0])
-                .paEmittente((String) row[1])
-                .match(parseInfoMatch(row[2]))
-                .build())
-            .collect(Collectors.toList());
-
-        return UnifiedSearchResponseDTO.builder()
-            .results(results)
-            .count(results.size())
-            .totalElements(groupedRowsPage.getTotalElements())
-            .totalPages(groupedRowsPage.getTotalPages())
-            .build();
+        return groupedRowsPage.map(row -> PositionPaymentExtraDTO.builder()
+            .nav((String) row[0])
+            .paEmittente((String) row[1])
+            .match(parseInfoMatch(row[2]))
+            .build());
     }
 
     @Override
@@ -333,14 +252,14 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public TransferPaymentDTO getTransfers(String nav, String paEmittente, String token) {
-        log.debug("Request to get transfers for: {}, {}, {}", nav, paEmittente, token);
+    public TransferPaymentDTO getTransfers(String nav, String paEmittente, String token, Pageable pageable) {
+        log.debug("Request to get transfers for: {}, {}, {}, {}, {}", nav, paEmittente, token,pageable.getOffset(), pageable.getPageSize() );
 
         if (nav == null || paEmittente == null || token == null || token.trim().isEmpty()) {
             return null;
         }
 
-        List<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim());
+        List<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -376,19 +295,17 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public WorkflowResponseDTO getWorkflows(String nav, String paEmittente) {
+    public WorkflowResponseDTO getWorkflows(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
-        if (nav == null || paEmittente == null) {
-            return WorkflowResponseDTO.builder()
-                .count(0.0)
-                .eventsPosition(Collections.emptyList())
-                .eventsToken(Collections.emptyList())
-                .build();
-        }
 
-        List<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente);
-        List<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente);
+
+        List<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente, pageable);
+        List<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente, pageable);
+
+        if ((positionEvents == null || positionEvents.isEmpty()) && (tokenEvents == null || tokenEvents.isEmpty())) {
+            return null;
+        }
 
         List<WorkflowObjectDTO> eventsPositionList = positionEvents != null && !positionEvents.isEmpty()
             ? positionEvents.stream()
@@ -427,22 +344,12 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public ExtraInfoResponseDTO getExtraInfo(String token) {
+    public ExtraInfoResponseDTO getExtraInfo(String token, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
-        if (token == null || token.trim().isEmpty()) {
-            return ExtraInfoResponseDTO.builder()
-                .count(0)
-                .results(Collections.emptyList())
-                .build();
-        }
-
-        List<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim());
+        List<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim(),pageable);
         if (rows == null || rows.isEmpty()) {
-            return ExtraInfoResponseDTO.builder()
-                .count(0)
-                .results(Collections.emptyList())
-                .build();
+            return null;
         }
 
         List<ExtraInfoObjectDTO> results = rows.stream()

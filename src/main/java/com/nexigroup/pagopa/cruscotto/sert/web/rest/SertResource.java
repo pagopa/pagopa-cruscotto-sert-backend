@@ -3,13 +3,25 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.MediaType;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import tech.jhipster.web.util.PaginationUtil;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for SERT APIs.
@@ -22,9 +34,19 @@ public class SertResource {
 
     private final SertService sertService;
 
+    // Valid sort fields for search API
+
+
+
     public SertResource(SertService sertService) {
         this.sertService = sertService;
     }
+
+    /**
+     * Validates that the sort fields in Pageable are allowed.
+     * Only "nav" and "paEmittente" are allowed for sorting.
+     */
+
 
     /**
      * {@code GET  /search} : Unified search API.
@@ -35,62 +57,69 @@ public class SertResource {
      * @param token the Token di pagamento.
      * @param idCarrello the ID Carrello.
      * @param info the Valore per ricerca extra.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the unifiedSearchResponse.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the search results.
      */
     @GetMapping("/search")
     @Operation(tags = "Ricerca delle posizioni debitorie")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<UnifiedSearchResponseDTO> search(
+    public ResponseEntity<?> search(
         @RequestParam(required = false) String pa,
         @RequestParam(required = false) String nav,
         @RequestParam(required = false) String iuv,
         @RequestParam(required = false) String token,
         @RequestParam(required = false, name = "idCarrello") String idCarrello,
         @RequestParam(required = false) String info,
-        @RequestParam(defaultValue = "0") int offset,
-        @RequestParam(defaultValue = "10") int limit
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         log.debug("REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
 
-        int presentGroups = 0;
+        try {
+            // Validate sort fields
+            ResponseEntity<String> errorMessage = PaymentUtil.validatePageable(pageable, PaymentUtil.SEARCH_SORT_MAPPING);
+            if (errorMessage != null) return errorMessage;
+             pageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_SORT_MAPPING, Sort.Order.desc("paEmittente"));
 
-        if (iuv != null) presentGroups++;
-        if (token != null) presentGroups++;
-        if (idCarrello != null) presentGroups++;
-        if (info != null) presentGroups++;
+            int presentGroups = 0;
 
-        if (presentGroups > 1) {
-            log.error("Invalid search parameters: exactly one search group must be provided.");
-            return ResponseEntity.badRequest().build();
-        }
+            if (iuv != null) presentGroups++;
+            if (token != null) presentGroups++;
+            if (idCarrello != null) presentGroups++;
+            if (info != null) presentGroups++;
 
-
-        if (presentGroups == 0){
-            if (pa != null ||  nav != null) {
-                return ResponseEntity.ok(sertService.searchByNav(nav, pa, offset, limit));
-            } else  {
-                log.error("Provide PA or NAV for PA+NAV search.");
+            if (presentGroups > 1) {
+                log.error("Invalid search parameters: exactly one search group must be provided.");
                 return ResponseEntity.badRequest().build();
             }
-        }
 
-        if (iuv != null) {
-            return ResponseEntity.ok(sertService.searchByIuv(pa, nav, iuv, offset, limit));
-        }
+            Page<PositionPaymentExtraDTO> page = null;
 
-        if (token != null) {
-            return ResponseEntity.ok(sertService.searchByToken(pa, nav, token, offset, limit));
-        }
+            if (presentGroups == 0){
+                if (pa != null ||  nav != null) {
+                    page = sertService.searchByNav(nav, pa, pageable);
+                } else  {
+                    log.error("Provide PA or NAV for PA+NAV search.");
+                    return ResponseEntity.badRequest().build();
+                }
+            } else if (iuv != null) {
+                page = sertService.searchByIuv(pa, nav, iuv, pageable);
+            } else if (token != null) {
+                page = sertService.searchByToken(pa, nav, token, pageable);
+            } else if (idCarrello != null) {
+                page = sertService.searchByCart(pa, nav, idCarrello, pageable);
+            } else if (info != null) {
+                page = sertService.searchExtra(pa, nav, info, pageable);
+            }
 
-        if (idCarrello != null) {
-            return ResponseEntity.ok(sertService.searchByCart(pa, nav, idCarrello, offset, limit));
-        }
+            if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
 
-        if (info != null) {
-            return ResponseEntity.ok(sertService.searchExtra(pa, nav, info, offset, limit));
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+            return ResponseEntity.ok().headers(headers).body(page.getContent());
+        } catch (Exception e) {
+            log.error("Error occurred during search operation. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
         }
-
-        return ResponseEntity.badRequest().build();
     }
 
     /**
@@ -103,16 +132,21 @@ public class SertResource {
     @GetMapping("/position/{nav}/{pa-emittente}")
     @Operation(tags = "Visualizzazione posizione debitoria")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_POSITION_DETAIL + "\")")
-    public ResponseEntity<PositionPaymentDTO> getPosition(
+    public ResponseEntity<?> getPosition(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente
     ) {
         log.debug("REST request to get Position : {}, {}", nav, paEmittente);
-        PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente);
-        if (positionPayment == null) {
-            return ResponseEntity.notFound().build();
+        try {
+            PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente);
+            if (positionPayment == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(positionPayment);
+        } catch (Exception e) {
+            log.error("Error occurred while retrieving position details. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
         }
-        return ResponseEntity.ok(positionPayment);
     }
 
     /**
@@ -124,13 +158,18 @@ public class SertResource {
     @GetMapping("/token/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TOKEN_DETAIL + "\")")
-    public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
+    public ResponseEntity<?> getTokenInfo(@PathVariable("token") String token) {
         log.debug("REST request to get Token Info : {}", token);
-        TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
-        if (tokenInfo == null) {
-            return ResponseEntity.notFound().build();
+        try {
+            TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
+            if (tokenInfo == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(tokenInfo);
+        } catch (Exception e) {
+            log.error("Error occurred while retrieving token information. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
         }
-        return ResponseEntity.ok(tokenInfo);
     }
 
     /**
@@ -144,18 +183,34 @@ public class SertResource {
     @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TRANSFER_DETAIL + "\")")
-    public ResponseEntity<TransferPaymentDTO> getTransfers(
+    public ResponseEntity<?> getTransfers(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
-        @PathVariable("token") String token
+        @PathVariable("token") String token,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         log.debug("REST request to get Transfers : {}, {}, {}", nav, paEmittente, token);
-        TransferPaymentDTO transferPayment = sertService.getTransfers(nav, paEmittente, token);
-        if (transferPayment == null) {
-            return ResponseEntity.notFound().build();
+        try {
+            // Validate transfer sort fields (frontend names) and check idTransfer is not passed
+            ResponseEntity<String> errorMessage = PaymentUtil.validatePageable(pageable, PaymentUtil.TRANSFER_SORT_MAPPING);
+            if (errorMessage != null) return errorMessage;
+
+
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.desc("idTransfer"),PaymentUtil.TRANSFER_SORT_MAPPING,
+                Sort.Order.desc("paTransfer"));
+            TransferPaymentDTO transferPayment = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
+            if (transferPayment == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(transferPayment);
+        } catch (Exception e) {
+            log.error("Error occurred while retrieving transfer details. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
         }
-        return ResponseEntity.ok(transferPayment);
     }
+
+
+
 
     /**
      * {@code GET  /workflows/{nav}/{pa-emittente}} : Recupero eventi di workflow di una posizione debitoria e relativi tentativi.
@@ -167,12 +222,28 @@ public class SertResource {
     @GetMapping("/workflows/{nav}/{pa-emittente}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_WORKFLOW_DETAIL + "\")")
-    public ResponseEntity<WorkflowResponseDTO> getWorkflows(
+    public ResponseEntity<?> getWorkflows(
         @PathVariable("nav") String nav,
-        @PathVariable("pa-emittente") String paEmittente
+        @PathVariable("pa-emittente") String paEmittente,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         log.debug("REST request to get Workflows : {}, {}", nav, paEmittente);
-        return ResponseEntity.ok(sertService.getWorkflows(nav, paEmittente));
+        try {
+
+            ResponseEntity<String> errorMessage = PaymentUtil.validatePageable(pageable, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING);
+            if (errorMessage != null) return errorMessage;
+
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING, Sort.Order.desc("insertedtimestamp"));
+            WorkflowResponseDTO workflows = sertService.getWorkflows(nav, paEmittente, remappedPageable);
+            if (workflows ==null ){
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(workflows);
+
+        } catch (Exception e) {
+            log.error("Error occurred while retrieving workflow information. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
+        }
     }
 
     /**
@@ -184,8 +255,22 @@ public class SertResource {
     @GetMapping("/extra/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_EXTRA_DETAIL + "\")")
-    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(@PathVariable("token") String token) {
+    public ResponseEntity<?> getExtraInfo(@PathVariable("token") String token,
+                                          @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable) {
         log.debug("REST request to get Extra Info : {}", token);
-        return ResponseEntity.ok(sertService.getExtraInfo(token));
+        try {
+            ResponseEntity<String> errorMessage = PaymentUtil.validatePageable(pageable, PaymentUtil.EXTRA_INFO_SORT_MAPPING);
+            if (errorMessage != null) return errorMessage;
+
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING, Sort.Order.desc("infoName"));
+            ExtraInfoResponseDTO extraInfo = sertService.getExtraInfo(token, remappedPageable);
+            if (extraInfo ==null ){
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(extraInfo);
+        } catch (Exception e) {
+            log.error("Error occurred while retrieving extra information. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
+        }
     }
 }
