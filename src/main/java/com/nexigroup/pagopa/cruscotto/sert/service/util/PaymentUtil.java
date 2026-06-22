@@ -1,5 +1,13 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.util;
 
+import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -8,13 +16,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HexFormat;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class PaymentUtil {
+
+    private final static  Logger log = LoggerFactory.getLogger(PaymentUtil.class);
+
 
     private PaymentUtil() {
         // Utility class
@@ -107,5 +115,90 @@ public final class PaymentUtil {
             .filter(part -> !part.isEmpty())
             .collect(Collectors.toList());
     }
+    public static Pageable remapSorting(Pageable pageable, Sort.Order orderPivot, Map<String, String> sortMapping, Sort.Order orderDefault) {
+        List<Sort.Order> orders = new ArrayList<>();
+
+        // Always prepend idTransfer DESC as first sort
+        if (orderPivot != null) {
+            orders.add(orderPivot);
+        }
+        // Add remapped sorts from frontend (if any)
+        if (pageable != null && pageable.getSort().isSorted()) {
+            pageable.getSort().stream()
+                .map(order -> {
+                    String prop = order.getProperty();
+                    String mapped = sortMapping.getOrDefault(prop, prop);
+                    return new Sort.Order(order.getDirection(), mapped);
+                })
+                .forEach(orders::add);
+        }else {
+            // If no sort provided, default to idTransfer DESC
+            orders.add(orderDefault);
+        }
+
+        Sort mappedSort = Sort.by(orders);
+
+        if (pageable == null) {
+            return PageRequest.of(0, 20, mappedSort);
+        }
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
+    }
+
+    public  static final Map<String, String> TRANSFER_SORT_MAPPING = Map.of(
+        "idTransfer", "idTransfer",
+        "typeTransfer", "isBollo",
+        "iban", "ibanTransfer",
+        "amount", "amountTransfer",
+        "paFiscalCode", "paTransfer"
+    );
+
+    public static final Map<String, String> EXTRA_INFO_SORT_MAPPING = Map.of(
+        "nav", "nav",
+        "pa-emittente", "paEmittente",
+        "token", "token",
+        "name", "infoName",
+        "value", "infoValue",
+        "tipoevento", "tipoEvento"
+    );
+    public static final Map<String, String> SEARCH_SORT_MAPPING = Map.of(
+        "nav", "nav",
+        "paEmittente", "paEmittente"
+    );
+
+    public static final Map<String, String> WORKFLOW_QUERY_TO_DTO_MAPPING = Map.of(
+        "insertedtimestamp", "insertedtimestamp",
+        "tipoevento", "nomeevento",
+        "sottotipoevento", "tipoevento",
+        "outcome", "outcome",
+        "faultcode", "faultcode",
+        "event-id", "eventid"
+    );
+
+    public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) {
+        if (pageable.getSort().isSorted()) {
+            Set<String> invalid = pageable.getSort().stream()
+                .map(Sort.Order::getProperty)
+                .filter(p -> !mapAttribute.containsKey(p))
+                .collect(Collectors.toSet());
+            if (!invalid.isEmpty()) {
+                String errorMessage = String.format("Invalid sort fields for transfers: %s. Allowed fields are: %s. Mapping to query properties: %s",
+                    invalid, mapAttribute.keySet(), mapAttribute);
+                log.error(errorMessage);
+                return ResponseEntity.badRequest().body(errorMessage);
+            }
+
+            // Check that idTransfer is NOT passed by frontend
+            boolean hasIdTransfer = pageable.getSort().stream()
+                .anyMatch(order -> "idTransfer".equals(order.getProperty()));
+            if (hasIdTransfer) {
+                String errorMessage = "idTransfer cannot be passed in sort. It is automatically prepended as first sort in DESC order.";
+                log.error(errorMessage);
+                return ResponseEntity.badRequest().body(errorMessage);
+            }
+        }
+        return null;
+    }
+
 }
 

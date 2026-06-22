@@ -103,28 +103,51 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "WHERE p.id = pt.fkPosition " +
                     "AND pt.id = ptr.fkToken " +
                     "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
-                    "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-                    "ORDER BY ptr.dateEvent DESC, ptr.id DESC")
-     List<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token);
+                    "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
+     List<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
 
-    @Query(value = "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, afc.codice, " +
-                    "ew.fkTokens, NULL " +
-                    "FROM Position p LEFT JOIN EventsWf ew ON ew.fkPosition = p.id  " +
-                    "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
-                    "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-                    "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-                    "ORDER BY ew.insertedTimestampReq DESC")
-    List<Object[]> findEventsPositionByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
+    @Query(value = "SELECT " +
+        "ew.insertedTimestampReq AS insertedtimestamp, " +
+        "ae.nomeEvento AS nomeevento, " +
+        "ae.tipoEvento AS tipoevento, " +
+        "ew.outcomeReq AS outcome, " +
+        "ew.eventIdReq AS eventid, " +
+        "afc.codice AS faultcode, " +
+        "ew.fkTokens AS fktokens, " +
+        "NULL AS sottotipoevento " +
+        "FROM Position p " +
+        "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+        "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
+        "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
+        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " )
+    List<Object[]> findEventsPositionByNavAndPa(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente,
+        Pageable pageable
+    );
 
-    @Query(value = "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, afc.codice, " +
-                    "FUNCTION('ENCODE', pt.token, 'hex') AS token " +
-                    "FROM EventsWf ew LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
-                    "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode, PositionTokens pt, Position p " +
-                    "WHERE ew.fkTokens = pt.id " +
-                    "AND ew.fkPosition = p.id " +
-                    "AND p.nav = :nav AND p.paEmittente = :paEmittente AND ew.fkTokens IS NOT NULL " +
-                    "ORDER BY ew.insertedTimestampReq DESC")
-    List<Object[]> findEventsTokenByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
+    @Query(value = "SELECT " +
+        "ew.insertedTimestampReq AS insertedtimestamp, " +
+        "ae.nomeEvento AS nomeevento, " +
+        "ae.tipoEvento AS tipoevento, " +
+        "ew.outcomeReq AS outcome, " +
+        "ew.eventIdReq AS eventid, " +
+        "afc.codice AS faultcode, " +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS token " +
+        "FROM EventsWf ew " +
+        "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
+        "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode, " +
+        "PositionTokens pt, Position p " +
+        "WHERE ew.fkTokens = pt.id " +
+        "AND ew.fkPosition = p.id " +
+        "AND p.nav = :nav " +
+        "AND p.paEmittente = :paEmittente " +
+        "AND ew.fkTokens IS NOT NULL " )
+    List<Object[]> findEventsTokenByNavAndPa(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT p.nav AS nav, p.paEmittente AS paEmittente, FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
                     "ei.infoName AS infoName, ei.infoValue AS infoValue, " +
@@ -132,7 +155,6 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "FROM PositionTokens pt, Position p, ExtraInfo ei " +
                     "WHERE p.id = pt.fkPosition " +
                     "AND ei.fkToken = pt.id " +
-                    "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-                    "ORDER BY ei.infoName")
-    List<Object[]> findExtraInfoByToken(@Param("token") String token);
+                    "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
+    List<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
 }
