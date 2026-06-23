@@ -110,16 +110,20 @@ public class SertResource {
                 page = sertService.searchExtra(pa, nav, info, pageable);
             }
 
-            if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            return ResponseEntity.ok().headers(headers).body(page.getContent());
+            return creteREsponseEntity(page);
         } catch (Exception e) {
             log.error("Error occurred during search operation. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
             return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
         }
+    }
+
+    private static ResponseEntity<?> creteREsponseEntity(Page<?> page) {
+        if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     /**
@@ -134,11 +138,19 @@ public class SertResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_POSITION_DETAIL + "\")")
     public ResponseEntity<?> getPosition(
         @PathVariable("nav") String nav,
-        @PathVariable("pa-emittente") String paEmittente
+        @PathVariable("pa-emittente") String paEmittente,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         log.debug("REST request to get Position : {}, {}", nav, paEmittente);
         try {
-            PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente);
+            ResponseEntity<String> errorMessage = PaymentUtil.validatePageable(pageable, PaymentUtil.POSITION_TOKEN_SORT_MAPPING);
+            if (errorMessage != null) return errorMessage;
+
+
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.desc("idTransfer"),PaymentUtil.POSITION_TOKEN_SORT_MAPPING,
+                Sort.Order.desc("paTransfer"));
+
+            PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente,remappedPageable);
             if (positionPayment == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -198,11 +210,10 @@ public class SertResource {
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.desc("idTransfer"),PaymentUtil.TRANSFER_SORT_MAPPING,
                 Sort.Order.desc("paTransfer"));
-            TransferPaymentDTO transferPayment = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
-            if (transferPayment == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(transferPayment);
+            Page<TransferPaymentDTO> page = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
+
+            return creteREsponseEntity(page);
+
         } catch (Exception e) {
             log.error("Error occurred while retrieving transfer details. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
             return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
@@ -234,11 +245,10 @@ public class SertResource {
             if (errorMessage != null) return errorMessage;
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING, Sort.Order.desc("insertedtimestamp"));
-            WorkflowResponseDTO workflows = sertService.getWorkflows(nav, paEmittente, remappedPageable);
-            if (workflows ==null ){
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(workflows);
+            Page<WorkflowResponseDTO> page = sertService.getWorkflows(nav, paEmittente, remappedPageable);
+
+            return creteREsponseEntity(page);
+
 
         } catch (Exception e) {
             log.error("Error occurred while retrieving workflow information. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
@@ -263,11 +273,8 @@ public class SertResource {
             if (errorMessage != null) return errorMessage;
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING, Sort.Order.desc("infoName"));
-            ExtraInfoResponseDTO extraInfo = sertService.getExtraInfo(token, remappedPageable);
-            if (extraInfo ==null ){
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(extraInfo);
+            Page<ExtraInfoResponseDTO> page = sertService.getExtraInfo(token, remappedPageable);
+            return creteREsponseEntity(page);
         } catch (Exception e) {
             log.error("Error occurred while retrieving extra information. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
             return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");

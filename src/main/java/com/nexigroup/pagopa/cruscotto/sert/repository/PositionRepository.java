@@ -75,7 +75,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                    "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
                    "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
                    "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
-    List<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
+    List<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
 
     @Query(value = "SELECT p.nav AS nav, p.paEmittente AS paEmittente, p.lastEvent AS lastEvent, " +
                    "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
@@ -104,7 +104,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "AND pt.id = ptr.fkToken " +
                     "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
                     "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-     List<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
+     Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
 
     @Query(value = "SELECT " +
         "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -120,7 +120,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
         "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
         "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " )
-    List<Object[]> findEventsPositionByNavAndPa(
+    Page<Object[]> findEventsPositionByNavAndPa(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
         Pageable pageable
@@ -143,7 +143,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "AND p.nav = :nav " +
         "AND p.paEmittente = :paEmittente " +
         "AND ew.fkTokens IS NOT NULL " )
-    List<Object[]> findEventsTokenByNavAndPa(
+    Page<Object[]> findEventsTokenByNavAndPa(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
         Pageable pageable
@@ -156,5 +156,5 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "WHERE p.id = pt.fkPosition " +
                     "AND ei.fkToken = pt.id " +
                     "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-    List<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
+    Page<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
 }

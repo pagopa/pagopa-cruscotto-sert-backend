@@ -153,6 +153,16 @@ public final class PaymentUtil {
         "paFiscalCode", "paTransfer"
     );
 
+
+    public  static final Map<String, String> POSITION_TOKEN_SORT_MAPPING = Map.of(
+        "idTransfer", "idTransfer",
+        "typeTransfer", "isBollo",
+        "iban", "ibanTransfer",
+        "amount", "amountTransfer",
+        "paFiscalCode", "paTransfer"
+    );
+
+
     public static final Map<String, String> EXTRA_INFO_SORT_MAPPING = Map.of(
         "nav", "nav",
         "pa-emittente", "paEmittente",
