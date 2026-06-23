@@ -124,12 +124,12 @@ public class SertServiceImpl implements SertService {
     public PositionPaymentDTO getPosition(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        List<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
+        Page<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }
 
-        Object[] firstRow = rows.get(0);
+        Object[] firstRow = rows.getContent().get(0);
         Object[] preferredRow = rows.stream().filter(row -> row[5] != null).findFirst().orElse(firstRow);
         Object[] payedRow = rows.stream().filter(row -> row[7] != null && row[5] != null).findFirst().orElse(null);
 
