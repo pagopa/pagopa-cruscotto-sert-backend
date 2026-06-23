@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExtraInfoResponseDTO implements Serializable {
-    private Integer count;
+    private Long count;
     private List<ExtraInfoObjectDTO> results;
 }

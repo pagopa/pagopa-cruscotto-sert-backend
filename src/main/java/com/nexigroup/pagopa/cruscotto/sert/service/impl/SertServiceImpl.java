@@ -16,7 +16,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -39,27 +42,12 @@ public class SertServiceImpl implements SertService {
         this.positionRepository = positionRepository;
     }
 
-    /**
-     * Helper method to get pageable with default sort if not specified.
-     * Default sort is by paEmittente in ascending order.
-     */
-    private Pageable ensureDefaultSort(Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            return pageable;
-        }
-        return PageRequest.of(
-            pageable.getPageNumber(),
-            pageable.getPageSize(),
-            Sort.by(Sort.Order.asc("paEmittente"))
-        );
-    }
 
     @Override
     public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Pageable effectivePageable = ensureDefaultSort(pageable);
-        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, effectivePageable);
+        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
 
         return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
             .nav(pos.getNav())
@@ -71,8 +59,7 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        Pageable effectivePageable = ensureDefaultSort(pageable);
-        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, effectivePageable);
+        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
 
         return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
             .nav(pos.getNav())
@@ -84,8 +71,7 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        Pageable effectivePageable = ensureDefaultSort(pageable);
-        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, effectivePageable);
+        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
 
         return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
             .nav(pos.getNav())
@@ -103,8 +89,7 @@ public class SertServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Pageable effectivePageable = ensureDefaultSort(pageable);
-        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, effectivePageable);
+        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
 
         return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
             .nav(pos.getNav())
@@ -120,12 +105,12 @@ public class SertServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
-        Pageable effectivePageable = ensureDefaultSort(pageable);
+
         Page<Object[]> groupedRowsPage = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
             pa,
-            effectivePageable
+            pageable
         );
 
         return groupedRowsPage.map(row -> PositionPaymentExtraDTO.builder()
@@ -136,10 +121,10 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public PositionPaymentDTO getPosition(String nav, String paEmittente) {
+    public PositionPaymentDTO getPosition(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        List<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente);
+        List<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -252,24 +237,25 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public TransferPaymentDTO getTransfers(String nav, String paEmittente, String token, Pageable pageable) {
+    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, Pageable pageable) {
         log.debug("Request to get transfers for: {}, {}, {}, {}, {}", nav, paEmittente, token,pageable.getOffset(), pageable.getPageSize() );
 
         if (nav == null || paEmittente == null || token == null || token.trim().isEmpty()) {
             return null;
         }
 
-        List<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
+        Page<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }
 
-        Object[] latestRow = rows.get(0);
+        Object[] latestRow = rows.getContent().get(0);
+
         List<TransferObjectDTO> transfers = rows.stream()
             .map(this::toTransferObject)
             .collect(Collectors.toList());
 
-        return TransferPaymentDTO.builder()
+        TransferPaymentDTO dto = TransferPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(asString(latestRow[0]))
                 .paEmittente(asString(latestRow[1]))
@@ -282,6 +268,8 @@ public class SertServiceImpl implements SertService {
             .transfersCount(toDouble(latestRow[6]))
             .transfers(transfers)
             .build();
+
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, rows.getTotalElements());
     }
 
     private TransferObjectDTO toTransferObject(Object[] row) {
@@ -295,13 +283,13 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public WorkflowResponseDTO getWorkflows(String nav, String paEmittente, Pageable pageable) {
+    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
 
 
-        List<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente, pageable);
-        List<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente, pageable);
+        Page<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente, pageable);
+        Page<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente, pageable);
 
         if ((positionEvents == null || positionEvents.isEmpty()) && (tokenEvents == null || tokenEvents.isEmpty())) {
             return null;
@@ -334,20 +322,22 @@ public class SertServiceImpl implements SertService {
                 .collect(Collectors.toList())
             : Collections.emptyList();
 
-        double totalCount = eventsPositionList.size() ;
+        Long totalCount = positionEvents.getTotalElements() ;
 
-        return WorkflowResponseDTO.builder()
+        WorkflowResponseDTO dto = WorkflowResponseDTO.builder()
             .count(totalCount)
             .eventsPosition(eventsPositionList)
             .eventsToken(eventsTokenList)
             .build();
+
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);
     }
 
     @Override
-    public ExtraInfoResponseDTO getExtraInfo(String token, Pageable pageable) {
+    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
-        List<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim(),pageable);
+        Page<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim(),pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -364,9 +354,10 @@ public class SertServiceImpl implements SertService {
                 .build())
             .collect(Collectors.toList());
 
-        return ExtraInfoResponseDTO.builder()
-            .count(results.size())
+        ExtraInfoResponseDTO dto = ExtraInfoResponseDTO.builder()
+            .count(rows.getTotalElements())
             .results(results)
             .build();
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, rows.getTotalElements());
     }
 }

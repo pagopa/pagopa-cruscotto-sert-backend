@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkflowResponseDTO implements Serializable {
-    private Double count;
+    private Long count;
 
     @JsonProperty("events-position")
     private List<WorkflowObjectDTO> eventsPosition;
