@@ -61,36 +61,66 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                         "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(@Param("searchValue") String searchValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT p.nav AS nav, p.paEmittente AS paEmittente, p.lastEvent AS lastEvent, " +
-                   "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-                   "pt.dateEvent AS tokenDateEvent, pt.paymentDate AS paymentDate, pt.outcome AS outcome, " +
-                   "pt.amount AS amount, pt.fee AS fee, apsp.codice AS psp, aipa.codice AS ptPa, " +
-                   "aipsp.codice AS ptPsp, ast.codice AS station, ac.codice AS channel, " +
-                   "pt.touchpoint AS touchpoint, pt.paymentMethod AS paymentMethod, pt.idCarrello AS idCarrello " +
-                   "FROM Position p LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-                   "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
-                   "LEFT JOIN AnagIntermediario aipa ON aipa.id = pt.intermediarioPa " +
-                   "LEFT JOIN AnagIntermediario aipsp ON aipsp.id = pt.intermediarioPsp " +
-                   "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
-                   "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
-                   "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-                   "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
-    List<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
+    @Query(value = "SELECT " +
+        "p.nav AS nav, " +
+        "p.paEmittente AS paEmittente, " +
+        "p.lastEvent AS lastEvent, " +
+        "pt.iuv AS iuv, " +
+        "pt.creditorRefId AS creditorReferenceId, " +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
+        "pt.dateEvent AS tokenDateEvent, " +
+        "pt.paymentDate AS paymentDate, " +
+        "pt.outcome AS outcome, " +
+        "pt.amount AS amount, " +
+        "pt.fee AS fee, " +
+        "apsp.codice AS psp, " +
+        "aipa.codice AS ptPa, " +
+        "aipsp.codice AS ptPsp, " +
+        "ast.codice AS station, " +
+        "ac.codice AS channel, " +
+        "pt.touchpoint AS touchpoint, " +
+        "pt.paymentMethod AS paymentMethod, " +
+        "pt.idCarrello AS idCarrello " +
+        "FROM Position p " +
+        "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+        "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
+        "LEFT JOIN AnagIntermediario aipa ON aipa.id = pt.intermediarioPa " +
+        "LEFT JOIN AnagIntermediario aipsp ON aipsp.id = pt.intermediarioPsp " +
+        "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
+        "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
+        "WHERE p.nav = :nav " +
+        "AND p.paEmittente = :paEmittente ")
+    Page<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
 
-    @Query(value = "SELECT p.nav AS nav, p.paEmittente AS paEmittente, p.lastEvent AS lastEvent, " +
-                   "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-                   "pt.dateEvent AS tokenDateEvent, pt.paymentDate AS paymentDate, pt.outcome AS outcome, " +
-                   "pt.amount AS amount, pt.fee AS fee, apsp.codice AS psp, aipa.codice AS ptPa, " +
-                   "aipsp.codice AS ptPsp, ast.codice AS station, ac.codice AS channel, " +
-                   "pt.touchpoint AS touchpoint, pt.paymentMethod AS paymentMethod, pt.idCarrello AS idCarrello " +
-                   "FROM PositionTokens pt LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
-                   "LEFT JOIN AnagIntermediario aipa ON aipa.id = pt.intermediarioPa " +
-                   "LEFT JOIN AnagIntermediario aipsp ON aipsp.id = pt.intermediarioPsp " +
-                   "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
-                   "LEFT JOIN AnagCanale ac ON ac.id = pt.canale, Position p " +
-                   "WHERE p.id = pt.fkPosition " +
-                   "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-                   "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
+    @Query(value = "SELECT " +
+        "p.nav AS nav, " +
+        "p.paEmittente AS paEmittente, " +
+        "p.lastEvent AS lastEvent, " +
+        "pt.iuv AS iuv, " +
+        "pt.creditorRefId AS creditorReferenceId, " +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
+        "pt.dateEvent AS tokenDateEvent, " +
+        "pt.paymentDate AS paymentDate, " +
+        "pt.outcome AS outcome, " +
+        "pt.amount AS amount, " +
+        "pt.fee AS fee, " +
+        "apsp.codice AS psp, " +
+        "aipa.codice AS intermediarioPa, " +
+        "aipsp.codice AS intermediarioPsp, " +
+        "ast.codice AS station, " +
+        "ac.codice AS channel, " +
+        "pt.touchpoint AS touchpoint, " +
+        "pt.paymentMethod AS paymentMethod, " +
+        "pt.idCarrello AS idCarrello " +
+        "FROM PositionTokens pt " +
+        "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
+        "LEFT JOIN AnagIntermediario aipa ON aipa.id = pt.intermediarioPa " +
+        "LEFT JOIN AnagIntermediario aipsp ON aipsp.id = pt.intermediarioPsp " +
+        "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
+        "LEFT JOIN AnagCanale ac ON ac.id = pt.canale, Position p " +
+        "WHERE p.id = pt.fkPosition " +
+        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
     List<Object[]> findTokenDetailRow(@Param("token") String token);
 
     @Query(value = "SELECT p.nav AS nav, p.paEmittente AS paEmittente, p.lastEvent AS lastEvent, " +

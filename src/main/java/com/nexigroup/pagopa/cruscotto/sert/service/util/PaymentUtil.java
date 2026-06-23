@@ -155,11 +155,13 @@ public final class PaymentUtil {
 
 
     public  static final Map<String, String> POSITION_TOKEN_SORT_MAPPING = Map.of(
-        "idTransfer", "idTransfer",
-        "typeTransfer", "isBollo",
-        "iban", "ibanTransfer",
-        "amount", "amountTransfer",
-        "paFiscalCode", "paTransfer"
+        "tokenDateEvent", "tokenDateEvent",
+        "psp", "psp",
+        "ptPsp", "ptPsp",
+        "amount", "amount",
+        "paymentMethod", "paymentMethod",
+        "paymentDate","paymentDate",
+        "touchpoint", "touchpoint"
     );
 
 

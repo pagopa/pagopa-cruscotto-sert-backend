@@ -147,8 +147,8 @@ public class SertResource {
             if (errorMessage != null) return errorMessage;
 
 
-            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.desc("idTransfer"),PaymentUtil.POSITION_TOKEN_SORT_MAPPING,
-                Sort.Order.desc("paTransfer"));
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,null,PaymentUtil.POSITION_TOKEN_SORT_MAPPING,
+                Sort.Order.desc("tokenDateEvent"));
 
             PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente,remappedPageable);
             if (positionPayment == null) {
