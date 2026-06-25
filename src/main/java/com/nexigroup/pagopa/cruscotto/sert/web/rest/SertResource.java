@@ -208,7 +208,7 @@ public class SertResource {
             if (errorMessage != null) return errorMessage;
 
 
-            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.desc("idTransfer"),PaymentUtil.TRANSFER_SORT_MAPPING,
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.asc("idTransfer"),PaymentUtil.TRANSFER_SORT_MAPPING,
                 Sort.Order.desc("paTransfer"));
             Page<TransferPaymentDTO> page = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
 
