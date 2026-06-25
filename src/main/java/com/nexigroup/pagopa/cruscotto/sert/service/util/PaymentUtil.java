@@ -115,9 +115,14 @@ public final class PaymentUtil {
             .filter(part -> !part.isEmpty())
             .collect(Collectors.toList());
     }
-    public static Pageable remapSorting(Pageable pageable, Sort.Order orderSecondary, Map<String, String> sortMapping, Sort.Order orderDefault) {
+    public static Pageable remapSorting(Pageable pageable, Sort.Order orderPivot, Map<String, String> sortMapping, Sort.Order orderDefault) {
         List<Sort.Order> orders = new ArrayList<>();
 
+        // Always prepend idTransfer DESC as first sort
+        if (orderPivot != null) {
+            orders.add(orderPivot);
+        }
+        // Add remapped sorts from frontend (if any)
         if (pageable != null && pageable.getSort().isSorted()) {
             pageable.getSort().stream()
                 .map(order -> {
@@ -127,13 +132,9 @@ public final class PaymentUtil {
                 })
                 .forEach(orders::add);
         }else {
+            // If no sort provided, default to idTransfer DESC
             orders.add(orderDefault);
         }
-
-        if (orderSecondary != null) {
-            orders.add(orderSecondary);
-        }
-
 
         Sort mappedSort = Sort.by(orders);
 
@@ -154,13 +155,12 @@ public final class PaymentUtil {
 
 
     public  static final Map<String, String> POSITION_TOKEN_SORT_MAPPING = Map.of(
-        "tokenDateEvent", "tokenDateEvent",
-        "psp", "psp",
-        "ptPsp", "ptPsp",
-        "amount", "amount",
-        "paymentMethod", "paymentMethod",
-        "paymentDate","paymentDate",
-        "touchpoint", "touchpoint"
+        "idTransfer", "idTransfer",
+        "typeTransfer", "isBollo",
+        "iban", "ibanTransfer",
+        "amount", "amountTransfer",
+        "paFiscalCode", "paTransfer",
+        "token","tokenHex"
     );
 
 
