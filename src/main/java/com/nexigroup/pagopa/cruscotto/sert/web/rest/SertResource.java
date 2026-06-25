@@ -150,11 +150,13 @@ public class SertResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,null,PaymentUtil.POSITION_TOKEN_SORT_MAPPING,
                 Sort.Order.desc("tokenDateEvent"));
 
-            PositionPaymentDTO positionPayment = sertService.getPosition(nav, paEmittente,remappedPageable);
-            if (positionPayment == null) {
+            Page<PositionPaymentDTO> page = sertService.getPosition(nav, paEmittente,remappedPageable);
+            if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(positionPayment);
+
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+            return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
         } catch (Exception e) {
             log.error("Error occurred while retrieving position details. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
             return ResponseEntity.status(500).body("An error occurred while processing your request. Please try again later.");
@@ -247,7 +249,12 @@ public class SertResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING, Sort.Order.desc("insertedtimestamp"));
             Page<WorkflowResponseDTO> page = sertService.getWorkflows(nav, paEmittente, remappedPageable);
 
-            return creteREsponseEntity(page);
+            if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+            return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 
 
         } catch (Exception e) {

@@ -121,7 +121,7 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public PositionPaymentDTO getPosition(String nav, String paEmittente, Pageable pageable) {
+    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
         Page<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
@@ -140,7 +140,7 @@ public class SertServiceImpl implements SertService {
 
         long distinctOutcomes = rows.stream().map(row -> asString(row[8])).filter(Objects::nonNull).distinct().count();
 
-        return PositionPaymentDTO.builder()
+        PositionPaymentDTO dto= PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(asString(firstRow[0]))
                 .paEmittente(asString(firstRow[1]))
@@ -178,6 +178,8 @@ public class SertServiceImpl implements SertService {
                 .isCart(preferredRow[18] != null)
                 .build())
             .build();
+
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens.size());
     }
 
 
