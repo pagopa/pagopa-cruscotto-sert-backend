@@ -214,7 +214,13 @@ public class SertResource {
                 Sort.Order.desc("paTransfer"));
             Page<TransferPaymentDTO> page = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
 
-            return creteREsponseEntity(page);
+            if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+            return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
+
 
         } catch (Exception e) {
             log.error("Error occurred while retrieving transfer details. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
