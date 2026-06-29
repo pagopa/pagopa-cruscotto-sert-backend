@@ -1,12 +1,10 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.undertow.util.BadRequestException;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.annotations.ParameterObject;

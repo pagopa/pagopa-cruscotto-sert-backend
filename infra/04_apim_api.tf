@@ -1,8 +1,14 @@
 locals {
   repo_name = "pagopa-cruscotto-sert-backend"
 
-  display_name = "Cruscotto Sert pagoPA backend service API"
-  description = "Cruscotto Sert pagoPA backend service API"
+  display_name.api_sert = "Cruscotto Sert pagoPA backend service API"
+  description.api_sert = "Cruscotto Sert pagoPA backend service API"
+  display_name.api_management = "Cruscotto Sert management pagoPA backend service API"
+  description.api_management = "Cruscotto Sert management pagoPA backend service API"
+  display_name.api_auth = "Cruscotto Sert AUTH pagoPA backend service API"
+  description.api_auth = "Cruscotto Sert AUTH pagoPA backend service API"
+
+
   path  = "smo/cruscotto-sert"
 
   host         = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
@@ -25,7 +31,7 @@ resource "azurerm_api_management_api_version_set" "api_version_set" {
   versioning_scheme   = "Segment"
 }
 
-module "api_v1" {
+module "api_sert" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
   name                  = format("%s-${local.repo_name}", var.env_short)
@@ -37,15 +43,74 @@ module "api_v1" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description
-  display_name = local.display_name
+  description  = local.description.api_sert
+  display_name = local.display_name.api_sert
   path         = local.path
   protocols    = ["https"]
 
   service_url = null
 
   content_format = "openapi"
-  content_value  = templatefile("../openapi/openapi.json", {
+  content_value  = templatefile("../openapi/openapi_sert.json", {
+    host = local.host
+  })
+
+  xml_content = templatefile("./policy/_base_policy.xml", {
+    hostname = var.hostname
+  })
+}
+
+module "api_auth" {
+  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+
+  name                  = format("%s-${local.repo_name}", var.env_short)
+  api_management_name   = local.apim.name
+  resource_group_name   = local.apim.rg
+  product_ids           = [local.apim.product_id]
+  subscription_required = false # via JWT
+
+  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  api_version    = "v1"
+
+  description  = local.description.api_auth
+  display_name = local.display_name.api_auth
+  path         = local.path
+  protocols    = ["https"]
+
+  service_url = null
+
+  content_format = "openapi"
+  content_value  = templatefile("../openapi/openapi_auth.json", {
+    host = local.host
+  })
+
+  xml_content = templatefile("./policy/_base_policy.xml", {
+    hostname = var.hostname
+  })
+}
+
+
+module "api_management" {
+  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+
+  name                  = format("%s-${local.repo_name}", var.env_short)
+  api_management_name   = local.apim.name
+  resource_group_name   = local.apim.rg
+  product_ids           = [local.apim.product_id]
+  subscription_required = false # via JWT
+
+  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  api_version    = "v1"
+
+  description  = local.description.api_management
+  display_name = local.display_name.api_management
+  path         = local.path
+  protocols    = ["https"]
+
+  service_url = null
+
+  content_format = "openapi"
+  content_value  = templatefile("../openapi/openapi_management.json", {
     host = local.host
   })
 
