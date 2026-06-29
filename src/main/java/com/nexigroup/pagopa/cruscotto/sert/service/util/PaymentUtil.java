@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.util;
 
+import io.undertow.util.BadRequestException;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,7 +134,7 @@ public final class PaymentUtil {
         if (orderSecondColumn != null) {
             orders.add(orderSecondColumn);
         }
-        
+
         Sort mappedSort = Sort.by(orders);
 
         if (pageable == null) {
@@ -187,7 +188,7 @@ public final class PaymentUtil {
         "event-id", "eventid"
     );
 
-    public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) {
+    public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) throws BadRequestException {
         if (pageable.getSort().isSorted()) {
             Set<String> invalid = pageable.getSort().stream()
                 .map(Sort.Order::getProperty)
@@ -197,7 +198,7 @@ public final class PaymentUtil {
                 String errorMessage = String.format("Invalid sort fields for transfers: %s. Allowed fields are: %s. Mapping to query properties: %s",
                     invalid, mapAttribute.keySet(), mapAttribute);
                 log.error(errorMessage);
-                return ResponseEntity.badRequest().body(errorMessage);
+                throw new BadRequestException(errorMessage);
             }
 
             // Check that idTransfer is NOT passed by frontend
@@ -206,7 +207,7 @@ public final class PaymentUtil {
             if (hasIdTransfer) {
                 String errorMessage = "idTransfer cannot be passed in sort. It is automatically prepended as first sort in DESC order.";
                 log.error(errorMessage);
-                return ResponseEntity.badRequest().body(errorMessage);
+                throw new BadRequestException(errorMessage);
             }
         }
         return null;

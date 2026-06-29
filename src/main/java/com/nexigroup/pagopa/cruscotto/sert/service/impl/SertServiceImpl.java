@@ -48,7 +48,9 @@ public class SertServiceImpl implements SertService {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
         Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
-
+        if (positionsPage == null || positionsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
         return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
             .nav(pos.getNav())
             .paEmittente(pos.getPaEmittente())
@@ -126,7 +128,7 @@ public class SertServiceImpl implements SertService {
 
         Page<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
         if (rows == null || rows.isEmpty()) {
-            return null;
+            return Page.empty(pageable);
         }
 
         Object[] firstRow = rows.getContent().get(0);
