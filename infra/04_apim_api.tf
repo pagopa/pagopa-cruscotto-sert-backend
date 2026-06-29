@@ -1,11 +1,4 @@
-terraform {
-  required_providers {
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.9"
-    }
-  }
-}
+
 
 locals {
   repo_name = "pagopa-cruscotto-sert-backend"
