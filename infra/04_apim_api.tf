@@ -19,15 +19,15 @@ resource "azurerm_api_management_group" "api_group" {
   name                = local.apim.product_id
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
-  display_name        = local.display_name
-  description         = local.description
+  display_name        = local.display_name_sert
+  description         = local.description_sert
 }
 
 resource "azurerm_api_management_api_version_set" "api_version_set" {
   name                = format("%s-${local.repo_name}", var.env_short)
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
-  display_name        = local.display_name
+  display_name        = local.display_name_sert
   versioning_scheme   = "Segment"
 }
 
