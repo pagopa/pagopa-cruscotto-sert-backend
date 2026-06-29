@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopacruscottosertbackend
 description: Microservice description
 type: application
-version: 0.252.0
-appVersion: 0.3.14
+version: 0.253.0
+appVersion: 0.3.15
 dependencies:
   - name: microservice-chart
     version: 7.5.0
