@@ -7,21 +7,21 @@ locals {
   apis = {
     sert = {
       display_name = "Cruscotto Sert pagoPA backend service API"
-      description  = "Cruscotto Sert pagoPA backend service API"
+      description  = "Cruscotto Sert backend service API"
       path         = "smo/cruscotto-sert"
       openapi      = "../openapi/openapi_sert.json"
     }
 
     management = {
       display_name = "Cruscotto Management pagoPA backend service API"
-      description  = "Cruscotto Management pagoPA backend service API"
+      description  = "Cruscotto Management backend service API"
       path         = "smo/cruscotto-management"
       openapi      = "../openapi/openapi_management.json"
     }
 
     auth = {
       display_name = "Cruscotto AUTH pagoPA backend service API"
-      description  = "Cruscotto AUTH pagoPA backend service API"
+      description  = "Cruscotto AUTH backend service API"
       path         = "smo/cruscotto-auth"
       openapi      = "../openapi/openapi_auth.json"
     }
@@ -29,7 +29,7 @@ locals {
 }
 
 # =========================
-# API GROUP (opzionale)
+# API GROUP
 # =========================
 resource "azurerm_api_management_group" "api_group" {
   name                = local.apim.product_id
@@ -37,11 +37,11 @@ resource "azurerm_api_management_group" "api_group" {
   api_management_name = local.apim.name
 
   display_name = "Cruscotto Sert APIs"
-  description  = "Group for Cruscotto Sert APIs"
+  description  = "Cruscotto Sert APIs"
 }
 
 # =========================
-# VERSION SET (UNO SOLO)
+# VERSION SET
 # =========================
 resource "azurerm_api_management_api_version_set" "api_version_set" {
   name                = format("%s-%s", var.env_short, local.repo_name)
@@ -53,16 +53,22 @@ resource "azurerm_api_management_api_version_set" "api_version_set" {
 }
 
 # =========================
-# API DEFINITIONS
+# APIs
 # =========================
 module "apis" {
   for_each = local.apis
 
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
-  name                = format("%s-%s-%s", var.env_short, local.repo_name, each.key)
-  api_management_name = local.apim.name
-  resource_group_name = local.apim.rg
+  name = format(
+    "%s-%s-%s",
+    var.env_short,
+    local.repo_name,
+    each.key
+  )
+
+  api_management_name   = local.apim.name
+  resource_group_name   = local.apim.rg
 
   product_ids           = [local.apim.product_id]
   subscription_required = false
