@@ -1,12 +1,12 @@
 locals {
   repo_name = "pagopa-cruscotto-sert-backend"
 
-  display_name.api_sert = "Cruscotto Sert pagoPA backend service API"
-  description.api_sert = "Cruscotto Sert pagoPA backend service API"
-  display_name.api_management = "Cruscotto Sert management pagoPA backend service API"
-  description.api_management = "Cruscotto Sert management pagoPA backend service API"
-  display_name.api_auth = "Cruscotto Sert AUTH pagoPA backend service API"
-  description.api_auth = "Cruscotto Sert AUTH pagoPA backend service API"
+  display_name.sert = "Cruscotto Sert pagoPA backend service API"
+  description.sert = "Cruscotto Sert pagoPA backend service API"
+  display_name.management = "Cruscotto Sert management pagoPA backend service API"
+  description.management = "Cruscotto Sert management pagoPA backend service API"
+  display_name.auth = "Cruscotto Sert AUTH pagoPA backend service API"
+  description.auth = "Cruscotto Sert AUTH pagoPA backend service API"
 
 
   path  = "smo/cruscotto-sert"
@@ -43,8 +43,8 @@ module "api_sert" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description.api_sert
-  display_name = local.display_name.api_sert
+  description  = local.description.sert
+  display_name = local.display_name.sert
   path         = local.path
   protocols    = ["https"]
 
@@ -72,8 +72,8 @@ module "api_auth" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description.api_auth
-  display_name = local.display_name.api_auth
+  description  = local.description.auth
+  display_name = local.display_name.auth
   path         = local.path
   protocols    = ["https"]
 
@@ -102,8 +102,8 @@ module "api_management" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description.api_management
-  display_name = local.display_name.api_management
+  description  = local.description.management
+  display_name = local.display_name.management
   path         = local.path
   protocols    = ["https"]
 
