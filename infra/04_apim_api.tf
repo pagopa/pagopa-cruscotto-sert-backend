@@ -1,12 +1,12 @@
 locals {
   repo_name = "pagopa-cruscotto-sert-backend"
 
-  display_name.sert = "Cruscotto Sert pagoPA backend service API"
-  description.sert = "Cruscotto Sert pagoPA backend service API"
-  display_name.management = "Cruscotto Sert management pagoPA backend service API"
-  description.management = "Cruscotto Sert management pagoPA backend service API"
-  display_name.auth = "Cruscotto Sert AUTH pagoPA backend service API"
-  description.auth = "Cruscotto Sert AUTH pagoPA backend service API"
+  display_name_sert = "Cruscotto Sert pagoPA backend service API"
+  description_sert = "Cruscotto Sert pagoPA backend service API"
+  display_name_management = "Cruscotto Sert management pagoPA backend service API"
+  description_management = "Cruscotto Sert management pagoPA backend service API"
+  display_name_auth = "Cruscotto Sert AUTH pagoPA backend service API"
+  description_auth = "Cruscotto Sert AUTH pagoPA backend service API"
 
 
   path  = "smo/cruscotto-sert"
@@ -43,8 +43,8 @@ module "api_sert" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description.sert
-  display_name = local.display_name.sert
+  description  = local.description_sert
+  display_name = local.display_name_sert
   path         = local.path
   protocols    = ["https"]
 
@@ -72,8 +72,8 @@ module "api_auth" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description.auth
-  display_name = local.display_name.auth
+  description  = local.description_auth
+  display_name = local.display_name_auth
   path         = local.path
   protocols    = ["https"]
 
@@ -102,8 +102,8 @@ module "api_management" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = local.description.management
-  display_name = local.display_name.management
+  description  = local.description_management
+  display_name = local.display_name_management
   path         = local.path
   protocols    = ["https"]
 
