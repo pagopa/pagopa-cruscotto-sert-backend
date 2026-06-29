@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9"
+    }
+  }
+}
+
 locals {
   repo_name = "pagopa-cruscotto-sert-backend"
 
@@ -28,9 +37,7 @@ locals {
   }
 }
 
-# =========================
-# API GROUP
-# =========================
+
 resource "azurerm_api_management_group" "api_group" {
   name                = local.apim.product_id
   resource_group_name = local.apim.rg
@@ -40,20 +47,23 @@ resource "azurerm_api_management_group" "api_group" {
   description  = "Cruscotto Sert APIs"
 }
 
-# =========================
-# VERSION SET
-# =========================
+
 resource "azurerm_api_management_api_version_set" "api_version_set" {
   name                = format("%s-%s", var.env_short, local.repo_name)
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
 
-  display_name      = "Cruscotto Sert pagoPA backend service API"
+  display_name      = "Cruscotto Sert APIs"
   versioning_scheme = "Segment"
 }
 
+
+resource "time_sleep" "wait_between_api_creations" {
+  create_duration = "15s"
+}
+
 # =========================
-# APIs
+# APIs 
 # =========================
 module "apis" {
   for_each = local.apis
@@ -67,8 +77,8 @@ module "apis" {
     each.key
   )
 
-  api_management_name   = local.apim.name
-  resource_group_name   = local.apim.rg
+  api_management_name = local.apim.name
+  resource_group_name = local.apim.rg
 
   product_ids           = [local.apim.product_id]
   subscription_required = false
@@ -93,4 +103,16 @@ module "apis" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = local.hostname
   })
+
+
+  depends_on = [
+    time_sleep.wait_between_api_creations
+  ]
+}
+
+
+resource "time_sleep" "final_apim_sync" {
+  depends_on = [module.apis]
+
+  create_duration = "20s"
 }
