@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

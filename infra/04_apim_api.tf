@@ -25,7 +25,7 @@ resource "azurerm_api_management_api_version_set" "api_version_set" {
   versioning_scheme   = "Segment"
 }
 
-module "api_v1" {
+module "api_sert" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
   name                  = format("%s-${local.repo_name}", var.env_short)
@@ -45,7 +45,66 @@ module "api_v1" {
   service_url = null
 
   content_format = "openapi"
-  content_value  = templatefile("../openapi/openapi.json", {
+  content_value  = templatefile("../openapi/openapi_sert.json", {
+    host = local.host
+  })
+
+  xml_content = templatefile("./policy/_base_policy.xml", {
+    hostname = var.hostname
+  })
+}
+
+module "api_auth" {
+  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+
+  name                  = format("%s-${local.repo_name}", var.env_short)
+  api_management_name   = local.apim.name
+  resource_group_name   = local.apim.rg
+  product_ids           = [local.apim.product_id]
+  subscription_required = false # via JWT
+
+  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  api_version    = "v1"
+
+  description  = local.description
+  display_name = local.display_name
+  path         = local.path
+  protocols    = ["https"]
+
+  service_url = null
+
+  content_format = "openapi"
+  content_value  = templatefile("../openapi/openapi_auth.json", {
+    host = local.host
+  })
+
+  xml_content = templatefile("./policy/_base_policy.xml", {
+    hostname = var.hostname
+  })
+}
+
+
+module "api_management" {
+  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+
+  name                  = format("%s-${local.repo_name}", var.env_short)
+  api_management_name   = local.apim.name
+  resource_group_name   = local.apim.rg
+  product_ids           = [local.apim.product_id]
+  subscription_required = false # via JWT
+
+  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  api_version    = "v1"
+
+  description  = local.description
+  display_name = local.display_name
+  path         = local.path
+  protocols    = ["https"]
+
+  service_url = null
+
+  content_format = "openapi"
+  content_value  = templatefile("../openapi/openapi_management.json", {
     host = local.host
   })
 

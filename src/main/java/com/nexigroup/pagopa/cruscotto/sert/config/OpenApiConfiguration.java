@@ -4,6 +4,7 @@ import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,5 +35,45 @@ public class OpenApiConfiguration {
 
             openApi.addServersItem(server);
         };
+    }
+
+
+    @Bean
+    public GroupedOpenApi searchApi() {
+        return GroupedOpenApi.builder()
+            .group("sertSearch")
+            .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch")
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+            .group("auth")
+            .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.auth")
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi actuatorApi() {
+        return GroupedOpenApi.builder()
+            .group("management")
+            .pathsToMatch(
+                "/management/**"
+            )
+            .pathsToExclude(
+                "/management/env/**",
+                "/management/configprops/**",
+                "/management/loggers/**",
+                "/management/logfile/**",
+                "/management/threaddump/**",
+                "/management/caches/**",
+                "/management/jhimetrics/**",
+                "/management/jhiopenapigroups/**",
+                ("/api/**")
+
+            )
+
+            .build();
     }
 }
