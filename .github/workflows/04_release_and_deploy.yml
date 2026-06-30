@@ -147,6 +147,7 @@ jobs:
     uses: ./.github/workflows/04h_deploy_with_github_runner.yml
     with:
       environment: ${{ needs.setup.outputs.environment }}
+      branch: ${{ github.ref_name }}
       # uninstall: ${{ inputs.uninstall }}
     secrets: inherit
 
