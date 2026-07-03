@@ -188,7 +188,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
 
     @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
                     "ei.infoName AS infoName, ei.infoValue AS infoValue, " +
-                    "(SELECT MAX(ae2.tipoEvento) FROM EventsWf ew2 LEFT JOIN AnagEvento ae2 ON ae2.id = ew2.tipoEvento WHERE ew2.fkTokens = pt.id) AS tipoEvento " +
+                    "(SELECT MAX(ae2.nomeEvento) FROM EventsWf ew2 LEFT JOIN AnagEvento ae2 ON ae2.id = ew2.tipoEvento WHERE ew2.fkTokens = pt.id) AS tipoEvento " +
                     "FROM PositionTokens pt " +
                     "JOIN Position p ON p.id = pt.fkPosition " +
                     "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
