@@ -47,13 +47,13 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
-        if (positionsPage == null || positionsPage.isEmpty()) {
+        Page<Object[]> groupRow = positionRepository.findByNavOrPa(nav, pa, pageable);
+        if (groupRow == null || groupRow.isEmpty()) {
             return Page.empty(pageable);
         }
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -61,11 +61,11 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -73,11 +73,11 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -91,11 +91,11 @@ public class SertServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -167,8 +167,11 @@ public class SertServiceImpl implements SertService {
             )
             .actors(ActorsDTO.builder()
                 .psp(asString(preferredRow[11]))
+                .pspDescription(asString(preferredRow[19]))
                 .ptPa(asString(preferredRow[12]))
+                .ptPaDescription(asString(preferredRow[20]))
                 .ptPsp(asString(preferredRow[13]))
+                .ptPspDescription(asString(preferredRow[21]))
                 .station(asString(preferredRow[14]))
                 .channel(asString(preferredRow[15]))
                 .build())
@@ -237,8 +240,11 @@ public class SertServiceImpl implements SertService {
             )
             .actors(ActorsDTO.builder()
                 .psp(asString(row[11]))
+                .pspDescription(asString(row[19]))
                 .ptPa(asString(row[12]))
+                .ptPaDescription(asString(row[20]))
                 .ptPsp(asString(row[13]))
+                .ptPspDescription(asString(row[21]))
                 .station(asString(row[14]))
                 .channel(asString(row[15]))
                 .build())
