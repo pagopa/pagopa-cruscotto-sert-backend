@@ -21,6 +21,7 @@ public class WorkflowObjectDTO implements Serializable {
     private String sottotipoevento;
     private String outcome;
     private String faultcode;
+    private Integer positionNumber;
 
     @JsonProperty("event-id")
     private String eventId;

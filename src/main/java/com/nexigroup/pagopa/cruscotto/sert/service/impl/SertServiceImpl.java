@@ -140,9 +140,11 @@ public class SertServiceImpl implements SertService {
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
-        long distinctOutcomes = rows.stream().map(row -> asString(row[8])).filter(Objects::nonNull).distinct().count();
+        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
+        long okTokenCount = positionRepository.countOkTokensByNavAndPa(nav, paEmittente);
+        boolean multiOutcome = okTokenCount > 1;
 
-        PositionPaymentDTO dto= PositionPaymentDTO.builder()
+        PositionPaymentDTO dto = PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(asString(firstRow[0]))
                 .paEmittente(asString(firstRow[1]))
@@ -160,7 +162,7 @@ public class SertServiceImpl implements SertService {
                         .token(tokenAsHex(payedRow[5]))
                         .paymentBorn(toInstantFromDate(payedRow[6]))
                         .payedDate(toInstant(payedRow[7]))
-                        .multiOutcome(distinctOutcomes > 1)
+                        .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
@@ -177,7 +179,10 @@ public class SertServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(preferredRow[16]))
                 .paymentMethod(asString(preferredRow[17]))
-                .isCart(preferredRow[18] != null)
+                .isCart(rows.stream().anyMatch(r -> r[18] != null))  // true se almeno un token ha idCarrello != null
+                .isGpd(false)
+                .isStandin(false)
+                .isDw(nav.startsWith("351"))
                 .build())
             .build();
 
@@ -201,10 +206,19 @@ public class SertServiceImpl implements SertService {
         Object[] row = rows.get(0);
         boolean isPayed = row[7] != null;
 
+        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
+        String rowNav = asString(row[0]);
+        String rowPa  = asString(row[1]);
+        boolean multiOutcome = false;
+        if (rowNav != null && rowPa != null) {
+            long okTokenCount = positionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+            multiOutcome = okTokenCount > 1;
+        }
+
         return TokenInfoDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(row[0]))
-                .paEmittente(asString(row[1]))
+                .nav(rowNav)
+                .paEmittente(rowPa)
                 .iuv(asString(row[3]))
                 .creditorReferenceId(asString(row[4]))
                 .lastEvent(toInstant(row[2]))
@@ -218,7 +232,7 @@ public class SertServiceImpl implements SertService {
                         .token(tokenAsHex(row[5]))
                         .paymentBorn(toInstantFromDate(row[6]))
                         .payedDate(toInstant(row[7]))
-                        .multiOutcome(false)
+                        .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
@@ -235,7 +249,10 @@ public class SertServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(row[16]))
                 .paymentMethod(asString(row[17]))
-                .isCart(row[18] != null)
+                .isCart(row[18] != null)  // true se idCarrello != null
+                .isGpd(false)
+                .isStandin(false)
+                .isDw(rowNav != null && rowNav.startsWith("351"))
                 .build())
             .build();
     }
@@ -290,43 +307,53 @@ public class SertServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
+        Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(nav, paEmittente, pageable);
 
-
-        Page<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente, pageable);
-        Page<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente, pageable);
-
-        if ((positionEvents == null || positionEvents.isEmpty()) && (tokenEvents == null || tokenEvents.isEmpty())) {
+        if (workflowEvents == null || workflowEvents.isEmpty()) {
             return null;
         }
 
-        List<WorkflowObjectDTO> eventsPositionList = positionEvents != null && !positionEvents.isEmpty()
-            ? positionEvents.stream()
-                .map(row -> WorkflowObjectDTO.builder()
+        List<WorkflowObjectDTO> eventsPositionList = new java.util.ArrayList<>();
+        List<WorkflowTokenObjectDTO> eventsTokenList = new java.util.ArrayList<>();
+
+        List<Object[]> rows = workflowEvents.getContent();
+        int offset = (int) pageable.getOffset();
+        for (int i = 0; i < rows.size(); i++) {
+            Object[] row = rows.get(i);
+            // In case of a LEFT JOIN where there are no events at all, all event fields would be null.
+            if (row[0] == null && row[4] == null) {
+                continue;
+            }
+            int positionNumber = offset + i + 1;
+            String token = tokenAsHex(row[6]);
+
+            if (token != null) {
+                WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
                     .insertedtimestamp(toInstant(row[0]))
                     .tipoevento(asString(row[1]))
                     .sottotipoevento(asString(row[2]))
                     .outcome(asString(row[3]))
                     .eventId(asString(row[4]))
                     .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .build())
-                .collect(Collectors.toList())
-            : Collections.emptyList();
-
-        List<WorkflowTokenObjectDTO> eventsTokenList = tokenEvents != null && !tokenEvents.isEmpty()
-            ? tokenEvents.stream()
-                .map(row -> WorkflowTokenObjectDTO.builder()
+                    .positionNumber(positionNumber)
+                    .token(token)
+                    .build();
+                eventsTokenList.add(tokenDTO);
+            } else {
+                WorkflowObjectDTO positionDTO = WorkflowObjectDTO.builder()
                     .insertedtimestamp(toInstant(row[0]))
                     .tipoevento(asString(row[1]))
                     .sottotipoevento(asString(row[2]))
                     .outcome(asString(row[3]))
                     .eventId(asString(row[4]))
                     .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .token(tokenAsHex(row[6]))
-                    .build())
-                .collect(Collectors.toList())
-            : Collections.emptyList();
+                    .positionNumber(positionNumber)
+                    .build();
+                eventsPositionList.add(positionDTO);
+            }
+        }
 
-        Long totalCount = positionEvents.getTotalElements() ;
+        Long totalCount = workflowEvents.getTotalElements();
 
         WorkflowResponseDTO dto = WorkflowResponseDTO.builder()
             .count(totalCount)
