@@ -47,13 +47,13 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
-        if (positionsPage == null || positionsPage.isEmpty()) {
+        Page<Object[]> groupRow = positionRepository.findByNavOrPa(nav, pa, pageable);
+        if (groupRow == null || groupRow.isEmpty()) {
             return Page.empty(pageable);
         }
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -61,11 +61,11 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -73,11 +73,11 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -91,11 +91,11 @@ public class SertServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 

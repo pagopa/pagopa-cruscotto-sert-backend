@@ -13,29 +13,47 @@ import org.springframework.data.domain.Pageable;
 @Repository
 public interface PositionRepository extends JpaRepository<Position, Integer> {
 
-    @Query(value = "SELECT p FROM Position p WHERE (:nav IS  NULL OR p.nav = :nav) AND (:pa IS  NULL OR p.paEmittente = :pa)")
-    Page<Position> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+    @Query(value = "SELECT p.nav, p.paEmittente  FROM Position p WHERE (:nav IS  NULL OR p.nav = :nav) AND (:pa IS  NULL OR p.paEmittente = :pa) GROUP BY p.nav, p.paEmittente ")
+    Page<Object[]> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt " +
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
                    "WHERE pt.fkPosition = p.id " +
                    "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
                    "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Position> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+                   "GROUP BY p.nav, p.paEmittente ",
+           countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+                        "WHERE pt.fkPosition = p.id " +
+                        "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
+                        "AND (:nav IS NULL OR p.nav = :nav) " +
+                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Object[]> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt " +
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
                    "WHERE pt.fkPosition = p.id " +
                    "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
                    "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Position> findByTokenAndOptionalNavAndPa(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+                   "GROUP BY p.nav, p.paEmittente ",
+           countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+                        "WHERE pt.fkPosition = p.id " +
+                        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+                        "AND (:nav IS NULL OR p.nav = :nav) " +
+                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Object[]> findByTokenAndOptionalNavAndPa(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt " +
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
                    "WHERE pt.fkPosition = p.id " +
                    "AND pt.idCarrello = :idCart " +
                    "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Position> findByCartAndOptionalNavAndPa(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+                   "GROUP BY p.nav, p.paEmittente ",
+           countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+                        "WHERE pt.fkPosition = p.id " +
+                        "AND pt.idCarrello = :idCart " +
+                        "AND (:nav IS NULL OR p.nav = :nav) " +
+                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Object[]> findByCartAndOptionalNavAndPa(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt, ExtraInfo ei " +
                    "WHERE pt.fkPosition = p.id " +
@@ -95,7 +113,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE p.nav = :nav " +
-        "AND p.paEmittente = :paEmittente ")
+        "AND p.paEmittente = :paEmittente " +
+        "ORDER BY  p.lastEvent DESC ")
     Page<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
 
     @Query(value = "SELECT " +
