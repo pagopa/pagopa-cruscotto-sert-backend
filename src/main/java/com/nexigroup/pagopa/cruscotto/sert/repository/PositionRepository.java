@@ -164,4 +164,10 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "AND ei.fkToken = pt.id " +
                     "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
     Page<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
+
+    @Query("SELECT COUNT(pt) FROM PositionTokens pt, Position p " +
+           "WHERE p.id = pt.fkPosition " +
+           "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
+           "AND UPPER(pt.outcome) = 'OK'")
+    long countOkTokensByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
 }

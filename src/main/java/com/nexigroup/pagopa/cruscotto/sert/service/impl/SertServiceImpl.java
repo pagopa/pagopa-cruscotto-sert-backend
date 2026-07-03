@@ -140,9 +140,11 @@ public class SertServiceImpl implements SertService {
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
-        long distinctOutcomes = rows.stream().map(row -> asString(row[8])).filter(Objects::nonNull).distinct().count();
+        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
+        long okTokenCount = positionRepository.countOkTokensByNavAndPa(nav, paEmittente);
+        boolean multiOutcome = okTokenCount > 1;
 
-        PositionPaymentDTO dto= PositionPaymentDTO.builder()
+        PositionPaymentDTO dto = PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(asString(firstRow[0]))
                 .paEmittente(asString(firstRow[1]))
@@ -160,7 +162,7 @@ public class SertServiceImpl implements SertService {
                         .token(tokenAsHex(payedRow[5]))
                         .paymentBorn(toInstantFromDate(payedRow[6]))
                         .payedDate(toInstant(payedRow[7]))
-                        .multiOutcome(distinctOutcomes > 1)
+                        .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
@@ -204,10 +206,19 @@ public class SertServiceImpl implements SertService {
         Object[] row = rows.get(0);
         boolean isPayed = row[7] != null;
 
+        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
+        String rowNav = asString(row[0]);
+        String rowPa  = asString(row[1]);
+        boolean multiOutcome = false;
+        if (rowNav != null && rowPa != null) {
+            long okTokenCount = positionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+            multiOutcome = okTokenCount > 1;
+        }
+
         return TokenInfoDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(row[0]))
-                .paEmittente(asString(row[1]))
+                .nav(rowNav)
+                .paEmittente(rowPa)
                 .iuv(asString(row[3]))
                 .creditorReferenceId(asString(row[4]))
                 .lastEvent(toInstant(row[2]))
@@ -221,7 +232,7 @@ public class SertServiceImpl implements SertService {
                         .token(tokenAsHex(row[5]))
                         .paymentBorn(toInstantFromDate(row[6]))
                         .payedDate(toInstant(row[7]))
-                        .multiOutcome(false)
+                        .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
@@ -241,7 +252,7 @@ public class SertServiceImpl implements SertService {
                 .isCart(row[18] != null)
                 .isGpd(false)
                 .isStandin(false)
-                .isDw(asString(row[0])!=null && asString(row[0]).startsWith("351"))
+                .isDw(rowNav != null && rowNav.startsWith("351"))
                 .build())
             .build();
     }
