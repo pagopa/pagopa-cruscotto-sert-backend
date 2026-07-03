@@ -178,6 +178,9 @@ public class SertServiceImpl implements SertService {
                 .touchpoint(asString(preferredRow[16]))
                 .paymentMethod(asString(preferredRow[17]))
                 .isCart(preferredRow[18] != null)
+                .isGpd(false)
+                .isStandin(false)
+                .isDw(nav.startsWith("351"))
                 .build())
             .build();
 
@@ -236,6 +239,9 @@ public class SertServiceImpl implements SertService {
                 .touchpoint(asString(row[16]))
                 .paymentMethod(asString(row[17]))
                 .isCart(row[18] != null)
+                .isGpd(false)
+                .isStandin(false)
+                .isDw(asString(row[0])!=null && asString(row[0]).startsWith("351"))
                 .build())
             .build();
     }
@@ -290,43 +296,53 @@ public class SertServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
+        Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(nav, paEmittente, pageable);
 
-
-        Page<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente, pageable);
-        Page<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente, pageable);
-
-        if ((positionEvents == null || positionEvents.isEmpty()) && (tokenEvents == null || tokenEvents.isEmpty())) {
+        if (workflowEvents == null || workflowEvents.isEmpty()) {
             return null;
         }
 
-        List<WorkflowObjectDTO> eventsPositionList = positionEvents != null && !positionEvents.isEmpty()
-            ? positionEvents.stream()
-                .map(row -> WorkflowObjectDTO.builder()
+        List<WorkflowObjectDTO> eventsPositionList = new java.util.ArrayList<>();
+        List<WorkflowTokenObjectDTO> eventsTokenList = new java.util.ArrayList<>();
+
+        List<Object[]> rows = workflowEvents.getContent();
+        int offset = (int) pageable.getOffset();
+        for (int i = 0; i < rows.size(); i++) {
+            Object[] row = rows.get(i);
+            // In case of a LEFT JOIN where there are no events at all, all event fields would be null.
+            if (row[0] == null && row[4] == null) {
+                continue;
+            }
+            int positionNumber = offset + i + 1;
+            String token = tokenAsHex(row[6]);
+
+            if (token != null) {
+                WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
                     .insertedtimestamp(toInstant(row[0]))
                     .tipoevento(asString(row[1]))
                     .sottotipoevento(asString(row[2]))
                     .outcome(asString(row[3]))
                     .eventId(asString(row[4]))
                     .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .build())
-                .collect(Collectors.toList())
-            : Collections.emptyList();
-
-        List<WorkflowTokenObjectDTO> eventsTokenList = tokenEvents != null && !tokenEvents.isEmpty()
-            ? tokenEvents.stream()
-                .map(row -> WorkflowTokenObjectDTO.builder()
+                    .positionNumber(positionNumber)
+                    .token(token)
+                    .build();
+                eventsTokenList.add(tokenDTO);
+            } else {
+                WorkflowObjectDTO positionDTO = WorkflowObjectDTO.builder()
                     .insertedtimestamp(toInstant(row[0]))
                     .tipoevento(asString(row[1]))
                     .sottotipoevento(asString(row[2]))
                     .outcome(asString(row[3]))
                     .eventId(asString(row[4]))
                     .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .token(tokenAsHex(row[6]))
-                    .build())
-                .collect(Collectors.toList())
-            : Collections.emptyList();
+                    .positionNumber(positionNumber)
+                    .build();
+                eventsPositionList.add(positionDTO);
+            }
+        }
 
-        Long totalCount = positionEvents.getTotalElements() ;
+        Long totalCount = workflowEvents.getTotalElements();
 
         WorkflowResponseDTO dto = WorkflowResponseDTO.builder()
             .count(totalCount)

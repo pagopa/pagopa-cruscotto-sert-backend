@@ -84,8 +84,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "FROM Position p " +
         "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
-        "LEFT JOIN AnagIntermediario aipa ON aipa.id = pt.intermediarioPa " +
-        "LEFT JOIN AnagIntermediario aipsp ON aipsp.id = pt.intermediarioPsp " +
+        "LEFT JOIN AnagIntermediarioPa aipa ON aipa.id = pt.intermediarioPa " +
+        "LEFT JOIN AnagIntermediarioPsp aipsp ON aipsp.id = pt.intermediarioPsp " +
         "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "WHERE p.nav = :nav " +
@@ -114,8 +114,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "pt.idCarrello AS idCarrello " +
         "FROM PositionTokens pt " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
-        "LEFT JOIN AnagIntermediario aipa ON aipa.id = pt.intermediarioPa " +
-        "LEFT JOIN AnagIntermediario aipsp ON aipsp.id = pt.intermediarioPsp " +
+        "LEFT JOIN AnagIntermediarioPa aipa ON aipa.id = pt.intermediarioPa " +
+        "LEFT JOIN AnagIntermediarioPsp aipsp ON aipsp.id = pt.intermediarioPsp " +
         "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale, Position p " +
         "WHERE p.id = pt.fkPosition " +
@@ -143,37 +143,14 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "ew.outcomeReq AS outcome, " +
         "ew.eventIdReq AS eventid, " +
         "afc.codice AS faultcode, " +
-        "ew.fkTokens AS fktokens, " +
-        "NULL AS sottotipoevento " +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS token " +
         "FROM Position p " +
         "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+        "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
         "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
         "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " )
-    Page<Object[]> findEventsPositionByNavAndPa(
-        @Param("nav") String nav,
-        @Param("paEmittente") String paEmittente,
-        Pageable pageable
-    );
-
-    @Query(value = "SELECT " +
-        "ew.insertedTimestampReq AS insertedtimestamp, " +
-        "ae.nomeEvento AS nomeevento, " +
-        "ae.tipoEvento AS tipoevento, " +
-        "ew.outcomeReq AS outcome, " +
-        "ew.eventIdReq AS eventid, " +
-        "afc.codice AS faultcode, " +
-        "FUNCTION('ENCODE', pt.token, 'hex') AS token " +
-        "FROM EventsWf ew " +
-        "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
-        "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode, " +
-        "PositionTokens pt, Position p " +
-        "WHERE ew.fkTokens = pt.id " +
-        "AND ew.fkPosition = p.id " +
-        "AND p.nav = :nav " +
-        "AND p.paEmittente = :paEmittente " +
-        "AND ew.fkTokens IS NOT NULL " )
-    Page<Object[]> findEventsTokenByNavAndPa(
+        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente" )
+    Page<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
         Pageable pageable
