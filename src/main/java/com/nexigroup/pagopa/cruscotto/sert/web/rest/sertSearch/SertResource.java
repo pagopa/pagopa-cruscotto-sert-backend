@@ -131,7 +131,7 @@ public class SertResource {
         } catch (ResponseStatusException e) {
                 throw e;
         }catch (Exception e) {
-            log.error("Error occurred during search operation. Cause: {}, Message: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            log.error("Error occurred during search operation. ", e);
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later."
@@ -178,6 +178,7 @@ public class SertResource {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
+            log.error("Error in getPosition ", e);
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later.");
@@ -208,6 +209,7 @@ public class SertResource {
         } catch (ResponseStatusException e) {
             throw e;
         }catch (Exception e) {
+            log.error("Error in getTokenInfo ", e);
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later.");
@@ -255,6 +257,8 @@ public class SertResource {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
+            log.error("Error in getTransfers ", e);
+
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later.");
@@ -307,6 +311,8 @@ public class SertResource {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
+            log.error("Error in getWorkflows ", e);
+
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later.");
@@ -347,6 +353,8 @@ public class SertResource {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
+            log.error("Error in getExtraInfo ", e);
+
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later.");
