@@ -20,7 +20,7 @@ locals {
   sert = {
     display_name = "Cruscotto Sert pagoPA backend service API"
     description  = "Cruscotto Sert pagoPA backend service API"
-    path         = "smo/cruscotto-sert"
+    path         = "smo/cruscotto-sert-search"
   }
 }
 
@@ -70,6 +70,10 @@ module "api_auth_v1" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_auth,
+    time_sleep.wait_after_auth_vs
+  ]
 }
 
 
@@ -111,6 +115,10 @@ module "api_management_v1" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_management,
+    time_sleep.wait_after_management_vs
+  ]
 }
 
 # ----------------------------------------------------
@@ -151,4 +159,15 @@ module "api_v1" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+}
+
+# Helper sleep resources – give Azure time after each version‑set creation before the API module runs.
+resource "time_sleep" "wait_after_auth_vs" {
+  depends_on = [azurerm_api_management_api_version_set.api_version_set_auth]
+  create_duration = "30s"
+}
+
+resource "time_sleep" "wait_after_management_vs" {
+  depends_on = [azurerm_api_management_api_version_set.api_version_set_management]
+  create_duration = "30s"
 }
