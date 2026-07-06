@@ -7,7 +7,7 @@
 
   <groupId>com.nexigroup.pagopa.cruscotto</groupId>
   <artifactId>pagopa-cruscotto-sert-backend</artifactId>
-  <version>0.9.2</version>
+  <version>0.9.2-1-features/manage-table-anagag-intermediario</version>
   <packaging>jar</packaging>
   <name>PagoPa Ingestor View Backend</name>
   <description>PagoPa Ingestor View  Backend</description>
