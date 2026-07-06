@@ -164,10 +164,10 @@ module "api_v1" {
 # Helper sleep resources – give Azure time after each version‑set creation before the API module runs.
 resource "time_sleep" "wait_after_auth_vs" {
   depends_on = [azurerm_api_management_api_version_set.api_version_set_auth]
-  create_duration = "30s"
+  create_duration = "120s"
 }
 
 resource "time_sleep" "wait_after_management_vs" {
   depends_on = [azurerm_api_management_api_version_set.api_version_set_management]
-  create_duration = "30s"
+  create_duration = "60s"
 }
