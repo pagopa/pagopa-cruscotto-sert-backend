@@ -1,45 +1,63 @@
 locals {
   repo_name = "pagopa-cruscotto-sert-backend"
 
-  display_name = "Cruscotto Sert pagoPA backend service API"
-  description = "Cruscotto Sert pagoPA backend service API"
-  path  = "smo/cruscotto-sert"
+  host     = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
+  hostname = var.hostname
 
-  host         = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
-  hostname     = var.hostname
+  # Configurazioni per ciascuna delle 3 API
+  auth = {
+    display_name = "Cruscotto Sert Auth pagoPA backend service API"
+    description  = "Cruscotto Sert Auth pagoPA backend service API"
+    path         = "smo/cruscotto-sert-auth"
+  }
+
+  management = {
+    display_name = "Cruscotto Sert Management pagoPA backend service API"
+    description  = "Cruscotto Sert Management pagoPA backend service API"
+    path         = "smo/cruscotto-sert-management"
+  }
+
+  sert = {
+    display_name = "Cruscotto Sert pagoPA backend service API"
+    description  = "Cruscotto Sert pagoPA backend service API"
+    path         = "smo/cruscotto-sert-search"
+  }
 }
 
 resource "azurerm_api_management_group" "api_group" {
   name                = local.apim.product_id
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
-  display_name        = local.display_name
-  description         = local.description
+  display_name        = local.sert.display_name
+  description         = local.sert.description
 }
 
-resource "azurerm_api_management_api_version_set" "api_version_set" {
-  name                = format("%s-${local.repo_name}", var.env_short)
+# ----------------------------------------------------
+# 1. AUTH API
+# ----------------------------------------------------
+resource "azurerm_api_management_api_version_set" "api_version_set_auth" {
+  name                = format("%s-${local.repo_name}-auth", var.env_short)
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
-  display_name        = local.display_name
+  display_name        = local.auth.display_name
   versioning_scheme   = "Segment"
 }
 
-module "api_v1_account" {
+module "api_auth_v1" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
-  name                  = format("%s-${local.repo_name}-account", var.env_short)
+  name                  = format("%s-${local.repo_name}-auth", var.env_short)
   api_management_name   = local.apim.name
   resource_group_name   = local.apim.rg
   product_ids           = [local.apim.product_id]
   subscription_required = false
 
-  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  version_set_id = azurerm_api_management_api_version_set.api_version_set_auth.id
   api_version    = "v1"
 
-  description  = "${local.description} - account management endpoints"
-  display_name = "${local.display_name} - Account Management"
-  path         = "${local.path}-account"
+  description  = local.auth.description
+  display_name = local.auth.display_name
+  path         = local.auth.path
   protocols    = ["https"]
 
   service_url = null
@@ -52,9 +70,25 @@ module "api_v1_account" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_auth,
+    time_sleep.wait_after_auth_vs
+  ]
 }
 
-module "api_v1_management" {
+
+# ----------------------------------------------------
+# 2. MANAGEMENT API
+# ----------------------------------------------------
+resource "azurerm_api_management_api_version_set" "api_version_set_management" {
+  name                = format("%s-${local.repo_name}-management", var.env_short)
+  resource_group_name = local.apim.rg
+  api_management_name = local.apim.name
+  display_name        = local.management.display_name
+  versioning_scheme   = "Segment"
+}
+
+module "api_management_v1" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
   name                  = format("%s-${local.repo_name}-management", var.env_short)
@@ -63,12 +97,12 @@ module "api_v1_management" {
   product_ids           = [local.apim.product_id]
   subscription_required = false
 
-  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  version_set_id = azurerm_api_management_api_version_set.api_version_set_management.id
   api_version    = "v1"
 
-  description  = "${local.description} - Spring Boot management endpoints"
-  display_name = "${local.display_name} - Management"
-  path         = "${local.path}-management"
+  description  = local.management.description
+  display_name = local.management.display_name
+  path         = local.management.path
   protocols    = ["https"]
 
   service_url = null
@@ -81,12 +115,27 @@ module "api_v1_management" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_management,
+    time_sleep.wait_after_management_vs
+  ]
 }
 
-module "api_v1_business" {
+# ----------------------------------------------------
+# 3. SERT API
+# ----------------------------------------------------
+resource "azurerm_api_management_api_version_set" "api_version_set" {
+  name                = format("%s-${local.repo_name}", var.env_short)
+  resource_group_name = local.apim.rg
+  api_management_name = local.apim.name
+  display_name        = local.sert.display_name
+  versioning_scheme   = "Segment"
+}
+
+module "api_v1" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
-  name                  = format("%s-${local.repo_name}-business", var.env_short)
+  name                  = format("%s-${local.repo_name}", var.env_short)
   api_management_name   = local.apim.name
   resource_group_name   = local.apim.rg
   product_ids           = [local.apim.product_id]
@@ -95,9 +144,9 @@ module "api_v1_business" {
   version_set_id = azurerm_api_management_api_version_set.api_version_set.id
   api_version    = "v1"
 
-  description  = "${local.description} - business logic endpoints"
-  display_name = "${local.display_name} - Business Logic"
-  path         = "${local.path}-business"
+  description  = local.sert.description
+  display_name = local.sert.display_name
+  path         = local.sert.path
   protocols    = ["https"]
 
   service_url = null
@@ -110,4 +159,15 @@ module "api_v1_business" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+}
+
+# Helper sleep resources – give Azure time after each version‑set creation before the API module runs.
+resource "time_sleep" "wait_after_auth_vs" {
+  depends_on = [azurerm_api_management_api_version_set.api_version_set_auth]
+  create_duration = "120s"
+}
+
+resource "time_sleep" "wait_after_management_vs" {
+  depends_on = [azurerm_api_management_api_version_set.api_version_set_management]
+  create_duration = "60s"
 }
