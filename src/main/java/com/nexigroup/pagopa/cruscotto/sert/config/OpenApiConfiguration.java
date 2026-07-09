@@ -43,6 +43,17 @@ public class OpenApiConfiguration {
         return GroupedOpenApi.builder()
             .group("sertSearch")
             .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch")
+            .pathsToExclude(
+                "/management/env/**",
+                "/management/configprops/**",
+                "/management/loggers/**",
+                "/management/logfile/**",
+                "/management/threaddump/**",
+                "/management/caches/**",
+                "/management/jhimetrics/**",
+                "/management/jhiopenapigroups/**"
+
+            )
             .build();
     }
 
@@ -51,6 +62,17 @@ public class OpenApiConfiguration {
         return GroupedOpenApi.builder()
             .group("auth")
             .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.auth")
+            .pathsToExclude(
+                "/management/env/**",
+                "/management/configprops/**",
+                "/management/loggers/**",
+                "/management/logfile/**",
+                "/management/threaddump/**",
+                "/management/caches/**",
+                "/management/jhimetrics/**",
+                "/management/jhiopenapigroups/**"
+
+            )
             .build();
     }
 
