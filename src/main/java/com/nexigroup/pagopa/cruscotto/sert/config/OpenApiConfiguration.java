@@ -39,49 +39,11 @@ public class OpenApiConfiguration {
 
 
     @Bean
-    public GroupedOpenApi searchApi() {
+    public GroupedOpenApi sertApi() {
         return GroupedOpenApi.builder()
             .group("sertSearch")
-            .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch")
-            .pathsToExclude(
-                "/management/env/**",
-                "/management/configprops/**",
-                "/management/loggers/**",
-                "/management/logfile/**",
-                "/management/threaddump/**",
-                "/management/caches/**",
-                "/management/jhimetrics/**",
-                "/management/jhiopenapigroups/**"
-
-            )
-            .build();
-    }
-
-    @Bean
-    public GroupedOpenApi authApi() {
-        return GroupedOpenApi.builder()
-            .group("auth")
-            .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.auth")
-            .pathsToExclude(
-                "/management/env/**",
-                "/management/configprops/**",
-                "/management/loggers/**",
-                "/management/logfile/**",
-                "/management/threaddump/**",
-                "/management/caches/**",
-                "/management/jhimetrics/**",
-                "/management/jhiopenapigroups/**"
-
-            )
-            .build();
-    }
-
-    @Bean
-    public GroupedOpenApi actuatorApi() {
-        return GroupedOpenApi.builder()
-            .group("management")
             .pathsToMatch(
-                "/management/**"
+                "/management/**", "/api/**"
             )
             .pathsToExclude(
                 "/management/env/**",
@@ -92,10 +54,19 @@ public class OpenApiConfiguration {
                 "/management/caches/**",
                 "/management/jhimetrics/**",
                 "/management/jhiopenapigroups/**",
-                ("/api/**")
+                ("/sub/api/**")
 
             )
 
+
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi subKeySertApi() {
+        return GroupedOpenApi.builder()
+            .group("subKeySertSearchApi")
+            .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey")
             .build();
     }
 }

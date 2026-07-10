@@ -4,23 +4,18 @@ locals {
   host     = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
   hostname = var.hostname
 
-  # Configurazioni per ciascuna delle 3 API
-  auth = {
-    display_name = "Cruscotto Sert Auth pagoPA backend service API"
-    description  = "Cruscotto Sert Auth pagoPA backend service API"
-    path         = "smo/cruscotto-sert-auth"
+  # API con Subscription Key
+  sert_subkey = {
+    display_name = "Cruscotto Sert pagoPA backend service API (Subscription Key)"
+    description  = "Cruscotto Sert pagoPA backend service API (Subscription Key)"
+    path         = "smo/cruscotto-sert-subkey"
   }
 
-  management = {
-    display_name = "Cruscotto Sert Management pagoPA backend service API"
-    description  = "Cruscotto Sert Management pagoPA backend service API"
-    path         = "smo/cruscotto-sert-management"
-  }
-
+  # API senza Subscription Key
   sert = {
     display_name = "Cruscotto Sert pagoPA backend service API"
     description  = "Cruscotto Sert pagoPA backend service API"
-    path         = "smo/cruscotto-sert-search"
+    path         = "smo/cruscotto-sert"
   }
 }
 
@@ -33,98 +28,63 @@ resource "azurerm_api_management_group" "api_group" {
 }
 
 # ----------------------------------------------------
-# 1. AUTH API
+# 1. SERT API (Subscription Key)
 # ----------------------------------------------------
-resource "azurerm_api_management_api_version_set" "api_version_set_auth" {
-  name                = format("%s-${local.repo_name}-auth", var.env_short)
+resource "azurerm_api_management_api_version_set" "api_version_set_sert_subkey" {
+  name                = format("%s-${local.repo_name}-sert-subkey", var.env_short)
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
-  display_name        = local.auth.display_name
+  display_name        = local.sert_subkey.display_name
   versioning_scheme   = "Segment"
 }
 
-module "api_auth_v1" {
+resource "time_sleep" "wait_after_sert_subkey_vs" {
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_sert_subkey
+  ]
+
+  create_duration = "120s"
+}
+
+module "api_sert_subkey_v1" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
-  name                  = format("%s-${local.repo_name}-auth", var.env_short)
+  name                  = format("%s-${local.repo_name}-sert-subkey", var.env_short)
   api_management_name   = local.apim.name
   resource_group_name   = local.apim.rg
   product_ids           = [local.apim.product_id]
-  subscription_required = false
 
-  version_set_id = azurerm_api_management_api_version_set.api_version_set_auth.id
+  subscription_required = true
+
+  version_set_id = azurerm_api_management_api_version_set.api_version_set_sert_subkey.id
   api_version    = "v1"
 
-  description  = local.auth.description
-  display_name = local.auth.display_name
-  path         = local.auth.path
+  description  = local.sert_subkey.description
+  display_name = local.sert_subkey.display_name
+  path         = local.sert_subkey.path
   protocols    = ["https"]
 
   service_url = null
 
   content_format = "openapi"
-  content_value  = templatefile("../openapi/openapi_auth.json", {
+  content_value = templatefile("../openapi/openapi_sert_subkey.json", {
     host = local.host
   })
 
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
+
   depends_on = [
-    azurerm_api_management_api_version_set.api_version_set_auth,
-    time_sleep.wait_after_auth_vs
-  ]
-}
-
-
-# ----------------------------------------------------
-# 2. MANAGEMENT API
-# ----------------------------------------------------
-resource "azurerm_api_management_api_version_set" "api_version_set_management" {
-  name                = format("%s-${local.repo_name}-management", var.env_short)
-  resource_group_name = local.apim.rg
-  api_management_name = local.apim.name
-  display_name        = local.management.display_name
-  versioning_scheme   = "Segment"
-}
-
-module "api_management_v1" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
-
-  name                  = format("%s-${local.repo_name}-management", var.env_short)
-  api_management_name   = local.apim.name
-  resource_group_name   = local.apim.rg
-  product_ids           = [local.apim.product_id]
-  subscription_required = false
-
-  version_set_id = azurerm_api_management_api_version_set.api_version_set_management.id
-  api_version    = "v1"
-
-  description  = local.management.description
-  display_name = local.management.display_name
-  path         = local.management.path
-  protocols    = ["https"]
-
-  service_url = null
-
-  content_format = "openapi"
-  content_value  = templatefile("../openapi/openapi_management.json", {
-    host = local.host
-  })
-
-  xml_content = templatefile("./policy/_base_policy.xml", {
-    hostname = var.hostname
-  })
-  depends_on = [
-    azurerm_api_management_api_version_set.api_version_set_management,
-    time_sleep.wait_after_management_vs
+    azurerm_api_management_api_version_set.api_version_set_sert_subkey,
+    time_sleep.wait_after_sert_subkey_vs
   ]
 }
 
 # ----------------------------------------------------
-# 3. SERT API
+# 2. SERT API (No Subscription Key)
 # ----------------------------------------------------
-resource "azurerm_api_management_api_version_set" "api_version_set" {
+resource "azurerm_api_management_api_version_set" "api_version_set_sert" {
   name                = format("%s-${local.repo_name}", var.env_short)
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
@@ -132,16 +92,17 @@ resource "azurerm_api_management_api_version_set" "api_version_set" {
   versioning_scheme   = "Segment"
 }
 
-module "api_v1" {
+module "api_sert_v1" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
   name                  = format("%s-${local.repo_name}", var.env_short)
   api_management_name   = local.apim.name
   resource_group_name   = local.apim.rg
   product_ids           = [local.apim.product_id]
+
   subscription_required = false
 
-  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
+  version_set_id = azurerm_api_management_api_version_set.api_version_set_sert.id
   api_version    = "v1"
 
   description  = local.sert.description
@@ -152,22 +113,11 @@ module "api_v1" {
   service_url = null
 
   content_format = "openapi"
-  content_value  = templatefile("../openapi/openapi_sert.json", {
+  content_value = templatefile("../openapi/openapi_sert.json", {
     host = local.host
   })
 
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = var.hostname
   })
-}
-
-# Helper sleep resources – give Azure time after each version‑set creation before the API module runs.
-resource "time_sleep" "wait_after_auth_vs" {
-  depends_on = [azurerm_api_management_api_version_set.api_version_set_auth]
-  create_duration = "120s"
-}
-
-resource "time_sleep" "wait_after_management_vs" {
-  depends_on = [azurerm_api_management_api_version_set.api_version_set_management]
-  create_duration = "60s"
 }
