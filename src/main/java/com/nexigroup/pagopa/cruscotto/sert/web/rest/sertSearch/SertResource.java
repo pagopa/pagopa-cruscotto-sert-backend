@@ -60,17 +60,14 @@ public class SertResource {
      * @param info the Valore per ricerca extra.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the search results.
      */
-    @GetMapping("/search")
-    @Operation(tags = "Ricerca delle posizioni debitorie")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<PositionPaymentExtraDTO>> search(
-        @RequestParam(required = false) String pa,
-        @RequestParam(required = false) String nav,
-        @RequestParam(required = false) String iuv,
-        @RequestParam(required = false) String token,
-        @RequestParam(required = false, name = "idCarrello") String idCarrello,
-        @RequestParam(required = false) String info,
-        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+        String pa,
+        String nav,
+        String iuv,
+        String token,
+        String idCarrello,
+        String info,
+        Pageable pageable
     ) {
         log.info("START REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
 
@@ -140,20 +137,10 @@ public class SertResource {
     }
 
 
-    /**
-     * {@code GET  /position/{nav}/{pa-emittente}} : Ricerca di un codice avviso emesso da PA.
-     *
-     * @param nav the Codice Avviso.
-     * @param paEmittente the Codice Fiscale Ente Creditore.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the positionPayment.
-     */
-    @GetMapping("/position/{nav}/{pa-emittente}")
-    @Operation(tags = "Visualizzazione posizione debitoria")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_POSITION_DETAIL + "\")")
     public ResponseEntity<PositionPaymentDTO> getPosition(
-        @PathVariable("nav") String nav,
-        @PathVariable("pa-emittente") String paEmittente,
-        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+         String nav,
+         String paEmittente,
+         Pageable pageable
     ) {
         log.info ("START REST request to get Position : {}, {}", nav, paEmittente);
         try {
@@ -185,16 +172,7 @@ public class SertResource {
         }
     }
 
-    /**
-     * {@code GET  /token/{token}} : Visualizza il dettaglio di un singolo tentativo di pagamento.
-     *
-     * @param token the Token di ricerca.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the tokenInfo.
-     */
-    @GetMapping("/token/{token}")
-    @Operation(tags = "Visualizzazione Dettagli")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TOKEN_DETAIL + "\")")
-    public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
+    public ResponseEntity<TokenInfoDTO> getTokenInfo( String token) {
         log.info("START REST request to get Token Info : {}", token);
         try {
             TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
@@ -216,22 +194,11 @@ public class SertResource {
         }
     }
 
-    /**
-     * {@code GET  /transfers/{nav}/{pa-emittente}/{token}} : Visualizza transfer di un singolo tentativo di pagamento.
-     *
-     * @param nav the Codice Avviso.
-     * @param paEmittente the Codice Fiscale Ente Creditore.
-     * @param token the token.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the transferPayment.
-     */
-    @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
-    @Operation(tags = "Visualizzazione Dettagli")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TRANSFER_DETAIL + "\")")
     public ResponseEntity<TransferPaymentDTO> getTransfers(
-        @PathVariable("nav") String nav,
-        @PathVariable("pa-emittente") String paEmittente,
-        @PathVariable("token") String token,
-        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+        String nav,
+        String paEmittente,
+        String token,
+        Pageable pageable
     ) {
         log.info("START REST request to get Transfers : {}, {}, {}", nav, paEmittente, token);
         try {
@@ -265,23 +232,10 @@ public class SertResource {
         }
     }
 
-
-
-
-    /**
-     * {@code GET  /workflows/{nav}/{pa-emittente}} : Recupero eventi di workflow di una posizione debitoria e relativi tentativi.
-     *
-     * @param nav the Codice Avviso.
-     * @param paEmittente the Codice Fiscale Ente Creditore.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the workflowResponse.
-     */
-    @GetMapping("/workflows/{nav}/{pa-emittente}")
-    @Operation(tags = "Visualizzazione Dettagli")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_WORKFLOW_DETAIL + "\")")
     public ResponseEntity<WorkflowResponseDTO> getWorkflows(
-        @PathVariable("nav") String nav,
-        @PathVariable("pa-emittente") String paEmittente,
-        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+        String nav,
+        String paEmittente,
+        Pageable pageable
     ) {
         log.info("START REST request to get Workflows : {}, {}", nav, paEmittente);
         try {
@@ -318,18 +272,10 @@ public class SertResource {
                 "An error occurred while processing your request. Please try again later.");
         }
     }
+    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
+        String token,
+        Pageable pageable) {
 
-    /**
-     * {@code GET  /extra/{token}} : Visualizza informazioni extra su un tentativo di pagamento.
-     *
-     * @param token the Codice Avviso (token).
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the extraInfoResponse.
-     */
-    @GetMapping("/extra/{token}")
-    @Operation(tags = "Visualizzazione Dettagli")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_EXTRA_DETAIL + "\")")
-    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(@PathVariable("token") String token,
-                                          @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable) {
         log.info("START REST request to get Extra Info : {}", token);
         try {
             PaymentUtil.validatePageable(pageable, PaymentUtil.EXTRA_INFO_SORT_MAPPING);

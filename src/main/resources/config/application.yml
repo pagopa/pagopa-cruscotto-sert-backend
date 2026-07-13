@@ -182,7 +182,7 @@ springdoc:
   api-docs:
     path: /api-docs
   show-actuator: true
-  paths-to-match: /api/**, /management/**
+  paths-to-match: /api/**, /management/**, /sub/**
 
 # Properties to be exposed on the /info management endpoint
 info:
