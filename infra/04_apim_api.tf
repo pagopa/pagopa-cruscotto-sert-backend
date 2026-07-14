@@ -52,9 +52,9 @@ module "api_sert_subkey_v1" {
   name                  = format("%s-${local.repo_name}-sert-subkey", var.env_short)
   api_management_name   = local.apim.name
   resource_group_name   = local.apim.rg
-  product_ids           = [local.apim.product_id]
+  product_ids           = [local.apim.product_id_subkey]
 
-  subscription_required = true
+  subscription_required = true // Subscription key required
 
   version_set_id = azurerm_api_management_api_version_set.api_version_set_sert_subkey.id
   api_version    = "v1"
@@ -72,7 +72,9 @@ module "api_sert_subkey_v1" {
   })
 
   xml_content = templatefile("./policy/_base_policy.xml", {
-    hostname = var.hostname
+    hostname   = var.hostname
+    origin     = var.origin
+    crusc8_aud = var.crusc8_aud
   })
 
   depends_on = [
@@ -100,7 +102,7 @@ module "api_sert_v1" {
   resource_group_name   = local.apim.rg
   product_ids           = [local.apim.product_id]
 
-  subscription_required = false
+  subscription_required = false // No subscription key required JWT validation
 
   version_set_id = azurerm_api_management_api_version_set.api_version_set_sert.id
   api_version    = "v1"
@@ -117,7 +119,9 @@ module "api_sert_v1" {
     host = local.host
   })
 
-  xml_content = templatefile("./policy/_base_policy.xml", {
-    hostname = var.hostname
+  xml_content = templatefile("./policy/_base_policy_jwt.xml", {
+    hostname   = var.hostname
+    origin     = var.origin
+    crusc8_aud = var.crusc8_aud
   })
 }

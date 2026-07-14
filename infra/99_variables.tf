@@ -48,3 +48,14 @@ variable "hostname" {
   default     = null
   description = "Hostname for the API"
 }
+
+variable "origin" {
+  type        = string
+  default     = null
+  description = "CORS allowed origin domain (without https:// prefix)"
+}
+
+variable "crusc8_aud" {
+  type        = string
+  description = "Audience (aud) claim expected in JWT tokens for the Crusc8 application"
+}
