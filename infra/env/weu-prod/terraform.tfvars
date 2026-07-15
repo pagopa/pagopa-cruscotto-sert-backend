@@ -10,6 +10,7 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
-apim_dns_zone_prefix               = "platform"
-external_domain                    = "pagopa.it"
-hostname = "crusc8.itn.internal.platform.pagopa.it"
+apim_dns_zone_prefix = "platform"
+external_domain      = "pagopa.it"
+hostname             = "crusc8.itn.internal.platform.pagopa.it"
+origin               = "crusc8.platform.pagopa.it"
