@@ -13,5 +13,4 @@ tags = {
 apim_dns_zone_prefix = "platform"
 external_domain      = "pagopa.it"
 hostname             = "crusc8.itn.internal.platform.pagopa.it"
-origin               = "platform.pagopa.it"
-crusc8_aud           = "TODO-replace-with-app-client-id"
+origin               = "crusc8.platform.pagopa.it"

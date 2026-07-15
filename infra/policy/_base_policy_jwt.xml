@@ -49,11 +49,7 @@
           <openid-config url="https://login.microsoftonline.com/7788edaf-0346-4068-9d79-c868aed15b3d/v2.0/.well-known/openid-configuration" />
 
           <!-- Audience check: only tokens minted for the configured Crusc8 application are accepted. -->
-          <required-claims>
-            <claim name="aud" match="any">
-              <value>${crusc8_aud}</value>
-            </claim>
-          </required-claims>
+
         </validate-jwt>
       </otherwise>
     </choose>

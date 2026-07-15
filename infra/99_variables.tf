@@ -55,7 +55,3 @@ variable "origin" {
   description = "CORS allowed origin domain (without https:// prefix)"
 }
 
-variable "crusc8_aud" {
-  type        = string
-  description = "Audience (aud) claim expected in JWT tokens for the Crusc8 application"
-}

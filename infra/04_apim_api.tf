@@ -74,7 +74,6 @@ module "api_sert_subkey_v1" {
   xml_content = templatefile("./policy/_base_policy.xml", {
     hostname   = var.hostname
     origin     = var.origin
-    crusc8_aud = var.crusc8_aud
   })
 
   depends_on = [
@@ -122,6 +121,5 @@ module "api_sert_v1" {
   xml_content = templatefile("./policy/_base_policy_jwt.xml", {
     hostname   = var.hostname
     origin     = var.origin
-    crusc8_aud = var.crusc8_aud
   })
 }
