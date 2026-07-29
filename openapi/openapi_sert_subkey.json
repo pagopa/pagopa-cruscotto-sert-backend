@@ -70,8 +70,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -80,8 +80,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -95,7 +95,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WorkflowResponseDTO"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowObjectDTO"
+                  }
                 }
               }
             }
@@ -170,8 +173,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -180,8 +183,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -220,8 +223,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -230,8 +233,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -344,8 +347,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -354,8 +357,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -439,8 +442,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -449,8 +452,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -523,8 +526,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -533,8 +536,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -597,60 +600,7 @@
           "faultcode": {
             "type": "string"
           },
-          "positionNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "event-id": {
-            "type": "string"
-          }
-        }
-      },
-      "WorkflowResponseDTO": {
-        "type": "object",
-        "properties": {
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "events-position": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkflowObjectDTO"
-            }
-          },
-          "events-token": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkflowTokenObjectDTO"
-            }
-          }
-        }
-      },
-      "WorkflowTokenObjectDTO": {
-        "type": "object",
-        "properties": {
-          "insertedtimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "tipoevento": {
-            "type": "string"
-          },
-          "sottotipoevento": {
-            "type": "string"
-          },
-          "outcome": {
-            "type": "string"
-          },
-          "faultcode": {
-            "type": "string"
-          },
-          "positionNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "token": {
+          "corr-id": {
             "type": "string"
           },
           "event-id": {

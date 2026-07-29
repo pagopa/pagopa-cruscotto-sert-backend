@@ -116,7 +116,7 @@ public final class PaymentUtil {
             .filter(part -> !part.isEmpty())
             .collect(Collectors.toList());
     }
-    public static Pageable remapSorting(Pageable pageable, Sort.Order orderSecondColumn, Map<String, String> sortMapping, Sort.Order orderDefault) {
+    public static Pageable remapSorting(Pageable pageable, Sort.Order orderSecondColumn, Map<String, String> sortMapping, List<Sort.Order> orderDefault) {
         List<Sort.Order> orders = new ArrayList<>();
 
         if (pageable != null && pageable.getSort().isSorted()) {
@@ -128,7 +128,7 @@ public final class PaymentUtil {
                 })
                 .forEach(orders::add);
         }else {
-            orders.add(orderDefault);
+            orders.addAll(orderDefault);
         }
 
         if (orderSecondColumn != null) {
@@ -185,7 +185,8 @@ public final class PaymentUtil {
         "sottotipoevento", "tipoevento",
         "outcome", "outcome",
         "faultcode", "faultcode",
-        "event-id", "eventid"
+        "event-id", "eventid",
+        "corr-id","id"
     );
 
     public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) throws BadRequestException {

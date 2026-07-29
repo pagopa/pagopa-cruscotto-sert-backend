@@ -320,7 +320,6 @@ public class SertServiceImpl implements SertService {
         }
 
         List<WorkflowObjectDTO> eventsPositionList = new java.util.ArrayList<>();
-        List<WorkflowTokenObjectDTO> eventsTokenList = new java.util.ArrayList<>();
 
         List<Object[]> rows = workflowEvents.getContent();
         int offset = (int) pageable.getOffset();
@@ -330,41 +329,26 @@ public class SertServiceImpl implements SertService {
             if (row[0] == null && row[4] == null) {
                 continue;
             }
-            int positionNumber = offset + i + 1;
-            String token = tokenAsHex(row[6]);
 
-            if (token != null) {
-                WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
-                    .insertedtimestamp(toInstant(row[0]))
-                    .tipoevento(asString(row[1]))
-                    .sottotipoevento(asString(row[2]))
-                    .outcome(asString(row[3]))
-                    .eventId(asString(row[4]))
-                    .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .positionNumber(positionNumber)
-                    .token(token)
-                    .build();
-                eventsTokenList.add(tokenDTO);
-            } else {
-                WorkflowObjectDTO positionDTO = WorkflowObjectDTO.builder()
-                    .insertedtimestamp(toInstant(row[0]))
-                    .tipoevento(asString(row[1]))
-                    .sottotipoevento(asString(row[2]))
-                    .outcome(asString(row[3]))
-                    .eventId(asString(row[4]))
-                    .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .positionNumber(positionNumber)
-                    .build();
-                eventsPositionList.add(positionDTO);
-            }
+            String token = tokenAsHex(row[6]);
+            WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
+                .insertedtimestamp(toInstant(row[0]))
+                .tipoevento(asString(row[1]))
+                .sottotipoevento(asString(row[2]).equals("REQ/RESP")?asString(row[7]):asString(row[2]))
+                .outcome(asString(row[3]))
+                .eventId(asString(row[4]))
+                .faultcode( (asString(row[2]).equals("REQ/RESP") && !asString(row[7]).equals("REQ") ) ? (row[5] != null ? String.valueOf(row[5]) : null):null)
+                .token(token)
+                .id(asString(row[8]))
+                .build();
+            eventsPositionList.add(tokenDTO);
+
         }
 
         Long totalCount = workflowEvents.getTotalElements();
 
         WorkflowResponseDTO dto = WorkflowResponseDTO.builder()
-            .count(totalCount)
             .eventsPosition(eventsPositionList)
-            .eventsToken(eventsTokenList)
             .build();
 
         return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);

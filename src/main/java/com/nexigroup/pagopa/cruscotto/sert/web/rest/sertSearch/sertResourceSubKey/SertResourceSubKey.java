@@ -77,7 +77,7 @@ public class SertResourceSubKey extends SertResource {
 
     @GetMapping("/workflows/{nav}/{pa-emittente}")
     @Operation(tags = "Visualizzazione Dettagli")
-    public ResponseEntity<WorkflowResponseDTO> getWorkflows(
+    public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable

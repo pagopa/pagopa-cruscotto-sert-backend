@@ -75,7 +75,7 @@ public class SertResource {
             // Validate sort fields
             PaymentUtil.validatePageable(pageable, PaymentUtil.SEARCH_SORT_MAPPING);
 
-            pageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_SORT_MAPPING, Sort.Order.desc("paEmittente"));
+            pageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_SORT_MAPPING, List.of(Sort.Order.desc("paEmittente")));
 
             int presentGroups = 0;
 
@@ -147,7 +147,7 @@ public class SertResource {
             PaymentUtil.validatePageable(pageable, PaymentUtil.POSITION_TOKEN_SORT_MAPPING);
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,null,PaymentUtil.POSITION_TOKEN_SORT_MAPPING,
-                Sort.Order.desc("tokenDateEvent"));
+                List.of(Sort.Order.desc("tokenDateEvent")));
 
             Page<PositionPaymentDTO> page = sertService.getPosition(nav, paEmittente,remappedPageable);
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
@@ -207,7 +207,7 @@ public class SertResource {
 
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.asc("idTransfer"),PaymentUtil.TRANSFER_SORT_MAPPING,
-                Sort.Order.desc("paTransfer"));
+                List.of(Sort.Order.asc("idTransfer"),Sort.Order.desc("paTransfer")));
             Page<TransferPaymentDTO> page = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
@@ -232,7 +232,7 @@ public class SertResource {
         }
     }
 
-    public ResponseEntity<WorkflowResponseDTO> getWorkflows(
+    public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         String nav,
         String paEmittente,
         Pageable pageable
@@ -243,9 +243,9 @@ public class SertResource {
            PaymentUtil.validatePageable(pageable, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING);
 
 
-            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null,
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, Sort.Order.asc("insertedtimestamp"),
                 PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING,
-                Sort.Order.desc("insertedtimestamp"));
+                List.of(Sort.Order.desc("insertedtimestamp") ));
 
             Page<WorkflowResponseDTO> page = sertService.getWorkflows(nav, paEmittente, remappedPageable);
 
@@ -259,7 +259,7 @@ public class SertResource {
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
             log.info("END REST request to get Workflows ");
 
-            return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
+            return ResponseEntity.ok().headers(headers).body(page.getContent().get(0).getEventsPosition());
 
 
         } catch (ResponseStatusException e) {
@@ -281,7 +281,8 @@ public class SertResource {
             PaymentUtil.validatePageable(pageable, PaymentUtil.EXTRA_INFO_SORT_MAPPING);
 
 
-            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING, Sort.Order.desc("infoName"));
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING,
+                List.of(Sort.Order.desc("infoName")));
             Page<ExtraInfoResponseDTO> page = sertService.getExtraInfo(token, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
