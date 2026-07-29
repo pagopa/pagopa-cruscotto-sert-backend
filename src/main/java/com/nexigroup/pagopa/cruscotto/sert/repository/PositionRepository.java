@@ -166,20 +166,47 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                     "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
      Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
 
-    @Query(value = "SELECT " +
-        "ew.insertedTimestampReq AS insertedtimestamp, " +
-        "ae.nomeEvento AS nomeevento, " +
-        "ae.tipoEvento AS tipoevento, " +
-        "ew.outcomeReq AS outcome, " +
-        "ew.eventIdReq AS eventid, " +
-        "afc.codice AS faultcode, " +
-        "FUNCTION('ENCODE', pt.token, 'hex') AS token " +
-        "FROM Position p " +
-        "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-        "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
-        "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
-        "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente" )
+    @Query(value =
+        "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
+        "FROM ( " +
+            "SELECT " +
+            "ew.insertedTimestampResp AS insertedtimestamp, " +
+            "ae.nomeEvento AS nomeevento, " +
+            "ae.tipoEvento AS tipoevento, " +
+            "ew.outcomeResp AS outcome, " +
+            "ew.eventIdResp AS eventid, " +
+            "afc.codice AS faultcode, " +
+            "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+            "'RESP' AS reqResp, " +
+            "ew.id AS id " +
+            "FROM Position p " +
+            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+            "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+            "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
+            "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
+            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "UNION ALL " +
+            "SELECT " +
+            "ew.insertedTimestampReq AS insertedtimestamp, " +
+            "ae.nomeEvento AS nomeevento, " +
+            "ae.tipoEvento AS tipoevento, " +
+            "ew.outcomeReq AS outcome, " +
+            "ew.eventIdReq AS eventid, " +
+            "afc.codice AS faultcode, " +
+            "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+            "'REQ' AS reqResp, " +
+            "ew.id AS id " +
+            "FROM Position p " +
+            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+            "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+            "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
+            "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
+            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+        " )"
+        ,
+        countQuery = "SELECT COUNT(ew.id) * 2 FROM Position p " +
+                     "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+                     "WHERE p.nav = :nav AND p.paEmittente = :paEmittente" )
     Page<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,

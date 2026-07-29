@@ -85,7 +85,7 @@ public class SertResourceJwtToken extends SertResource {
     @GetMapping("/workflows/{nav}/{pa-emittente}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_WORKFLOW_DETAIL + "\")")
-    public ResponseEntity<WorkflowResponseDTO> getWorkflows(
+    public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
