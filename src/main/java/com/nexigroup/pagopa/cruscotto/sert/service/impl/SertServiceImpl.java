@@ -153,7 +153,7 @@ public class SertServiceImpl implements SertService {
                 .lastEvent(toInstant(firstRow[2]))
                 .isCached(false)
                 .build())
-            .tokens(allTokens.size())
+            .tokens(rows.getTotalElements())
             .allTokens(allTokens)
             .payed(
                 payedRow == null
@@ -189,7 +189,7 @@ public class SertServiceImpl implements SertService {
                 .build())
             .build();
 
-        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens.size());
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, rows.getTotalElements());
     }
 
 

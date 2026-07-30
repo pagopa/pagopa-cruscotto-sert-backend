@@ -161,6 +161,7 @@ public final class PaymentUtil {
         "paymentMethod", "paymentMethod",
         "paymentDate","paymentDate",
         "touchpoint", "touchpoint",
+        "pt-pa-description", "ptPaDesc",
         "token","tokenHex"
 
     );
