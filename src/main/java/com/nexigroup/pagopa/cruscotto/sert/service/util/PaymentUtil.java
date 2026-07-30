@@ -116,7 +116,7 @@ public final class PaymentUtil {
             .filter(part -> !part.isEmpty())
             .collect(Collectors.toList());
     }
-    public static Pageable remapSorting(Pageable pageable, Sort.Order orderSecondColumn, Map<String, String> sortMapping, List<Sort.Order> orderDefault) {
+    public static Pageable remapSorting(Pageable pageable, List<Sort.Order> orderSecondColumn, Map<String, String> sortMapping, List<Sort.Order> orderDefault) {
         List<Sort.Order> orders = new ArrayList<>();
 
         if (pageable != null && pageable.getSort().isSorted()) {
@@ -132,7 +132,7 @@ public final class PaymentUtil {
         }
 
         if (orderSecondColumn != null) {
-            orders.add(orderSecondColumn);
+            orders.addAll(orderSecondColumn);
         }
 
         Sort mappedSort = Sort.by(orders);
@@ -161,6 +161,7 @@ public final class PaymentUtil {
         "paymentMethod", "paymentMethod",
         "paymentDate","paymentDate",
         "touchpoint", "touchpoint",
+        "pt-pa-description", "ptPaDesc",
         "token","tokenHex"
 
     );
@@ -186,6 +187,7 @@ public final class PaymentUtil {
         "outcome", "outcome",
         "faultcode", "faultcode",
         "event-id", "eventid",
+        "token", "token",
         "corr-id","id"
     );
 
