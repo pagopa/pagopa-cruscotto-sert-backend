@@ -206,7 +206,7 @@ public class SertResource {
             PaymentUtil.validatePageable(pageable, PaymentUtil.TRANSFER_SORT_MAPPING);
 
 
-            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,Sort.Order.asc("idTransfer"),PaymentUtil.TRANSFER_SORT_MAPPING,
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable,List.of(Sort.Order.asc("idTransfer")),PaymentUtil.TRANSFER_SORT_MAPPING,
                 List.of(Sort.Order.asc("idTransfer"),Sort.Order.desc("paTransfer")));
             Page<TransferPaymentDTO> page = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
 
@@ -242,8 +242,20 @@ public class SertResource {
 
            PaymentUtil.validatePageable(pageable, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING);
 
+            List<Sort.Order> orderSecondColumn = List.of(Sort.Order.asc("insertedtimestamp"));
 
-            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, Sort.Order.asc("insertedtimestamp"),
+            Sort.Order sortSottotipoEvento = pageable.getSort()
+                .getOrderFor("sottotipoevento");
+
+            if (sortSottotipoEvento != null) {
+                orderSecondColumn = List.of(
+                    new Sort.Order(sortSottotipoEvento.getDirection(), "reqResp"),
+                    Sort.Order.asc("insertedtimestamp")
+                );
+            }
+
+
+            Pageable remappedPageable =PaymentUtil.remapSorting(pageable, orderSecondColumn,
                 PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING,
                 List.of(Sort.Order.desc("insertedtimestamp") ));
 
