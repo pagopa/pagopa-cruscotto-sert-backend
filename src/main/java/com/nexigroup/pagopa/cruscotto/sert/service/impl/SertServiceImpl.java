@@ -207,7 +207,7 @@ public class SertServiceImpl implements SertService {
         }
 
         Object[] row = rows.get(0);
-        boolean isPayed = row[7] != null;
+        boolean isPayed = row[8] != null;
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
         String rowNav = asString(row[0]);
