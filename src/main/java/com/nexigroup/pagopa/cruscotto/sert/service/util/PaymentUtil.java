@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.util;
 
+import io.undertow.util.BadRequestException;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,14 +116,9 @@ public final class PaymentUtil {
             .filter(part -> !part.isEmpty())
             .collect(Collectors.toList());
     }
-    public static Pageable remapSorting(Pageable pageable, Sort.Order orderPivot, Map<String, String> sortMapping, Sort.Order orderDefault) {
+    public static Pageable remapSorting(Pageable pageable, List<Sort.Order> orderSecondColumn, Map<String, String> sortMapping, List<Sort.Order> orderDefault) {
         List<Sort.Order> orders = new ArrayList<>();
 
-        // Always prepend idTransfer DESC as first sort
-        if (orderPivot != null) {
-            orders.add(orderPivot);
-        }
-        // Add remapped sorts from frontend (if any)
         if (pageable != null && pageable.getSort().isSorted()) {
             pageable.getSort().stream()
                 .map(order -> {
@@ -132,8 +128,11 @@ public final class PaymentUtil {
                 })
                 .forEach(orders::add);
         }else {
-            // If no sort provided, default to idTransfer DESC
-            orders.add(orderDefault);
+            orders.addAll(orderDefault);
+        }
+
+        if (orderSecondColumn != null) {
+            orders.addAll(orderSecondColumn);
         }
 
         Sort mappedSort = Sort.by(orders);
@@ -155,12 +154,16 @@ public final class PaymentUtil {
 
 
     public  static final Map<String, String> POSITION_TOKEN_SORT_MAPPING = Map.of(
-        "idTransfer", "idTransfer",
-        "typeTransfer", "isBollo",
-        "iban", "ibanTransfer",
-        "amount", "amountTransfer",
-        "paFiscalCode", "paTransfer",
+        "tokenDateEvent", "tokenDateEvent",
+        "psp", "psp",
+        "ptPsp", "ptPsp",
+        "amount", "amount",
+        "paymentMethod", "paymentMethod",
+        "paymentDate","paymentDate",
+        "touchpoint", "touchpoint",
+        "pt-pa-description", "ptPaDesc",
         "token","tokenHex"
+
     );
 
 
@@ -183,10 +186,12 @@ public final class PaymentUtil {
         "sottotipoevento", "tipoevento",
         "outcome", "outcome",
         "faultcode", "faultcode",
-        "event-id", "eventid"
+        "event-id", "eventid",
+        "token", "token",
+        "corr-id","id"
     );
 
-    public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) {
+    public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) throws BadRequestException {
         if (pageable.getSort().isSorted()) {
             Set<String> invalid = pageable.getSort().stream()
                 .map(Sort.Order::getProperty)
@@ -196,7 +201,7 @@ public final class PaymentUtil {
                 String errorMessage = String.format("Invalid sort fields for transfers: %s. Allowed fields are: %s. Mapping to query properties: %s",
                     invalid, mapAttribute.keySet(), mapAttribute);
                 log.error(errorMessage);
-                return ResponseEntity.badRequest().body(errorMessage);
+                throw new BadRequestException(errorMessage);
             }
 
             // Check that idTransfer is NOT passed by frontend
@@ -205,7 +210,7 @@ public final class PaymentUtil {
             if (hasIdTransfer) {
                 String errorMessage = "idTransfer cannot be passed in sort. It is automatically prepended as first sort in DESC order.";
                 log.error(errorMessage);
-                return ResponseEntity.badRequest().body(errorMessage);
+                throw new BadRequestException(errorMessage);
             }
         }
         return null;

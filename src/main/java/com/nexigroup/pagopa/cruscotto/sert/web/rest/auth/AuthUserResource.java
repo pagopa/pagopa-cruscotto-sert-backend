@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.auth;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -111,7 +111,7 @@ public class AuthUserResource {
     private final PasswordValidator passwordValidator;
 
     private final UserResourcePermissionValidator userResourcePermissionValidator;
-    
+
 
     public AuthUserResource(
         AuthUserService authUserService,

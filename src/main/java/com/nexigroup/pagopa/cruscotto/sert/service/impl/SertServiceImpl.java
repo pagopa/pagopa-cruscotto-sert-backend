@@ -47,11 +47,13 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByNavOrPa(nav, pa, pageable);
-
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        Page<Object[]> groupRow = positionRepository.findByNavOrPa(nav, pa, pageable);
+        if (groupRow == null || groupRow.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -59,11 +61,11 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -71,11 +73,11 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Position> positionsPage = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -89,11 +91,11 @@ public class SertServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Page<Position> positionsPage = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
+        Page<Object[]> groupRow = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
 
-        return positionsPage.map(pos -> PositionPaymentExtraDTO.builder()
-            .nav(pos.getNav())
-            .paEmittente(pos.getPaEmittente())
+        return groupRow.map(row -> PositionPaymentExtraDTO.builder()
+            .nav(asString(row[0]))
+            .paEmittente(asString(row[1]))
             .build());
     }
 
@@ -126,7 +128,7 @@ public class SertServiceImpl implements SertService {
 
         Page<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
         if (rows == null || rows.isEmpty()) {
-            return null;
+            return Page.empty(pageable);
         }
 
         Object[] firstRow = rows.getContent().get(0);
@@ -138,9 +140,11 @@ public class SertServiceImpl implements SertService {
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
-        long distinctOutcomes = rows.stream().map(row -> asString(row[8])).filter(Objects::nonNull).distinct().count();
+        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
+        long okTokenCount = positionRepository.countOkTokensByNavAndPa(nav, paEmittente);
+        boolean multiOutcome = okTokenCount > 1;
 
-        PositionPaymentDTO dto= PositionPaymentDTO.builder()
+        PositionPaymentDTO dto = PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(asString(firstRow[0]))
                 .paEmittente(asString(firstRow[1]))
@@ -149,7 +153,7 @@ public class SertServiceImpl implements SertService {
                 .lastEvent(toInstant(firstRow[2]))
                 .isCached(false)
                 .build())
-            .tokens(allTokens.size())
+            .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
             .payed(
                 payedRow == null
@@ -158,13 +162,16 @@ public class SertServiceImpl implements SertService {
                         .token(tokenAsHex(payedRow[5]))
                         .paymentBorn(toInstantFromDate(payedRow[6]))
                         .payedDate(toInstant(payedRow[7]))
-                        .multiOutcome(distinctOutcomes > 1)
+                        .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
                 .psp(asString(preferredRow[11]))
+                .pspDescription(asString(preferredRow[19]))
                 .ptPa(asString(preferredRow[12]))
+                .ptPaDescription(asString(preferredRow[20]))
                 .ptPsp(asString(preferredRow[13]))
+                .ptPspDescription(asString(preferredRow[21]))
                 .station(asString(preferredRow[14]))
                 .channel(asString(preferredRow[15]))
                 .build())
@@ -175,11 +182,14 @@ public class SertServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(preferredRow[16]))
                 .paymentMethod(asString(preferredRow[17]))
-                .isCart(preferredRow[18] != null)
+                .isCart(rows.stream().anyMatch(r -> r[18] != null))  // true se almeno un token ha idCarrello != null
+                .isGpd(false)
+                .isStandin(false)
+                .isDw(nav.startsWith("351"))
                 .build())
             .build();
 
-        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens.size());
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements());
     }
 
 
@@ -197,12 +207,21 @@ public class SertServiceImpl implements SertService {
         }
 
         Object[] row = rows.get(0);
-        boolean isPayed = row[7] != null;
+        Boolean isPayed = row[8] != null && "OK".equalsIgnoreCase(row[8].toString());
+
+        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
+        String rowNav = asString(row[0]);
+        String rowPa  = asString(row[1]);
+        boolean multiOutcome = false;
+        if (rowNav != null && rowPa != null) {
+            long okTokenCount = positionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+            multiOutcome = okTokenCount > 1;
+        }
 
         return TokenInfoDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(row[0]))
-                .paEmittente(asString(row[1]))
+                .nav(rowNav)
+                .paEmittente(rowPa)
                 .iuv(asString(row[3]))
                 .creditorReferenceId(asString(row[4]))
                 .lastEvent(toInstant(row[2]))
@@ -216,13 +235,16 @@ public class SertServiceImpl implements SertService {
                         .token(tokenAsHex(row[5]))
                         .paymentBorn(toInstantFromDate(row[6]))
                         .payedDate(toInstant(row[7]))
-                        .multiOutcome(false)
+                        .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
                 .psp(asString(row[11]))
+                .pspDescription(asString(row[19]))
                 .ptPa(asString(row[12]))
+                .ptPaDescription(asString(row[20]))
                 .ptPsp(asString(row[13]))
+                .ptPspDescription(asString(row[21]))
                 .station(asString(row[14]))
                 .channel(asString(row[15]))
                 .build())
@@ -233,7 +255,10 @@ public class SertServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(row[16]))
                 .paymentMethod(asString(row[17]))
-                .isCart(row[18] != null)
+                .isCart(row[18] != null)  // true se idCarrello != null
+                .isGpd(false)
+                .isStandin(false)
+                .isDw(rowNav != null && rowNav.startsWith("351"))
                 .build())
             .build();
     }
@@ -288,48 +313,47 @@ public class SertServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
+        Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(nav, paEmittente, pageable);
 
-
-        Page<Object[]> positionEvents = positionRepository.findEventsPositionByNavAndPa(nav, paEmittente, pageable);
-        Page<Object[]> tokenEvents = positionRepository.findEventsTokenByNavAndPa(nav, paEmittente, pageable);
-
-        if ((positionEvents == null || positionEvents.isEmpty()) && (tokenEvents == null || tokenEvents.isEmpty())) {
+        if (workflowEvents == null || workflowEvents.isEmpty()) {
             return null;
         }
 
-        List<WorkflowObjectDTO> eventsPositionList = positionEvents != null && !positionEvents.isEmpty()
-            ? positionEvents.stream()
-                .map(row -> WorkflowObjectDTO.builder()
-                    .insertedtimestamp(toInstant(row[0]))
-                    .tipoevento(asString(row[1]))
-                    .sottotipoevento(asString(row[2]))
-                    .outcome(asString(row[3]))
-                    .eventId(asString(row[4]))
-                    .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .build())
-                .collect(Collectors.toList())
-            : Collections.emptyList();
+        List<WorkflowObjectDTO> eventsPositionList = new java.util.ArrayList<>();
 
-        List<WorkflowTokenObjectDTO> eventsTokenList = tokenEvents != null && !tokenEvents.isEmpty()
-            ? tokenEvents.stream()
-                .map(row -> WorkflowTokenObjectDTO.builder()
-                    .insertedtimestamp(toInstant(row[0]))
-                    .tipoevento(asString(row[1]))
-                    .sottotipoevento(asString(row[2]))
-                    .outcome(asString(row[3]))
-                    .eventId(asString(row[4]))
-                    .faultcode(row[5] != null ? String.valueOf(row[5]) : null)
-                    .token(tokenAsHex(row[6]))
-                    .build())
-                .collect(Collectors.toList())
-            : Collections.emptyList();
+        List<Object[]> rows = workflowEvents.getContent();
+        int offset = (int) pageable.getOffset();
+        for (int i = 0; i < rows.size(); i++) {
+            Object[] row = rows.get(i);
+            // In case of a LEFT JOIN where there are no events at all, all event fields would be null.
+            if (row[0] == null && row[4] == null) {
+                continue;
+            }
 
-        Long totalCount = positionEvents.getTotalElements() ;
+            String token = tokenAsHex(row[6]);
+            String faultcode =  (row[5] != null ? String.valueOf(row[5]) : null);
+            if ((asString(row[2]).equals("REQ/RESP"))&& asString(row[7]).equals("REQ")){
+                faultcode=null;
+            }
+
+            WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
+                .insertedtimestamp(toInstant(row[0]))
+                .tipoevento(asString(row[1]))
+                .sottotipoevento(asString(row[2]).equals("REQ/RESP")?asString(row[7]):asString(row[2]))
+                .outcome(asString(row[3]))
+                .eventId(asString(row[4]))
+                .faultcode( faultcode)
+                .token(token)
+                .id(asString(row[8]))
+                .build();
+            eventsPositionList.add(tokenDTO);
+
+        }
+
+        Long totalCount = workflowEvents.getTotalElements();
 
         WorkflowResponseDTO dto = WorkflowResponseDTO.builder()
-            .count(totalCount)
             .eventsPosition(eventsPositionList)
-            .eventsToken(eventsTokenList)
             .build();
 
         return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);

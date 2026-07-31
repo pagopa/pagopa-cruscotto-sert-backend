@@ -48,3 +48,10 @@ variable "hostname" {
   default     = null
   description = "Hostname for the API"
 }
+
+variable "origin" {
+  type        = string
+  default     = null
+  description = "CORS allowed origin domain (without https:// prefix)"
+}
+

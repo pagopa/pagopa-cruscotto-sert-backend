@@ -17,11 +17,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ActorsDTO implements Serializable {
     private String psp;
 
+    @JsonProperty("psp-description")
+    private String pspDescription;
+
     @JsonProperty("pt-pa")
     private String ptPa;
 
+    @JsonProperty("pt-pa-description")
+    private String ptPaDescription;
+
     @JsonProperty("pt-psp")
     private String ptPsp;
+
+    @JsonProperty("pt-psp-description")
+    private String ptPspDescription;
 
     private String station;
     private String channel;

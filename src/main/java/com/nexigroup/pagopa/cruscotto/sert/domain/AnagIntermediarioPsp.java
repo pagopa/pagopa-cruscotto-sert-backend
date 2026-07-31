@@ -15,8 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "ANAG_INTERMEDIARIO", uniqueConstraints = @UniqueConstraint(name = "uq_anag_intermediario_codice", columnNames = "CODICE"))
-public class AnagIntermediario {
+@Table(name = "ANAG_INTERMEDIARIO_PSP", schema = "sert_ingestor", uniqueConstraints = @UniqueConstraint(name = "uq_anag_intermediario_psp_codice", columnNames = "CODICE"))
+public class AnagIntermediarioPsp {
 
     @Id
     @Column(name = "ID", nullable = false)
@@ -24,5 +24,7 @@ public class AnagIntermediario {
 
     @Column(name = "CODICE")
     private String codice;
-}
 
+    @Column(name = "DESCRIPTION")
+    private String description;
+}

@@ -24,5 +24,8 @@ public class AnagPsp {
 
     @Column(name = "CODICE")
     private String codice;
+
+    @Column(name = "DESCRIPTION")
+    private String description;
 }
 

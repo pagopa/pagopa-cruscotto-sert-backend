@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.auth;
 
 import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
