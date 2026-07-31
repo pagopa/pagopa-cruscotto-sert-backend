@@ -153,7 +153,7 @@ public class SertServiceImpl implements SertService {
                 .lastEvent(toInstant(firstRow[2]))
                 .isCached(false)
                 .build())
-            .tokens(rows.getTotalElements())
+            .tokens(allTokens==null || allTokens.isEmpty()? 0: allTokens.size())
             .allTokens(allTokens)
             .payed(
                 payedRow == null
@@ -331,13 +331,18 @@ public class SertServiceImpl implements SertService {
             }
 
             String token = tokenAsHex(row[6]);
+            String faultcode =  (row[5] != null ? String.valueOf(row[5]) : null);
+            if ((asString(row[2]).equals("REQ/RESP"))&& asString(row[7]).equals("REQ")){
+                faultcode=null;
+            }
+
             WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
                 .insertedtimestamp(toInstant(row[0]))
                 .tipoevento(asString(row[1]))
                 .sottotipoevento(asString(row[2]).equals("REQ/RESP")?asString(row[7]):asString(row[2]))
                 .outcome(asString(row[3]))
                 .eventId(asString(row[4]))
-                .faultcode( (asString(row[2]).equals("REQ/RESP") && !asString(row[7]).equals("REQ") ) ? (row[5] != null ? String.valueOf(row[5]) : null):null)
+                .faultcode( faultcode)
                 .token(token)
                 .id(asString(row[8]))
                 .build();

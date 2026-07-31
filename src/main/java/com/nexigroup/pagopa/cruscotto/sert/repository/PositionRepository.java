@@ -210,23 +210,38 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
         " )"
         ,
-        countQuery = "SELECT COUNT(ew.id) * 2 FROM Position p " +
-                     "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                     "WHERE p.nav = :nav AND p.paEmittente = :paEmittente" )
+        countQuery =
+            "SELECT COUNT(*) FROM ( " +
+                "SELECT ew.id AS id " +
+                "FROM Position p " +
+                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+                "UNION ALL " +
+                "SELECT ew.id AS id " +
+                "FROM Position p " +
+                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+                ") "
+    )
     Page<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
         Pageable pageable
     );
 
-    @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-                    "ei.infoName AS infoName, ei.infoValue AS infoValue, " +
-                    "(SELECT MAX(ae2.nomeEvento) FROM EventsWf ew2 LEFT JOIN AnagEvento ae2 ON ae2.id = ew2.tipoEvento WHERE ew2.fkTokens = pt.id) AS tipoEvento " +
-                    "FROM PositionTokens pt " +
-                    "JOIN Position p ON p.id = pt.fkPosition " +
-                    "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
-                    "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-                    "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
+    @Query(value = "SELECT " +
+            "p.nav AS nav," +
+            " ape.description AS paEmittente," +
+            " FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+            " ei.infoName AS infoName," +
+            " ei.infoValue AS infoValue, " +
+            " ae.nomeEvento  AS tipoEvento " +
+        "FROM PositionTokens pt " +
+        "JOIN Position p ON p.id = pt.fkPosition " +
+        "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
+        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+        "LEFT JOIN AnagEvento ae ON ae.id = ei.tipoEvento " +
+        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
     Page<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
 
     @Query("SELECT COUNT(pt) FROM PositionTokens pt, Position p " +

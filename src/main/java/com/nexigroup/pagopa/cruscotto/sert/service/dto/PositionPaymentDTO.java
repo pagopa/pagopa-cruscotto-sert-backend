@@ -19,7 +19,7 @@ public class PositionPaymentDTO implements Serializable {
     @JsonProperty("position-info")
     private PositionPaymentInfoDTO positionInfo;
 
-    private Long tokens;
+    private Integer tokens;
 
     @JsonProperty("all-tokens")
     private List<String> allTokens;
