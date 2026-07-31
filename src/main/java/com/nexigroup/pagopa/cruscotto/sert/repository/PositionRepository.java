@@ -118,7 +118,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         countQuery =
             "SELECT COUNT(pt.id) " +
                 "FROM Position p " +
-                "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+                "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
                 "WHERE p.nav = :nav " +
                 "AND p.paEmittente = :paEmittente ")
     Page<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
