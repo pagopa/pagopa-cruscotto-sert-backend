@@ -153,7 +153,7 @@ public class SertServiceImpl implements SertService {
                 .lastEvent(toInstant(firstRow[2]))
                 .isCached(false)
                 .build())
-            .tokens(allTokens==null || allTokens.isEmpty()? 0: allTokens.size())
+            .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
             .payed(
                 payedRow == null
@@ -189,7 +189,7 @@ public class SertServiceImpl implements SertService {
                 .build())
             .build();
 
-        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, rows.getTotalElements());
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements());
     }
 
 
@@ -207,7 +207,7 @@ public class SertServiceImpl implements SertService {
         }
 
         Object[] row = rows.get(0);
-        boolean isPayed = row[8] != null;
+        Boolean isPayed = row[8] != null && "OK".equalsIgnoreCase(row[8].toString());
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
         String rowNav = asString(row[0]);
