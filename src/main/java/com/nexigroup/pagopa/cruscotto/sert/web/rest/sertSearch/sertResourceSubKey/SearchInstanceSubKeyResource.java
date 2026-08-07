@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest.searchinstance;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
@@ -22,11 +22,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/sub/api")
 @Validated
-public class SearchInstanceSubResource {
+public class SearchInstanceSubKeyResource {
 
     private final SearchInstanceService service;
 
-    public SearchInstanceSubResource(SearchInstanceService service) {
+    public SearchInstanceSubKeyResource(SearchInstanceService service) {
         this.service = service;
     }
 
