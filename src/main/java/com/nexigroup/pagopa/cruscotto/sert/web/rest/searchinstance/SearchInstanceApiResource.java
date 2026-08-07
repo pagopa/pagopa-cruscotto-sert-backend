@@ -1,6 +1,5 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.searchinstance;
 
-import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,17 +36,17 @@ public class SearchInstanceApiResource {
         this.service = service;
     }
 
-    @PostMapping(value = "/v1/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/bulk/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a new Search Instance")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<SearchInstanceDTO> create(@RequestBody SearchInstanceDTO dto) throws URISyntaxException {
         SearchInstanceDTO result = service.create(dto);
-        URI location = new URI("/api/v1/search-instances/" + (result != null && result.getId() != null ? result.getId() : ""));
+        URI location = new URI("/api/bulk/search-instances/" + (result != null && result.getId() != null ? result.getId() : ""));
         HttpHeaders headers = new HttpHeaders();
         return ResponseEntity.created(location).headers(headers).body(result);
     }
 
-    @GetMapping(value = "/v1/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/bulk/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List Search Instances")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<List<SearchInstanceDTO>> list() {
@@ -55,7 +54,7 @@ public class SearchInstanceApiResource {
         return ResponseEntity.ok(list);
     }
 
-    @GetMapping(value = "/v1/search-instances/{id}")
+    @GetMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Get Search Instance by id")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<SearchInstanceDTO> get(@PathVariable("id") UUID id) {
@@ -63,7 +62,7 @@ public class SearchInstanceApiResource {
         return dto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping(value = "/v1/search-instances/{id}")
+    @PutMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Update Search Instance")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<SearchInstanceDTO> update(@PathVariable("id") UUID id, @RequestBody SearchInstanceDTO dto) {
@@ -71,7 +70,7 @@ public class SearchInstanceApiResource {
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping(value = "/v1/search-instances/{id}")
+    @DeleteMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Delete Search Instance")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
@@ -80,22 +79,22 @@ public class SearchInstanceApiResource {
     }
 
     // Unified lifecycle endpoint: action in path (restore | archive | duplicate)
-    @PostMapping(value = "/v1/search-instances/{id}/{action}")
+    @PostMapping(value = "/bulk/search-instances/{id}/{action}")
     @Operation(summary = "Perform lifecycle action (restore|archive|duplicate)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<?> lifecycleAction(@PathVariable("id") UUID id, @PathVariable("action") String action) {
-        SearchInstanceAction act;
+        com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction act;
         try {
-            act = SearchInstanceAction.valueOf(action.toUpperCase());
+            act = com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction.valueOf(action.toUpperCase());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Invalid action: " + action);
         }
 
         Optional<SearchInstanceDTO> maybe = service.performAction(id, act);
-        if (act == SearchInstanceAction.DUPLICATE) {
+        if (act == com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction.DUPLICATE) {
             return maybe.map(dto -> {
                 try {
-                    URI location = new URI("/api/v1/search-instances/" + (dto.getId() != null ? dto.getId() : ""));
+                    URI location = new URI("/api/bulk/search-instances/" + (dto.getId() != null ? dto.getId() : ""));
                     return ResponseEntity.status(HttpStatus.CREATED).location(location).body(dto);
                 } catch (URISyntaxException e) {
                     return ResponseEntity.status(HttpStatus.CREATED).body(dto);
@@ -107,7 +106,7 @@ public class SearchInstanceApiResource {
     }
 
     // CSV
-    @PostMapping(value = "/v1/search-instances/{id}/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/bulk/search-instances/{id}/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV for Search Instance")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<Void> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
@@ -115,7 +114,7 @@ public class SearchInstanceApiResource {
         return ResponseEntity.accepted().build();
     }
 
-    @PostMapping(value = "/v1/search-instances/{id}/csv/validate")
+    @PostMapping(value = "/bulk/search-instances/{id}/csv/validate")
     @Operation(summary = "Validate CSV for Search Instance")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<Boolean> validateCsv(@PathVariable("id") UUID id) {
@@ -124,7 +123,7 @@ public class SearchInstanceApiResource {
     }
 
     // Execute / rerun
-    @PostMapping(value = "/v1/search-instances/{id}/execute")
+    @PostMapping(value = "/bulk/search-instances/{id}/execute")
     @Operation(summary = "Execute Search Instance (set READY)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<Void> execute(@PathVariable("id") UUID id) {
@@ -132,7 +131,7 @@ public class SearchInstanceApiResource {
         return ResponseEntity.accepted().build();
     }
 
-    @PostMapping(value = "/v1/search-instances/{id}/rerun")
+    @PostMapping(value = "/bulk/search-instances/{id}/rerun")
     @Operation(summary = "Rerun Search Instance (set READY)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<Void> rerun(@PathVariable("id") UUID id) {
@@ -141,7 +140,7 @@ public class SearchInstanceApiResource {
     }
 
     // Results
-    @GetMapping(value = "/v1/search-instances/{id}/last-result")
+    @GetMapping(value = "/bulk/search-instances/{id}/last-result")
     @Operation(summary = "Get last result metadata / availability")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<Void> getLastResult(@PathVariable("id") UUID id) {
@@ -150,7 +149,7 @@ public class SearchInstanceApiResource {
         return maybe.isPresent() ? ResponseEntity.ok().build() : ResponseEntity.noContent().build();
     }
 
-    @GetMapping(value = "/v1/search-instances/{id}/download")
+    @GetMapping(value = "/bulk/search-instances/{id}/download")
     @Operation(summary = "Download last ZIP result")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
     public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {

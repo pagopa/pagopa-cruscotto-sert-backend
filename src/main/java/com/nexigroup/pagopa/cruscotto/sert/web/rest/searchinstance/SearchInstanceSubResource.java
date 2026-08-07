@@ -30,28 +30,28 @@ public class SearchInstanceSubResource {
         this.service = service;
     }
 
-    @PostMapping(value = "/v1/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/bulk/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a new Search Instance (public /sub)")
     public ResponseEntity<SearchInstanceDTO> create(@RequestBody SearchInstanceDTO dto) {
         SearchInstanceDTO result = service.create(dto);
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping(value = "/v1/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/bulk/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List Search Instances (public /sub)")
     public ResponseEntity<List<SearchInstanceDTO>> list() {
         List<SearchInstanceDTO> list = service.findAll();
         return ResponseEntity.ok(list);
     }
 
-    @GetMapping(value = "/v1/search-instances/{id}")
+    @GetMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Get Search Instance by id (public /sub)")
     public ResponseEntity<SearchInstanceDTO> get(@PathVariable("id") UUID id) {
         Optional<SearchInstanceDTO> dto = service.findOne(id);
         return dto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping(value = "/v1/search-instances/{id}")
+    @PutMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Update Search Instance (public /sub)")
     public ResponseEntity<SearchInstanceDTO> update(@PathVariable("id") UUID id, @RequestBody SearchInstanceDTO dto) {
         SearchInstanceDTO updated = service.update(id, dto);
@@ -59,7 +59,7 @@ public class SearchInstanceSubResource {
     }
 
     // CSV upload (public)
-    @PostMapping(value = "/v1/search-instances/{id}/csv")
+    @PostMapping(value = "/bulk/search-instances/{id}/csv")
     @Operation(summary = "Upload CSV for Search Instance (public /sub)")
     public ResponseEntity<Void> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
         service.uploadCsv(id, file);
