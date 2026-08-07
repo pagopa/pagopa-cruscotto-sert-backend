@@ -119,6 +119,24 @@ public class SearchInstanceService {
         instanceRepository.save(entity);
     }
 
+    /**
+     * Perform lifecycle action: DUPLICATE returns a DTO, ARCHIVE/RESTORE return empty Optional
+     */
+    public Optional<SearchInstanceDTO> performAction(UUID id, SearchInstanceAction action) {
+        switch (action) {
+            case DUPLICATE:
+                return Optional.ofNullable(duplicate(id));
+            case ARCHIVE:
+                archive(id);
+                return Optional.empty();
+            case RESTORE:
+                restore(id);
+                return Optional.empty();
+            default:
+                throw new IllegalArgumentException("Unsupported action: " + action);
+        }
+    }
+
     public void uploadCsv(UUID id, MultipartFile file) {
         try {
             SearchInstance instance = instanceRepository.findById(id)
