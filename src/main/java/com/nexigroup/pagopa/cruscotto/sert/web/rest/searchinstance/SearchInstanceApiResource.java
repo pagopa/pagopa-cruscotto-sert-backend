@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.searchinstance;
 
+import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,28 +79,30 @@ public class SearchInstanceApiResource {
         return ResponseEntity.noContent().build();
     }
 
-    // Lifecycle
-    @PostMapping(value = "/v1/search-instances/{id}/duplicate")
-    @Operation(summary = "Duplicate Search Instance")
+    // Unified lifecycle endpoint: action in path (restore | archive | duplicate)
+    @PostMapping(value = "/v1/search-instances/{id}/{action}")
+    @Operation(summary = "Perform lifecycle action (restore|archive|duplicate)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<SearchInstanceDTO> duplicate(@PathVariable("id") UUID id) {
-        SearchInstanceDTO duplicated = service.duplicate(id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(duplicated);
-    }
+    public ResponseEntity<?> lifecycleAction(@PathVariable("id") UUID id, @PathVariable("action") String action) {
+        SearchInstanceAction act;
+        try {
+            act = SearchInstanceAction.valueOf(action.toUpperCase());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid action: " + action);
+        }
 
-    @PostMapping(value = "/v1/search-instances/{id}/archive")
-    @Operation(summary = "Archive Search Instance")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<Void> archive(@PathVariable("id") UUID id) {
-        service.archive(id);
-        return ResponseEntity.noContent().build();
-    }
+        Optional<SearchInstanceDTO> maybe = service.performAction(id, act);
+        if (act == SearchInstanceAction.DUPLICATE) {
+            return maybe.map(dto -> {
+                try {
+                    URI location = new URI("/api/v1/search-instances/" + (dto.getId() != null ? dto.getId() : ""));
+                    return ResponseEntity.status(HttpStatus.CREATED).location(location).body(dto);
+                } catch (URISyntaxException e) {
+                    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+                }
+            }).orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+        }
 
-    @PostMapping(value = "/v1/search-instances/{id}/restore")
-    @Operation(summary = "Restore Search Instance")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<Void> restore(@PathVariable("id") UUID id) {
-        service.restore(id);
         return ResponseEntity.noContent().build();
     }
 
