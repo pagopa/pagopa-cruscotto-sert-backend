@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest.searchinstance;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
@@ -29,11 +29,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api")
 @Validated
-public class SearchInstanceApiResource {
+public class SearchInstanceJwtTokenResource {
 
     private final SearchInstanceService service;
 
-    public SearchInstanceApiResource(SearchInstanceService service) {
+    public SearchInstanceJwtTokenResource(SearchInstanceService service) {
         this.service = service;
     }
 
