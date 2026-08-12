@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "SEARCH_PERIMETER_FILE")
+@Table(name = "SEARCH_PERIMETER_FILE", schema = "sert_ingestor")
 public class SearchPerimeterFile {
 
     @Id
@@ -33,24 +33,30 @@ public class SearchPerimeterFile {
     @JoinColumn(name = "INSTANCE_ID", nullable = false)
     private SearchInstance instance;
 
-    @Column(name = "SOURCE")
+    @Column(name = "EXECUTION_ID")
+    private UUID executionId;
+
+    @Column(name = "SOURCE", nullable = false, length = 32)
     private String source;
 
-    @Column(name = "TEMPLATE")
+    @Column(name = "TEMPLATE", length = 16)
     private String template;
 
-    @Column(name = "FILE_NAME")
+    @Column(name = "FILE_NAME", nullable = false, length = 255)
     private String fileName;
 
-    @Column(name = "BLOB_PATH")
-    private String blobPath;
+    @Column(name = "FILE_PATH", length = 1024)
+    private String filePath;
 
     @Column(name = "ROWS_COUNT")
-    private Integer rowsCount;
+    private Long rowsCount;
 
-    @Column(name = "VALIDATION_STATUS")
+    @Column(name = "VALIDATION_STATUS", nullable = false, length = 16)
     private String validationStatus;
 
-    @Column(name = "CREATED_AT")
+    @Column(name = "CREATED_AT", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "CONTENT", columnDefinition = "text")
+    private String content;
 }
