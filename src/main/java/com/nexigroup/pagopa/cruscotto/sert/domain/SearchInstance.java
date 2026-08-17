@@ -19,21 +19,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "SEARCH_INSTANCE")
+@Table(name = "SEARCH_INSTANCE", schema = "sert_ingestor")
 public class SearchInstance {
 
     @Id
     @Column(name = "ID", nullable = false)
     private UUID id;
 
-    @Column(name = "NAME")
+    @Column(name = "NAME", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "INPUT_TYPE")
+    @Column(name = "INPUT_TYPE", nullable = false, length = 16)
     private String inputType;
 
-    @Column(name = "STATUS")
+    @Column(name = "STATUS", nullable = false, length = 16)
     private String status;
+
+    @Column(name = "CREATED_AT", nullable = false)
+    private Instant createdAt;
+
+    @Column(name = "UPDATED_AT", nullable = false)
+    private Instant updatedAt;
 
     @Column(name = "ARCHIVED_AT")
     private Instant archivedAt;
@@ -41,9 +47,6 @@ public class SearchInstance {
     @Column(name = "LAST_EXECUTION_ID")
     private UUID lastExecutionId;
 
-    @Column(name = "CREATED_AT")
-    private Instant createdAt;
-
-    @Column(name = "UPDATED_AT")
-    private Instant updatedAt;
+    @Column(name = "SELECTED_REPORTS", length = 64)
+    private String selectedReports;
 }
