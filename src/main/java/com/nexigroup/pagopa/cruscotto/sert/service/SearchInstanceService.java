@@ -6,13 +6,19 @@ import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
+import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.errors.BadRequestAlertException;
+
+import  org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,8 +63,12 @@ public class SearchInstanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<SearchInstanceDTO> findAll() {
-        return instanceRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    public Page<SearchInstanceDTO> findAll(Pageable pageable) {
+        Page<SearchInstance> all = instanceRepository.findAll(pageable);
+        List<SearchInstanceDTO> collect = all.getContent().stream().map(this::toDto).collect(Collectors.toList());
+        return new PageCustomImpl<SearchInstanceDTO>(collect,
+            pageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
+
     }
 
     @Transactional(readOnly = true)
@@ -154,7 +164,7 @@ public class SearchInstanceService {
                 .source("USER_UPLOAD")
                 .template(null)
                 .fileName(fileName)
-                .blobPath(blobPath)
+                .filePath(blobPath)
                 .rowsCount(null)
                 .validationStatus("PENDING")
                 .createdAt(Instant.now())
@@ -180,7 +190,7 @@ public class SearchInstanceService {
             return false;
         }
         SearchPerimeterFile file = maybe.get();
-        boolean exists = blobStorageService.exists(file.getBlobPath());
+        boolean exists = blobStorageService.exists(file.getFilePath());
         file.setValidationStatus(exists ? "VALID" : "INVALID");
         perimeterFileRepository.save(file);
         return exists;

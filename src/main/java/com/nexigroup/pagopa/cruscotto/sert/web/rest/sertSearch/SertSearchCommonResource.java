@@ -1,37 +1,26 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
-import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.PaginationUtil;
 
 import java.util.List;
 
-/**
- * REST controller for SERT APIs.
- */
-@RestController
-@RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
-public class SertResource {
 
-    private final Logger log = LoggerFactory.getLogger(SertResource.class);
+public class SertSearchCommonResource {
+
+    private final Logger log = LoggerFactory.getLogger(SertSearchCommonResource.class);
 
     private final SertService sertService;
 
@@ -39,7 +28,7 @@ public class SertResource {
 
 
 
-    public SertResource(SertService sertService) {
+    public SertSearchCommonResource(SertService sertService) {
         this.sertService = sertService;
     }
 
