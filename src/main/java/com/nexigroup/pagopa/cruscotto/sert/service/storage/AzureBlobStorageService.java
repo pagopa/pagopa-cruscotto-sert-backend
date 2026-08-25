@@ -2,13 +2,17 @@ package com.nexigroup.pagopa.cruscotto.sert.service.storage;
 
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -18,8 +22,17 @@ public class AzureBlobStorageService implements BlobStorageService {
 
     private final BlobContainerClient containerClient;
 
-    public AzureBlobStorageService(BlobContainerClient containerClient) {
-        this.containerClient = containerClient;
+
+    public AzureBlobStorageService(
+        @Value("${azure.blob.connection-string}") String connectionString,
+        @Value("${azure.blob.container-name}") String containerName
+    ) {
+        Objects.requireNonNull(connectionString, "azure.blob.connection-string property is required");
+        Objects.requireNonNull(containerName, "azure.blob.container-name property is required");
+        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+            .connectionString(connectionString)
+            .buildClient();
+        this.containerClient = blobServiceClient.getBlobContainerClient(containerName);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
+import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +9,10 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import tech.jhipster.web.util.PaginationUtil;
 
 @RestController
 @RequestMapping("/api")
@@ -49,9 +56,10 @@ public class SearchInstanceJwtTokenResource {
     @GetMapping(value = "/bulk/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List Search Instances")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<List<SearchInstanceDTO>> list() {
-        List<SearchInstanceDTO> list = service.findAll();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<List<SearchInstanceDTO>> list( Pageable pageable) {
+        Page<SearchInstanceDTO> page = service.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping(value = "/bulk/search-instances/{id}")
