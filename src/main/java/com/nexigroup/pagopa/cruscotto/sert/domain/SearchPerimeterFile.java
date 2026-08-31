@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.domain;
 
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,7 +41,7 @@ public class SearchPerimeterFile {
     private String source;
 
     @Column(name = "TEMPLATE", length = 16)
-    private String template;
+    private CsvTemplate template;
 
     @Column(name = "FILE_NAME", nullable = false, length = 255)
     private String fileName;
