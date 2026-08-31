@@ -14,6 +14,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Entity representing search filter (SEARCH_FILTER)
  */
@@ -48,4 +54,42 @@ public class SearchFilter {
 
     @Column(name = "UPDATED_AT", nullable = false)
     private Instant updatedAt;
+
+    // ------------------ helper for JSON (de)serialization ------------------
+    private static final Logger log = LoggerFactory.getLogger(SearchFilter.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    /**
+     * Returns the deserialized SearchBulkFilterDTO represented by filterJson, or null
+     * if filterJson is null or cannot be deserialized.
+     */
+    public SearchBulkFilterDTO getFilterObject() {
+        if (this.filterJson == null) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.readValue(this.filterJson, SearchBulkFilterDTO.class);
+        } catch (JsonProcessingException e) {
+            // Log and return null to avoid 500 on (de)serialization errors; adjust if you prefer exceptions
+            log.error("Errore deserializzazione filterJson per SearchFilter instanceId={}", this.instanceId, e);
+            return null;
+        }
+    }
+
+    /**
+     * Serializes the provided SearchBulkFilterDTO into filterJson. If filter is null,
+     * filterJson is set to null. On serialization error, logs and sets filterJson to null.
+     */
+    public void setFilterObject(SearchBulkFilterDTO filter) {
+        if (filter == null) {
+            this.filterJson = null;
+            return;
+        }
+        try {
+            this.filterJson = OBJECT_MAPPER.writeValueAsString(filter);
+        } catch (JsonProcessingException e) {
+            log.error("Errore serializzazione SearchBulkFilterDTO per SearchFilter instanceId={}", this.instanceId, e);
+            this.filterJson = null;
+        }
+    }
 }
