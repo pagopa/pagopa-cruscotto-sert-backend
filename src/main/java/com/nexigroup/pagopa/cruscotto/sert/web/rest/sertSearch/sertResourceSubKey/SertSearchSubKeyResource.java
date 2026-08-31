@@ -20,11 +20,11 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/sub/api", produces = MediaType.APPLICATION_JSON_VALUE)
-public class SertSearchSubKeySearchResource extends SertSearchCommonResource {
+public class SertSearchSubKeyResource extends SertSearchCommonResource {
 
-    private final Logger log = LoggerFactory.getLogger(SertSearchSubKeySearchResource.class);
+    private final Logger log = LoggerFactory.getLogger(SertSearchSubKeyResource.class);
 
-    public SertSearchSubKeySearchResource(SertService sertService) {
+    public SertSearchSubKeyResource(SertService sertService) {
         super(sertService);
     }
 

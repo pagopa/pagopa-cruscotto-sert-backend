@@ -3,6 +3,8 @@ package com.nexigroup.pagopa.cruscotto.sert.service.dto;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,4 +24,5 @@ public class SearchInstanceDTO implements Serializable {
     private String status; // DRAFT, READY, RUNNING, EXECUTED, FAILED, ARCHIVED
     private Instant createdAt;
     private Instant updatedAt;
+    private SearchBulkFilterDTO perimeterFilter;
 }
