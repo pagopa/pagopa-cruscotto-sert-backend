@@ -3,6 +3,8 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtT
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.CsvValidationResult;
 import io.swagger.v3.oas.annotations.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +32,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.server.ResponseStatusException;
 import tech.jhipster.web.util.PaginationUtil;
+
+import java.io.InputStream;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api")
@@ -38,9 +44,11 @@ import tech.jhipster.web.util.PaginationUtil;
 public class SearchInstanceJwtTokenResource {
 
     private final SearchInstanceService service;
+    private final MassiveSearchCsvValidator csvValidator;
 
-    public SearchInstanceJwtTokenResource(SearchInstanceService service) {
+    public SearchInstanceJwtTokenResource(SearchInstanceService service, MassiveSearchCsvValidator csvValidator) {
         this.service = service;
+        this.csvValidator = csvValidator;
     }
 
     @PostMapping(value = "/bulk/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -128,6 +136,28 @@ public class SearchInstanceJwtTokenResource {
     public ResponseEntity<Boolean> validateCsv(@PathVariable("id") UUID id) {
         boolean ok = service.validateCsv(id);
         return ResponseEntity.ok(ok);
+    }
+
+    // New endpoint: validate uploaded CSV file directly (pre-creation, no id)
+    @PostMapping(value = "/bulk/search-instances/csv/validate-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Validate uploaded CSV file for Search Instance (pre-creation)")
+    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    public ResponseEntity<?> validateUploadedCsvNoId(
+        @RequestParam("file") MultipartFile file
+    ) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("No file uploaded");
+        }
+        try (InputStream is = file.getInputStream()) {
+            CsvValidationResult result = csvValidator.validate(is);
+            if (result.isValid()) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to read uploaded file", e);
+        }
     }
 
     // Execute / rerun
