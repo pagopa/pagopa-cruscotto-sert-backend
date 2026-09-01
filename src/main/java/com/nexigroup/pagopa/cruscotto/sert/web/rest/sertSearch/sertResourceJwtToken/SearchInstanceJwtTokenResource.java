@@ -1,10 +1,11 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
+import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
-import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.CsvValidationResult;
+
 import io.swagger.v3.oas.annotations.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -98,13 +99,7 @@ public class SearchInstanceJwtTokenResource {
     @PostMapping(value = "/bulk/search-instances/{id}/{action}")
     @Operation(summary = "Perform lifecycle action (restore|archive|duplicate)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<?> lifecycleAction(@PathVariable("id") UUID id, @PathVariable("action") String action) {
-        com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction act;
-        try {
-            act = com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction.valueOf(action.toUpperCase());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Invalid action: " + action);
-        }
+    public ResponseEntity<?> lifecycleAction(@PathVariable("id") UUID id, @PathVariable("action") SearchInstanceAction act) {
 
         Optional<SearchInstanceDTO> maybe = service.performAction(id, act);
         if (act == com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction.DUPLICATE) {
@@ -142,7 +137,7 @@ public class SearchInstanceJwtTokenResource {
     @PostMapping(value = "/bulk/search-instances/csv/validate-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Validate uploaded CSV file for Search Instance (pre-creation)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<?> validateUploadedCsvNoId(
+    public ResponseEntity<?> validateUploadedCsv(
         @RequestParam("file") MultipartFile file
     ) {
         if (file == null || file.isEmpty()) {
@@ -150,7 +145,7 @@ public class SearchInstanceJwtTokenResource {
         }
         try (InputStream is = file.getInputStream()) {
             CsvValidationResult result = csvValidator.validate(is);
-            if (result.isValid()) {
+            if (result.valid()) {
                 return ResponseEntity.ok().build();
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
