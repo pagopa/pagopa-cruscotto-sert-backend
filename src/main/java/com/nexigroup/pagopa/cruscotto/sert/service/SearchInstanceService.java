@@ -1,11 +1,15 @@
 package com.nexigroup.pagopa.cruscotto.sert.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexigroup.pagopa.cruscotto.sert.domain.SearchFilter;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
+import com.nexigroup.pagopa.cruscotto.sert.repository.SearchFilterRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.errors.BadRequestAlertException;
@@ -22,6 +26,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +43,8 @@ public class SearchInstanceService {
 
     private static final String ENTITY_NAME = "searchInstance";
 
+    private final Logger log = LoggerFactory.getLogger(SearchInstanceService.class);
+
     private final SearchInstanceRepository instanceRepository;
 
     private final SearchPerimeterFileRepository perimeterFileRepository;
@@ -45,16 +53,22 @@ public class SearchInstanceService {
 
     private final CsvFromFilterGenerator csvFromFilterGenerator;
 
+    private final SearchFilterRepository searchFilterRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public SearchInstanceService(
         SearchInstanceRepository instanceRepository,
         SearchPerimeterFileRepository perimeterFileRepository,
         BlobStorageService blobStorageService,
-        CsvFromFilterGenerator csvFromFilterGenerator
+        CsvFromFilterGenerator csvFromFilterGenerator,
+        SearchFilterRepository searchFilterRepository
     ) {
         this.instanceRepository = instanceRepository;
         this.perimeterFileRepository = perimeterFileRepository;
         this.blobStorageService = blobStorageService;
         this.csvFromFilterGenerator = csvFromFilterGenerator;
+        this.searchFilterRepository = searchFilterRepository;
     }
 
     public SearchInstanceDTO create(SearchInstanceDTO dto) {
@@ -69,20 +83,18 @@ public class SearchInstanceService {
         instanceRepository.save(entity);
 
         // If a perimeter filter is provided in the DTO, generate a CSV (NAV:pa_emittente)
-        // using CsvFromFilterGenerator and persist it in SEARCH_PERIMETER_FILE.content
+        // using CsvFromFilterGenerator and persist it in SEARCH_PERIMETER_FILE.content (upsert)
         try {
             if (dto.getPerimeterFilter() != null) {
                 byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 if (csvBytes != null && csvBytes.length > 0) {
                     String content = new String(csvBytes, StandardCharsets.UTF_8);
-                    savePerimeterFileContent(entity, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
+                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
                 }
             }
         } catch (Exception e) {
             // Log and continue: do not block creation if generation fails
-            // Optionally you may choose to throw to fail creation
-            // Using System.err for minimal dependency; consider using a logger
-            System.err.println("Failed to generate perimeter CSV: " + e.getMessage());
+            log.error("Failed to generate perimeter CSV on create for instance {}: {}", entity.getId(), e.getMessage(), e);
         }
 
         return toDto(entity);
@@ -113,17 +125,17 @@ public class SearchInstanceService {
         entity.setUpdatedAt(Instant.now());
         instanceRepository.save(entity);
 
-        // If a perimeter filter is provided in the DTO, (re)generate a CSV and persist content
+        // If a perimeter filter is provided in the DTO, (re)generate a CSV and persist/overwrite content
         try {
             if (dto.getPerimeterFilter() != null) {
                 byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 if (csvBytes != null && csvBytes.length > 0) {
                     String content = new String(csvBytes, StandardCharsets.UTF_8);
-                    savePerimeterFileContent(entity, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
+                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
                 }
             }
         } catch (Exception e) {
-            System.err.println("Failed to generate perimeter CSV on update: " + e.getMessage());
+            log.error("Failed to generate perimeter CSV on update for instance {}: {}", entity.getId(), e.getMessage(), e);
         }
 
         return toDto(entity);
@@ -148,6 +160,31 @@ public class SearchInstanceService {
             .updatedAt(Instant.now())
             .build();
         instanceRepository.save(copy);
+
+        // If original has a stored SearchFilter, deserialize and generate CSV for the new copy
+        try {
+            Optional<SearchFilter> maybeFilter = searchFilterRepository.findById(entity.getId());
+            if (maybeFilter.isPresent()) {
+                SearchFilter sf = maybeFilter.get();
+                if (sf.getFilterJson() != null && !sf.getFilterJson().isEmpty()) {
+                    try {
+                        SearchBulkFilterDTO filterDto = objectMapper.readValue(sf.getFilterJson(), SearchBulkFilterDTO.class);
+                        if (filterDto != null) {
+                            byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
+                            if (csvBytes != null && csvBytes.length > 0) {
+                                String content = new String(csvBytes, StandardCharsets.UTF_8);
+                                upsertPerimeterFileContent(copy, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
+                            }
+                        }
+                    } catch (Exception ex) {
+                        log.error("Failed to deserialize SearchFilter.filterJson for instance {}: {}", entity.getId(), ex.getMessage(), ex);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to generate perimeter CSV for duplicate instance {}: {}", copy.getId(), e.getMessage(), e);
+        }
+
         return toDto(copy);
     }
 
