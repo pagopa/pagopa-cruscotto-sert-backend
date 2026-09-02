@@ -80,7 +80,7 @@ public class SearchInstanceService {
             .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now())
             .updatedAt(Instant.now())
             .build();
-        instanceRepository.save(entity);
+
 
         // If a perimeter filter is provided in the DTO, generate a CSV (NAV:pa_emittente)
         // using CsvFromFilterGenerator and persist it in SEARCH_PERIMETER_FILE.content (upsert)
@@ -96,7 +96,7 @@ public class SearchInstanceService {
             // Log and continue: do not block creation if generation fails
             log.error("Failed to generate perimeter CSV on create for instance {}: {}", entity.getId(), e.getMessage(), e);
         }
-
+        instanceRepository.save(entity);
         return toDto(entity);
     }
 
@@ -303,7 +303,7 @@ public class SearchInstanceService {
             .build();
     }
 
-    private void savePerimeterFileContent(SearchInstance instance, String filename, String content, String source) {
+    private void upsertPerimeterFileContent(SearchInstance instance, String filename, String content, String source) {
         SearchPerimeterFile perimeterFile = SearchPerimeterFile.builder()
             .id(UUID.randomUUID())
             .instance(instance)
