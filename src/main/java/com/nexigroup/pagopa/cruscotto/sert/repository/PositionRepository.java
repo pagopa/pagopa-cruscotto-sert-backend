@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -273,11 +275,10 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "AND (:techPartners IS NULL OR pt.intermediarioPa IN (:techPartners) OR pt.intermediarioPsp IN (:techPartners)) " +
             "AND (:channels IS NULL OR pt.canale IN (:channels)) " +
             "AND (:stations IS NULL OR pt.stazione IN (:stations)) " +
-            "ORDER BY p.nav, p.paEmittente",
-        nativeQuery = true)
+            "ORDER BY p.nav, p.paEmittente")
     List<Object[]> findNavPaByFilter(
-        @Param("paymentFrom") Date paymentFrom,
-        @Param("paymentTo") Date paymentTo,
+        @Param("paymentFrom") LocalDateTime paymentFrom,
+        @Param("paymentTo") LocalDateTime paymentTo,
         @Param("paymentStatuses") List<String> paymentStatuses,
         @Param("includeNoOutcome") Boolean includeNoOutcome,
         @Param("touchpoints") List<String> touchpoints,
