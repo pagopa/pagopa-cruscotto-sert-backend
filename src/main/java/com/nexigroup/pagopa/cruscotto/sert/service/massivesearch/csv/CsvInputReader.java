@@ -26,7 +26,7 @@ public class CsvInputReader {
 
     private static final char QUOTE = '"';
 
-    private char separator = CsvConfiguration.separator;
+    private List<Character> separator = CsvConfiguration.separator;
     private Charset charset = CsvConfiguration.charset;
 
 
@@ -68,7 +68,7 @@ public class CsvInputReader {
                 }
             } else if (c == QUOTE) {
                 inQuotes = true;
-            } else if (c == separator) {
+            } else if (separator.contains(c)) {
                 fields.add(current.toString());
                 current.setLength(0);
             } else {

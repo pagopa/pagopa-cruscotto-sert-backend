@@ -254,28 +254,32 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
            "AND UPPER(pt.outcome) = 'OK'")
     long countOkTokensByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
 
-    @Query(value =
-        "SELECT DISTINCT p.nav AS nav , p.paEmittente AS paEmittente " +
+    @Query(
+        "SELECT DISTINCT p.nav AS nav, p.paEmittente AS paEmittente " +
             "FROM Position p " +
             "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-            "WHERE (:paymentFrom IS NULL OR pt.paymentDate >= :paymentFrom) " +
-            "AND (:paymentTo IS NULL OR pt.paymentDate <= :paymentTo) " +
+            "WHERE pt.paymentDate >= COALESCE(:paymentFrom, pt.paymentDate) " +
+            "AND pt.paymentDate <= COALESCE(:paymentTo, pt.paymentDate) " +
             "AND ( " +
-            "    (:paymentStatuses IS NULL) OR " +
-            "    (COALESCE(:includeNoOutcome, false) = true AND (pt.outcome IS NULL OR trim(pt.outcome) = '')) OR " +
-            "    ( :paymentStatuses IS NOT NULL AND pt.outcome IN (:paymentStatuses) ) " +
+            "    :paymentStatuses IS NULL OR " +
+            "    (COALESCE(:includeNoOutcome, false) = true AND " +
+            "        (pt.outcome IS NULL OR trim(pt.outcome) = '')) OR " +
+            "    pt.outcome IN (:paymentStatuses) " +
             ") " +
             "AND (:touchpoints IS NULL OR pt.touchpoint IN (:touchpoints)) " +
             "AND (:paymentMethods IS NULL OR pt.paymentMethod IN (:paymentMethods)) " +
-            "AND (:amountExact IS NULL OR pt.amount = :amountExact) " +
-            "AND (:amountMin IS NULL OR pt.amount >= :amountMin) " +
-            "AND (:amountMax IS NULL OR pt.amount <= :amountMax) " +
+            "AND pt.amount >= COALESCE(:amountMin, pt.amount) " +
+            "AND pt.amount <= COALESCE(:amountMax, pt.amount) " +
+            "AND pt.amount = COALESCE(:amountExact, pt.amount) " +
             "AND (:creditors IS NULL OR p.paEmittente IN (:creditors)) " +
             "AND (:psps IS NULL OR pt.psp IN (:psps)) " +
-            "AND (:techPartners IS NULL OR pt.intermediarioPa IN (:techPartners) OR pt.intermediarioPsp IN (:techPartners)) " +
+            "AND (:techPartners IS NULL OR " +
+            "     pt.intermediarioPa IN (:techPartners) OR " +
+            "     pt.intermediarioPsp IN (:techPartners)) " +
             "AND (:channels IS NULL OR pt.canale IN (:channels)) " +
             "AND (:stations IS NULL OR pt.stazione IN (:stations)) " +
-            "ORDER BY p.nav, p.paEmittente")
+            "ORDER BY p.nav, p.paEmittente"
+    )
     List<Object[]> findNavPaByFilter(
         @Param("paymentFrom") LocalDateTime paymentFrom,
         @Param("paymentTo") LocalDateTime paymentTo,
@@ -290,6 +294,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         @Param("psps") List<Integer> psps,
         @Param("techPartners") List<Integer> techPartners,
         @Param("channels") List<Integer> channels,
-        @Param("stations") List<Integer> stations
+        @Param("stations") List<Integer> stations,
+        Pageable pageable
     );
 }
