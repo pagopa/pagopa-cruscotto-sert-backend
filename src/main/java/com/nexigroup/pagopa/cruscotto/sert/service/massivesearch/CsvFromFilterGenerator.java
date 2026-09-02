@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,8 +74,8 @@ public class CsvFromFilterGenerator {
             List<Integer> stations = filter.getStations();
 
             List<Object[]> rows = positionRepository.findNavPaByFilter(
-                paymentFrom,
-                paymentTo,
+                filter.getPaymentPeriod().getFrom().atStartOfDay(),
+                filter.getPaymentPeriod().getTo().atTime(LocalTime.MAX),
                 statusStrings,
                 includeNoOutcome ? Boolean.TRUE : Boolean.FALSE,
                 CollectionUtils.isEmpty(touchpoints) ? null : touchpoints,
