@@ -1,6 +1,7 @@
 // src/main/java/com/nexigroup/pagopa/cruscotto/sert/service/massivesearch/CsvFromFilterGenerator.java
 package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch;
 
+import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.PerimeterPaymentStatus;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
@@ -21,10 +22,10 @@ public class CsvFromFilterGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(CsvFromFilterGenerator.class);
 
-    private final SearchInstanceRepository searchInstanceRepository;
+    private final PositionRepository positionRepository;
 
-    public CsvFromFilterGenerator(SearchInstanceRepository searchInstanceRepository) {
-        this.searchInstanceRepository = searchInstanceRepository;
+    public CsvFromFilterGenerator(PositionRepository positionRepository) {
+        this.positionRepository = positionRepository;
     }
 
     public byte[] generateCsv(SearchBulkFilterDTO filter) {
@@ -71,7 +72,7 @@ public class CsvFromFilterGenerator {
             List<Integer> channels = filter.getChannels();
             List<Integer> stations = filter.getStations();
 
-            List<Object[]> rows = searchInstanceRepository.findNavPaByFilter(
+            List<Object[]> rows = positionRepository.findNavPaByFilter(
                 paymentFrom,
                 paymentTo,
                 statusStrings,
