@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 public class SearchInstanceDTO implements Serializable {
     private UUID id;
     private String name;
-    private String inputType; // FILTER | CSV
+    private PerimeterSearchType inputType; // FILTER | CSV
     private String status; // DRAFT, READY, RUNNING, EXECUTED, FAILED, ARCHIVED
     private Instant createdAt;
     private Instant updatedAt;

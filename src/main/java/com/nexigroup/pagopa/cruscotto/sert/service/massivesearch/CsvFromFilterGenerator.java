@@ -3,10 +3,12 @@ package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch;
 
 import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvConfiguration;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.PerimeterPaymentStatus;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -87,7 +89,8 @@ public class CsvFromFilterGenerator {
                 CollectionUtils.isEmpty(psps) ? null : psps,
                 CollectionUtils.isEmpty(techPartners) ? null : techPartners,
                 CollectionUtils.isEmpty(channels) ? null : channels,
-                CollectionUtils.isEmpty(stations) ? null : stations
+                CollectionUtils.isEmpty(stations) ? null : stations,
+                PageRequest.of(0, CsvConfiguration.maxRows)
             );
 
             if (rows == null || rows.isEmpty()) return new byte[0];

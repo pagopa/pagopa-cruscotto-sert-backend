@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchFilter;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
+import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchFilterRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
@@ -20,7 +22,6 @@ import  org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.time.Instant;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class SearchInstanceService {
 
     private static final String ENTITY_NAME = "searchInstance";
+    public static final String GENERATED_FROM_FILTERS = "GENERATED_FROM_FILTERS";
 
     private final Logger log = LoggerFactory.getLogger(SearchInstanceService.class);
 
@@ -75,13 +77,13 @@ public class SearchInstanceService {
         SearchInstance entity = SearchInstance.builder()
             .id(dto.getId() != null ? dto.getId() : UUID.randomUUID())
             .name(dto.getName())
-            .inputType(dto.getInputType())
+            .inputType(dto.getInputType().name())
             .status(dto.getStatus() != null ? dto.getStatus() : "DRAFT")
             .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now())
             .updatedAt(Instant.now())
             .build();
 
-
+        instanceRepository.save(entity);
         // If a perimeter filter is provided in the DTO, generate a CSV (NAV:pa_emittente)
         // using CsvFromFilterGenerator and persist it in SEARCH_PERIMETER_FILE.content (upsert)
         try {
@@ -89,14 +91,13 @@ public class SearchInstanceService {
                 byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 if (csvBytes != null && csvBytes.length > 0) {
                     String content = new String(csvBytes, StandardCharsets.UTF_8);
-                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
+                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, GENERATED_FROM_FILTERS);
                 }
             }
         } catch (Exception e) {
             // Log and continue: do not block creation if generation fails
             log.error("Failed to generate perimeter CSV on create for instance {}: {}", entity.getId(), e.getMessage(), e);
         }
-        instanceRepository.save(entity);
         return toDto(entity);
     }
 
@@ -118,7 +119,7 @@ public class SearchInstanceService {
         SearchInstance entity = instanceRepository.findById(id)
             .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
         entity.setName(dto.getName());
-        entity.setInputType(dto.getInputType());
+        entity.setInputType(dto.getInputType().name());
         if (dto.getStatus() != null) {
             entity.setStatus(dto.getStatus());
         }
@@ -131,7 +132,7 @@ public class SearchInstanceService {
                 byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 if (csvBytes != null && csvBytes.length > 0) {
                     String content = new String(csvBytes, StandardCharsets.UTF_8);
-                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
+                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, "GENERATED_FROM_FILTERS");
                 }
             }
         } catch (Exception e) {
@@ -173,7 +174,7 @@ public class SearchInstanceService {
                             byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
                             if (csvBytes != null && csvBytes.length > 0) {
                                 String content = new String(csvBytes, StandardCharsets.UTF_8);
-                                upsertPerimeterFileContent(copy, "generated-perimeter.csv", content, "SYSTEM_GENERATED");
+                                upsertPerimeterFileContent(copy, "generated-perimeter.csv", content, "GENERATED_FROM_FILTERS");
                             }
                         }
                     } catch (Exception ex) {
@@ -296,7 +297,7 @@ public class SearchInstanceService {
         return SearchInstanceDTO.builder()
             .id(entity.getId())
             .name(entity.getName())
-            .inputType(entity.getInputType())
+            .inputType(PerimeterSearchType.fromString(entity.getInputType()))
             .status(entity.getStatus())
             .createdAt(entity.getCreatedAt())
             .updatedAt(entity.getUpdatedAt())
@@ -312,14 +313,13 @@ public class SearchInstanceService {
             .fileName(filename)
             .filePath(null)
             .rowsCount(countNonEmptyLines(content))
-            .validationStatus("PENDING")
+            .validationStatus(CsvStateValidation.VALID.name())
             .createdAt(Instant.now())
             .content(content)
             .build();
         perimeterFileRepository.save(perimeterFile);
 
         instance.setUpdatedAt(Instant.now());
-        instanceRepository.save(instance);
     }
 
     private Long countNonEmptyLines(String content) {
