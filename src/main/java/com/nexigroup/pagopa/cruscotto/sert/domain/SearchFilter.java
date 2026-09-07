@@ -17,6 +17,8 @@ import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,14 +40,8 @@ public class SearchFilter {
     @Column(name = "INSTANCE_ID", nullable = false)
     private UUID instanceId;
 
-    /**
-     * Convenience association to SearchInstance. Marked non-insertable/non-updatable
-     * because INSTANCE_ID is the PK mapped by instanceId.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "INSTANCE_ID", insertable = false, updatable = false)
-    private SearchInstance instance;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "FILTER_JSON", columnDefinition = "jsonb", nullable = false)
     private String filterJson;
 
