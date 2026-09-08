@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchFilter;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
+import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.CustomerGeneratedFile;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchFilterRepository;
@@ -15,20 +16,28 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplate;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.errors.BadRequestAlertException;
+import io.undertow.util.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
@@ -45,7 +54,7 @@ import java.util.stream.Collectors;
 public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     private static final String ENTITY_NAME = "searchInstance";
-    public static final String GENERATED_FROM_FILTERS = "GENERATED_FROM_FILTERS";
+    public static final String HEADER_NAV_PA_N = "\"NAV\";\"PA\"\n";
 
     private final Logger log = LoggerFactory.getLogger(SearchInstanceServiceImpl.class);
 
@@ -60,6 +69,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     private final SearchFilterRepository searchFilterRepository;
 
+    private final MassiveSearchCsvValidator csvValidator;
     private final ObjectMapper objectMapper ;
 
     public SearchInstanceServiceImpl(
@@ -67,7 +77,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         SearchPerimeterFileRepository perimeterFileRepository,
         BlobStorageService blobStorageService,
         CsvFromFilterGenerator csvFromFilterGenerator,
-        SearchFilterRepository searchFilterRepository,
+        SearchFilterRepository searchFilterRepository, MassiveSearchCsvValidator csvValidator,
         ObjectMapper objectMapper
     ) {
         this.instanceRepository = instanceRepository;
@@ -75,6 +85,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         this.blobStorageService = blobStorageService;
         this.csvFromFilterGenerator = csvFromFilterGenerator;
         this.searchFilterRepository = searchFilterRepository;
+        this.csvValidator = csvValidator;
         this.objectMapper= objectMapper;
     }
 
@@ -102,8 +113,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .build());
                 byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 if (csvBytes != null && csvBytes.length > 0) {
-                    String content = new String(csvBytes, StandardCharsets.UTF_8);
-                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, GENERATED_FROM_FILTERS);
+                    String content = HEADER_NAV_PA_N +new String(csvBytes, StandardCharsets.UTF_8);
+                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
                 }
             }
         } catch (Exception e) {
@@ -145,14 +156,15 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
                 searchFilterRepository.save(SearchFilter.builder()
                     .instanceId(entity.getId())
-                    .updatedAt((dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now()))
+                    .createdAt(entity.getCreatedAt())
+                    .updatedAt(( Instant.now()))
                     .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
                     .build());
 
                 byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 if (csvBytes != null && csvBytes.length > 0) {
-                    String content = new String(csvBytes, StandardCharsets.UTF_8);
-                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, "GENERATED_FROM_FILTERS");
+                    String content = HEADER_NAV_PA_N + new String(csvBytes, StandardCharsets.UTF_8);
+                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
                 }
             }
         } catch (Exception e) {
@@ -176,7 +188,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .id(UUID.randomUUID())
             .name(entity.getName() + " (copy)")
             .inputType(entity.getInputType())
-            .status("DRAFT")
+            .status(SearchInstanceStatus.DRAFT.name())
             .createdAt(Instant.now())
             .updatedAt(Instant.now())
             .build();
@@ -193,8 +205,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                         if (filterDto != null) {
                             byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
                             if (csvBytes != null && csvBytes.length > 0) {
-                                String content = new String(csvBytes, StandardCharsets.UTF_8);
-                                upsertPerimeterFileContent(copy, "generated-perimeter.csv", content, "GENERATED_FROM_FILTERS");
+                                String content = HEADER_NAV_PA_N + new String(csvBytes, StandardCharsets.UTF_8);
+                                upsertPerimeterFileContent(copy, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
                             }
                         }
                     } catch (Exception ex) {
@@ -245,54 +257,76 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         }
     }
 
-    public void uploadCsv(UUID id, MultipartFile file) {
+    public void uploadCsv(UUID id, MultipartFile file)  {
         try {
             SearchInstance instance = instanceRepository.findById(id)
-                .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
+                .orElseThrow(() ->
+                    new BadRequestAlertException(
+                        "SearchInstance not found",
+                        ENTITY_NAME,
+                        "idnotfound"
+                    )
+                );
 
             String fileName = file.getOriginalFilename();
             UUID fileId = UUID.randomUUID();
-            String blobPath = String.format("search-instances/%s/perimeter/%s-%s", id, fileId, fileName != null ? fileName : "perimeter.csv");
 
-            String url = blobStorageService.upload(blobPath, file.getInputStream(), file.getSize(), file.getContentType());
+            String blobPath = String.format(
+                "search-instances/%s/perimeter/%s-%s",
+                id,
+                fileId,
+                fileName != null ? fileName : "perimeter.csv"
+            );
 
-            SearchPerimeterFile perimeterFile = SearchPerimeterFile.builder()
-                .id(fileId)
-                .instance(instance)
-                .source("USER_UPLOAD")
-                .template(null)
-                .fileName(fileName)
-                .filePath(blobPath)
-                .rowsCount(null)
-                .validationStatus("PENDING")
-                .createdAt(Instant.now())
-                .build();
+            // Leggo il file una sola volta
+            byte[] fileBytes = file.getBytes();
+
+            // Creo un nuovo InputStream per il validator
+            CsvTemplate csvTemplate;
+            try (InputStream is = new ByteArrayInputStream(fileBytes)) {
+                csvTemplate = csvValidator.extractCsvTemplate(is);
+            }
+
+            SearchPerimeterFile perimeterFile =
+                perimeterFileRepository.findByInstance(instance);
+            String content = new String(fileBytes, StandardCharsets.UTF_8);
+            if (perimeterFile == null) {
+                perimeterFile = SearchPerimeterFile.builder()
+                    .id(fileId)
+                    .instance(instance)
+                    .source(CustomerGeneratedFile.USER_UPLOADED.name())
+                    .template(csvTemplate.name())
+                    .fileName(fileName)
+                    .filePath(blobPath)
+                    .rowsCount(countNonEmptyLines(content))
+                    .validationStatus(CsvStateValidation.VALID.name())
+                    .createdAt(Instant.now())
+                    .content(content)
+                    .build();
+            } else {
+                perimeterFile.setTemplate(csvTemplate.name());
+                perimeterFile.setFileName(fileName);
+                perimeterFile.setValidationStatus(CustomerGeneratedFile.USER_UPLOADED.name());
+                perimeterFile.setCreatedAt(Instant.now());
+                perimeterFile.setValidationStatus(CsvStateValidation.VALID.name());
+                perimeterFile.setRowsCount(countNonEmptyLines(content));
+                perimeterFile.setContent(content);
+            }
 
             perimeterFileRepository.save(perimeterFile);
 
-            // update instance updatedAt and keep reference to last execution/file if needed
             instance.setUpdatedAt(Instant.now());
             instanceRepository.save(instance);
 
         } catch (IOException e) {
-            throw new RuntimeException("Error uploading CSV file", e);
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Unable to read uploaded file",
+                e
+            );
         }
     }
 
-    public boolean validateCsv(UUID id) {
-        SearchInstance instance = instanceRepository.findById(id)
-            .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
-
-        Optional<SearchPerimeterFile> maybe = perimeterFileRepository.findTopByInstanceOrderByCreatedAtDesc(instance);
-        if (maybe.isEmpty()) {
-            return false;
-        }
-        SearchPerimeterFile file = maybe.get();
-        boolean exists = blobStorageService.exists(file.getFilePath());
-        file.setValidationStatus(exists ? "VALID" : "INVALID");
-        perimeterFileRepository.save(file);
-        return exists;
-    }
 
     public void execute(UUID id) {
         SearchInstance entity = instanceRepository.findById(id)
@@ -344,7 +378,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .id(UUID.randomUUID())
             .instance(instance)
             .source(source)
-            .template(null)
+            .template(CsvTemplate.NAV_PA.name())
             .fileName(filename)
             .filePath(null)
             .rowsCount(countNonEmptyLines(content))
@@ -365,5 +399,26 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             if (StringUtils.hasText(l)) count++;
         }
         return count;
+    }
+
+    @Override
+    public Optional<byte[]> downloadPerimeterCsv(UUID instanceId) {
+        SearchInstance instance = instanceRepository.findById(instanceId)
+            .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", "searchInstance", "idnotfound"));
+
+        Optional<SearchPerimeterFile> maybe = perimeterFileRepository.findTopByInstanceOrderByCreatedAtDesc(instance);
+        if (maybe.isEmpty()) {
+            return Optional.empty();
+        }
+
+        SearchPerimeterFile file = maybe.get();
+
+        // prefer content stored in DB
+        if (StringUtils.hasText(file.getContent())) {
+            return Optional.of(file.getContent().getBytes(StandardCharsets.UTF_8));
+        }
+
+
+        return Optional.empty();
     }
 }

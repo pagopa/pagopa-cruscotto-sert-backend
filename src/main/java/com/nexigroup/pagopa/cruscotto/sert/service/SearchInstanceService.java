@@ -4,6 +4,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
+import io.undertow.util.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +24,10 @@ public interface SearchInstanceService {
     void delete(UUID id);
     Optional<SearchInstanceDTO> performAction(UUID id, SearchInstanceAction action);
     void uploadCsv(UUID id, MultipartFile file);
-    boolean validateCsv(UUID id);
     void execute(UUID id);
     void rerun(UUID id);
     Optional<byte[]> getLastResult(UUID id);
 
 
+    Optional<byte[]> downloadPerimeterCsv(UUID instanceId);
 }

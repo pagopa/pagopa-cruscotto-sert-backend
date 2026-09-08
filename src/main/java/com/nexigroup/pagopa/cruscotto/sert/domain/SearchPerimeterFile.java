@@ -41,7 +41,7 @@ public class SearchPerimeterFile {
     private String source;
 
     @Column(name = "TEMPLATE", length = 16)
-    private CsvTemplate template;
+    private String template;
 
     @Column(name = "FILE_NAME", nullable = false, length = 255)
     private String fileName;

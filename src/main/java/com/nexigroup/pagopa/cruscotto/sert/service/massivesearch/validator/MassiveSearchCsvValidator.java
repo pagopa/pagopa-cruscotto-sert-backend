@@ -3,8 +3,11 @@ package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplateDetector.Field;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplateDetector.TemplateDetection;
+import io.undertow.util.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,9 +49,27 @@ public class MassiveSearchCsvValidator {
      * Validates the CSV and, when a consumer is provided, streams each valid normalized row to it.
      *
      * @param inputStream      the CSV source (closed by the caller)
-     * @param validRowConsumer optional consumer invoked for every valid row (may be {@code null})
      * @return the validation result
      */
+
+    public CsvTemplate extractCsvTemplate(InputStream inputStream) {
+        BufferedReader reader = inputReader.newReader(inputStream);
+
+        try {
+            String headerLine = readHeaderLine(reader);
+            List<String> headerColumns = inputReader.parseLine(headerLine);
+            TemplateDetection detection = templateDetector.detect(headerColumns);
+            if (detection.template() == CsvTemplate.UNKNOWN) {
+                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File malformed Unable extract  CSV Template");
+            }
+            return detection.template();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable extract  CSV TEmplate ", e);
+        }
+
+
+    }
+
     public CsvValidationResult validate(InputStream inputStream, Consumer<SearchInputRow> validRowConsumer) {
         List<CsvValidationError> errors = new ArrayList<>();
 
