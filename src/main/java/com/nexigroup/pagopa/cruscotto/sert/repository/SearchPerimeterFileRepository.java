@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface SearchPerimeterFileRepository extends JpaRepository<SearchPerimeterFile, UUID> {
 
     Optional<SearchPerimeterFile> findTopByInstanceOrderByCreatedAtDesc(SearchInstance instance);
+
+    SearchPerimeterFile findByInstance(SearchInstance instance);
 }

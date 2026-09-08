@@ -15,22 +15,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.undertow.util.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -78,8 +69,16 @@ public class SearchInstanceSubKeyResource {
         return ResponseEntity.ok(updated);
     }
 
+    @DeleteMapping(value = "/bulk/search-instances/{id}")
+    @Operation(summary = "Delete Search Instance")
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
     // CSV upload (public)
-    @PostMapping(value = "/bulk/search-instances/{id}/csv")
+    @PostMapping(value = "/bulk/search-instances/{id}/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV for Search Instance (public /sub)")
     public ResponseEntity<Void> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
         service.uploadCsv(id, file);
@@ -124,5 +123,43 @@ public class SearchInstanceSubKeyResource {
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    // Execute / rerun
+    @PostMapping(value = "/bulk/search-instances/{id}/execute")
+    @Operation(summary = "Execute Search Instance (set READY)")
+    public ResponseEntity<Void> execute(@PathVariable("id") UUID id) {
+        service.execute(id);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping(value = "/bulk/search-instances/{id}/rerun")
+    @Operation(summary = "Rerun Search Instance (set READY)")
+    public ResponseEntity<Void> rerun(@PathVariable("id") UUID id) {
+        service.rerun(id);
+        return ResponseEntity.accepted().build();
+    }
+
+    @GetMapping(value = "/bulk/search-instances/{id}/download")
+    @Operation(summary = "Download last ZIP result")
+    public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
+        Optional<byte[]> maybe = service.getLastResult(id);
+        return maybe.map(bytes -> ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(bytes))
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping(value = "/bulk/search-instances/{id}/perimeter/download")
+    @Operation(summary = "Download perimeter CSV for Search Instance")
+    public ResponseEntity<byte[]> downloadPerimeterCsv(@PathVariable("id") UUID id) {
+        Optional<byte[]> maybe = service.downloadPerimeterCsv(id);
+        return maybe.map(bytes -> {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+            ContentDisposition cd = ContentDisposition.builder("attachment")
+                .filename("generated-perimeter-" + id + ".csv")
+                .build();
+            headers.setContentDisposition(cd);
+            return ResponseEntity.ok().headers(headers).body(bytes);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

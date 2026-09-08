@@ -16,10 +16,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -95,26 +92,6 @@ public class SearchInstanceJwtTokenResource {
         return ResponseEntity.noContent().build();
     }
 
-    // Unified lifecycle endpoint: action in path (restore | archive | duplicate)
-    @PostMapping(value = "/bulk/search-instances/{id}/{action}")
-    @Operation(summary = "Perform lifecycle action (restore|archive|duplicate)")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<?> lifecycleAction(@PathVariable("id") UUID id, @PathVariable("action") SearchInstanceAction act) {
-
-        Optional<SearchInstanceDTO> maybe = service.performAction(id, act);
-        if (act == com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction.DUPLICATE) {
-            return maybe.map(dto -> {
-                try {
-                    URI location = new URI("/api/bulk/search-instances/" + (dto.getId() != null ? dto.getId() : ""));
-                    return ResponseEntity.status(HttpStatus.CREATED).location(location).body(dto);
-                } catch (URISyntaxException e) {
-                    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
-                }
-            }).orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-        }
-
-        return ResponseEntity.noContent().build();
-    }
 
     // CSV
     @PostMapping(value = "/bulk/search-instances/{id}/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -125,13 +102,7 @@ public class SearchInstanceJwtTokenResource {
         return ResponseEntity.accepted().build();
     }
 
-    @PostMapping(value = "/bulk/search-instances/{id}/csv/validate")
-    @Operation(summary = "Validate CSV for Search Instance")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<Boolean> validateCsv(@PathVariable("id") UUID id) {
-        boolean ok = service.validateCsv(id);
-        return ResponseEntity.ok(ok);
-    }
+
 
     // New endpoint: validate uploaded CSV file directly (pre-creation, no id)
     @PostMapping(value = "/bulk/search-instances/csv/validate-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -155,6 +126,28 @@ public class SearchInstanceJwtTokenResource {
         }
     }
 
+    // Unified lifecycle endpoint: action in path (restore | archive | duplicate)
+    @PostMapping(value = "/bulk/search-instances/{id}/{action}")
+    @Operation(summary = "Perform lifecycle action (restore|archive|duplicate)")
+    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    public ResponseEntity<?> lifecycleAction(@PathVariable("id") UUID id, @PathVariable("action") SearchInstanceAction act) {
+
+        Optional<SearchInstanceDTO> maybe = service.performAction(id, act);
+        if (act == com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction.DUPLICATE) {
+            return maybe.map(dto -> {
+                try {
+                    URI location = new URI("/api/bulk/search-instances/" + (dto.getId() != null ? dto.getId() : ""));
+                    return ResponseEntity.status(HttpStatus.CREATED).location(location).body(dto);
+                } catch (URISyntaxException e) {
+                    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+                }
+            }).orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+
     // Execute / rerun
     @PostMapping(value = "/bulk/search-instances/{id}/execute")
     @Operation(summary = "Execute Search Instance (set READY)")
@@ -172,15 +165,6 @@ public class SearchInstanceJwtTokenResource {
         return ResponseEntity.accepted().build();
     }
 
-    // Results
-    @GetMapping(value = "/bulk/search-instances/{id}/last-result")
-    @Operation(summary = "Get last result metadata / availability")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<Void> getLastResult(@PathVariable("id") UUID id) {
-        // TODO: return metadata – for now just 204 if present
-        Optional<byte[]> maybe = service.getLastResult(id);
-        return maybe.isPresent() ? ResponseEntity.ok().build() : ResponseEntity.noContent().build();
-    }
 
     @GetMapping(value = "/bulk/search-instances/{id}/download")
     @Operation(summary = "Download last ZIP result")
@@ -190,4 +174,21 @@ public class SearchInstanceJwtTokenResource {
         return maybe.map(bytes -> ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(bytes))
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping(value = "/bulk/search-instances/{id}/perimeter/download")
+    @Operation(summary = "Download perimeter CSV for Search Instance")
+    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    public ResponseEntity<byte[]> downloadPerimeterCsv(@PathVariable("id") UUID id) {
+        Optional<byte[]> maybe = service.downloadPerimeterCsv(id);
+        return maybe.map(bytes -> {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+            ContentDisposition cd = ContentDisposition.builder("attachment")
+                .filename("generated-perimeter-" + id + ".csv")
+                .build();
+            headers.setContentDisposition(cd);
+            return ResponseEntity.ok().headers(headers).body(bytes);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
 }
