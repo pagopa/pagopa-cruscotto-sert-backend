@@ -70,7 +70,7 @@ module "api_sert_subkey_v1" {
 
   service_url = null
 
-  content_format = "openapi"
+  content_format = "openapi+json"
   content_value = templatefile("../openapi/openapi_sert_subkey.json", {
     host = local.host
   })
@@ -129,7 +129,7 @@ module "api_sert_v1" {
 
   service_url = null
 
-  content_format = "openapi"
+  content_format = "openapi+json"
   content_value = templatefile("../openapi/openapi_sert.json", {
     host = local.host
   })
