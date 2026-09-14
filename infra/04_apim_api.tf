@@ -43,6 +43,10 @@ resource "time_sleep" "wait_after_sert_subkey_vs" {
     azurerm_api_management_api_version_set.api_version_set_sert_subkey
   ]
 
+  triggers = {
+    rollout = "2026-09-14-apim-api-create-v2"
+  }
+
   create_duration = "120s"
 }
 
@@ -98,6 +102,10 @@ resource "time_sleep" "wait_after_sert_vs" {
     azurerm_api_management_api_version_set.api_version_set_sert
   ]
 
+  triggers = {
+    rollout = "2026-09-14-apim-api-create-v2"
+  }
+
   create_duration = "120s"
 }
 
@@ -133,6 +141,7 @@ module "api_sert_v1" {
 
   depends_on = [
     azurerm_api_management_api_version_set.api_version_set_sert,
-    time_sleep.wait_after_sert_vs
+    time_sleep.wait_after_sert_vs,
+    module.api_sert_subkey_v1
   ]
 }
