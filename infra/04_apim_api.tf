@@ -93,6 +93,14 @@ resource "azurerm_api_management_api_version_set" "api_version_set_sert" {
   versioning_scheme   = "Segment"
 }
 
+resource "time_sleep" "wait_after_sert_vs" {
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_sert
+  ]
+
+  create_duration = "120s"
+}
+
 module "api_sert_v1" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
 
@@ -122,4 +130,9 @@ module "api_sert_v1" {
     hostname   = var.hostname
     origin     = var.origin
   })
+
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_sert,
+    time_sleep.wait_after_sert_vs
+  ]
 }
