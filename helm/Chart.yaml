@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopacruscottosertbackend
 description: Microservice description
 type: application
-version: 0.294.0
-appVersion: 1.0.0-2-feature-sert-mass-search-api
+version: 0.295.0
+appVersion: 1.0.0-3-feature-sert-mass-search-api
 dependencies:
   - name: microservice-chart
     version: 7.5.0
