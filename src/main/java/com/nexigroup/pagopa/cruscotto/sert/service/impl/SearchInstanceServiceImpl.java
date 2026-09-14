@@ -195,28 +195,41 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         instanceRepository.save(copy);
 
         // If original has a stored SearchFilter, deserialize and generate CSV for the new copy
-        try {
-            Optional<SearchFilter> maybeFilter = searchFilterRepository.findById(entity.getId());
-            if (maybeFilter.isPresent()) {
-                SearchFilter sf = maybeFilter.get();
-                if (sf.getFilterJson() != null && !sf.getFilterJson().isEmpty()) {
-                    try {
-                        SearchBulkFilterDTO filterDto = objectMapper.readValue(sf.getFilterJson(), SearchBulkFilterDTO.class);
-                        if (filterDto != null) {
-                            byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
-                            if (csvBytes != null && csvBytes.length > 0) {
-                                String content = HEADER_NAV_PA_N + new String(csvBytes, StandardCharsets.UTF_8);
-                                upsertPerimeterFileContent(copy, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
-                            }
+        Optional<SearchFilter> maybeFilter = searchFilterRepository.findById(entity.getId());
+
+        maybeFilter.ifPresent(sf -> {
+            if (sf.getFilterJson() != null && !sf.getFilterJson().isEmpty()) {
+                try {
+                    SearchBulkFilterDTO filterDto = objectMapper.readValue(
+                        sf.getFilterJson(),
+                        SearchBulkFilterDTO.class
+                    );
+
+                    if (filterDto != null) {
+                        byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
+
+                        if (csvBytes != null && csvBytes.length > 0) {
+                            String content = HEADER_NAV_PA_N
+                                + new String(csvBytes, StandardCharsets.UTF_8);
+
+                            upsertPerimeterFileContent(
+                                copy,
+                                "generated-perimeter.csv",
+                                content,
+                                CustomerGeneratedFile.GENERATED_FROM_FILTERS.name()
+                            );
                         }
-                    } catch (Exception ex) {
-                        log.error("Failed to deserialize SearchFilter.filterJson for instance {}: {}", entity.getId(), ex.getMessage(), ex);
                     }
+                } catch (Exception ex) {
+                    log.error(
+                        "Failed to deserialize SearchFilter.filterJson for instance {}: {}",
+                        entity.getId(),
+                        ex.getMessage(),
+                        ex
+                    );
                 }
             }
-        } catch (Exception e) {
-            log.error("Failed to generate perimeter CSV for duplicate instance {}: {}", copy.getId(), e.getMessage(), e);
-        }
+        });
 
         return toDto(copy);
     }
@@ -404,21 +417,15 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     @Override
     public Optional<byte[]> downloadPerimeterCsv(UUID instanceId) {
         SearchInstance instance = instanceRepository.findById(instanceId)
-            .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", "searchInstance", "idnotfound"));
+            .orElseThrow(() -> new BadRequestAlertException(
+                "SearchInstance not found",
+                "searchInstance",
+                "idnotfound"
+            ));
 
-        Optional<SearchPerimeterFile> maybe = perimeterFileRepository.findTopByInstanceOrderByCreatedAtDesc(instance);
-        if (maybe.isEmpty()) {
-            return Optional.empty();
-        }
-
-        SearchPerimeterFile file = maybe.get();
-
-        // prefer content stored in DB
-        if (StringUtils.hasText(file.getContent())) {
-            return Optional.of(file.getContent().getBytes(StandardCharsets.UTF_8));
-        }
-
-
-        return Optional.empty();
+        return perimeterFileRepository
+            .findTopByInstanceOrderByCreatedAtDesc(instance)
+            .filter(file -> StringUtils.hasText(file.getContent()))
+            .map(file -> file.getContent().getBytes(StandardCharsets.UTF_8));
     }
 }
