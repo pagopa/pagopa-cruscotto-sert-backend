@@ -80,7 +80,20 @@ public class SearchInstanceSubKeyResource {
     // CSV upload (public)
     @PostMapping(value = "/bulk/search-instances/{id}/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV for Search Instance (public /sub)")
-    public ResponseEntity<Void> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("No file uploaded");
+        }
+        try (InputStream is = file.getInputStream()) {
+            CsvValidationResult result = csvValidator.validate(is);
+            if (!result.valid()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to read uploaded file", e);
+        }
+
         service.uploadCsv(id, file);
         return ResponseEntity.accepted().build();
     }
@@ -140,7 +153,7 @@ public class SearchInstanceSubKeyResource {
         return ResponseEntity.accepted().build();
     }
 
-    @GetMapping(value = "/bulk/search-instances/{id}/download")
+    @GetMapping(value = "/bulk/search-instances/{id}/result/download")
     @Operation(summary = "Download last ZIP result")
     public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
         Optional<byte[]> maybe = service.getLastResult(id);

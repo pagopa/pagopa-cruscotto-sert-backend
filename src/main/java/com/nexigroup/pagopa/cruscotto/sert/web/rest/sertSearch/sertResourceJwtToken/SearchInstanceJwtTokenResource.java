@@ -97,7 +97,20 @@ public class SearchInstanceJwtTokenResource {
     @PostMapping(value = "/bulk/search-instances/{id}/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV for Search Instance")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<Void> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<CsvValidationResult> uploadCsv(@PathVariable("id") UUID id, @RequestParam("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+        }
+        try (InputStream is = file.getInputStream()) {
+            CsvValidationResult result = csvValidator.validate(is);
+            if (!result.valid()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to read uploaded file", e);
+        }
+
         service.uploadCsv(id, file);
         return ResponseEntity.accepted().build();
     }
@@ -108,11 +121,11 @@ public class SearchInstanceJwtTokenResource {
     @PostMapping(value = "/bulk/search-instances/csv/validate-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Validate uploaded CSV file for Search Instance (pre-creation)")
     @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
-    public ResponseEntity<?> validateUploadedCsv(
+    public ResponseEntity<CsvValidationResult> validateUploadedCsv(
         @RequestParam("file") MultipartFile file
     ) {
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body("No file uploaded");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
         }
         try (InputStream is = file.getInputStream()) {
             CsvValidationResult result = csvValidator.validate(is);
