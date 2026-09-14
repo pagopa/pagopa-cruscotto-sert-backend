@@ -6,6 +6,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.AnagIntermediarioPsp;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPaEmittente;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPsp;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AnagStazione;
+import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springdoc.core.annotations.ParameterObject;
@@ -35,7 +36,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/creditor-institutions")
     @Operation(summary = "Lookup creditor institutions (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<AnagPaEmittente>> creditorInstitutions(@ParameterObject Pageable pageable) {
         Page<AnagPaEmittente> page = service.findPaEmittente(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -44,7 +45,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/psp")
     @Operation(summary = "Lookup PSP (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<AnagPsp>> psp(@ParameterObject Pageable pageable) {
         Page<AnagPsp> page = service.findPsp(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -53,7 +54,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/intermediaries")
     @Operation(summary = "Lookup intermediaries (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<AnagIntermediarioPa>> intermediaries(@ParameterObject Pageable pageable) {
         Page<AnagIntermediarioPa> page = service.findIntermediaries(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -62,7 +63,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/intermediaries-psp")
     @Operation(summary = "Lookup intermediaries PSP (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<AnagIntermediarioPsp>> intermediariesPsp(@ParameterObject Pageable pageable) {
         Page<AnagIntermediarioPsp> page = service.findIntermediariesPsp(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -71,7 +72,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/stations")
     @Operation(summary = "Lookup stations (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<AnagStazione>> stations(@ParameterObject Pageable pageable) {
         Page<AnagStazione> page = service.findStations(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -80,7 +81,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/channels")
     @Operation(summary = "Lookup channels (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<AnagCanale>> channels(@ParameterObject Pageable pageable) {
         Page<AnagCanale> page = service.findChannels(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -89,7 +90,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/touchpoints")
     @Operation(summary = "Lookup touchpoints (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<String>> touchpoints(@ParameterObject Pageable pageable) {
         Page<String> page = service.findTouchpoints(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
@@ -98,7 +99,7 @@ public class SearchLookupJwtResource {
 
     @GetMapping("/payment-methods")
     @Operation(summary = "Lookup payment methods (paged) - JWT protected")
-    @PreAuthorize("hasAuthority('GTW.SERT_MASS_SEARCH')")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<List<String>> paymentMethods(@ParameterObject Pageable pageable) {
         Page<String> page = service.findPaymentMethods(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
