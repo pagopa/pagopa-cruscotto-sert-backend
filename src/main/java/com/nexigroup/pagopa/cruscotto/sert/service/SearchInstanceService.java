@@ -23,7 +23,7 @@ public interface SearchInstanceService {
     SearchInstanceDTO update(UUID id, SearchInstanceDTO dto);
     void delete(UUID id);
     Optional<SearchInstanceDTO> performAction(UUID id, SearchInstanceAction action);
-    void uploadCsv(UUID id, MultipartFile file);
+    void  uploadCsv(UUID id, MultipartFile file);
     void execute(UUID id);
     void rerun(UUID id);
     Optional<byte[]> getLastResult(UUID id);
