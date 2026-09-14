@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "OpenAPI definition",
-    "version": "0.11.8-1-feature/sert-mass-search-api"
+    "version": "0.11.8-2-feature-sert-mass-search-api"
   },
   "servers": [
     {
