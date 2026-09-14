@@ -110,7 +110,7 @@ resource "time_sleep" "wait_after_sert_vs" {
 }
 
 module "api_sert_v1" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+  source = "git::https://github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v10.22.0"
 
   name                  = format("%s-${local.repo_name}", var.env_short)
   api_management_name   = local.apim.name
