@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "OpenAPI definition",
-    "version": "1.0.0-9-feature-sert-mass-search-api"
+    "version": "1.0.0-7-feature-sert-mass-search-api"
   },
   "servers": [
     {
@@ -21,161 +21,6 @@
     }
   ],
   "paths": {
-    "/api/bulk/search-instances/{id}": {
-      "get": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Get Search Instance by id",
-        "operationId": "get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchInstanceDTO"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Update Search Instance",
-        "operationId": "update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SearchInstanceDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchInstanceDTO"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Delete Search Instance",
-        "operationId": "delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/auth-users": {
       "get": {
         "tags": [
@@ -219,15 +64,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthUserDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -242,12 +84,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthUserDTO"
+                  }
                 }
               }
             }
@@ -270,12 +115,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthUserDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -290,12 +135,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthUserDTO"
                 }
               }
             }
@@ -318,12 +163,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthUser"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -338,12 +183,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthUser"
                 }
               }
             }
@@ -369,8 +214,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -382,15 +234,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -458,15 +303,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthPermissionDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -481,12 +323,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthPermissionDTO"
+                  }
                 }
               }
             }
@@ -509,12 +354,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthPermissionDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -529,12 +374,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthPermissionDTO"
                 }
               }
             }
@@ -557,12 +402,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthPermissionDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -577,12 +422,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthPermissionDTO"
                 }
               }
             }
@@ -653,15 +498,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthGroupDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -676,12 +518,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthGroupDTO"
+                  }
                 }
               }
             }
@@ -704,12 +549,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthGroupDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -724,12 +569,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthGroupDTO"
                 }
               }
             }
@@ -752,12 +597,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthGroupDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -772,12 +617,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthGroupDTO"
                 }
               }
             }
@@ -805,8 +650,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -818,15 +670,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -894,15 +739,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthFunctionDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -917,12 +759,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthFunctionDTO"
+                  }
                 }
               }
             }
@@ -945,12 +790,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthFunctionDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -965,12 +810,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthFunctionDTO"
                 }
               }
             }
@@ -993,419 +838,32 @@
           "required": true
         },
         "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthFunctionDTO"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances": {
-      "get": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "List Search Instances",
-        "operationId": "list",
-        "parameters": [
-          {
-            "name": "pageable",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Pageable"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SearchInstanceDTO"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Create a new Search Instance",
-        "operationId": "create",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SearchInstanceDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchInstanceDTO"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/{id}/{action}": {
-      "post": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Perform lifecycle action (restore|archive|duplicate)",
-        "operationId": "lifecycleAction",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "action",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "RESTORE",
-                "ARCHIVE",
-                "DUPLICATE"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/{id}/rerun": {
-      "post": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Rerun Search Instance (set READY)",
-        "operationId": "rerun",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/{id}/execute": {
-      "post": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Execute Search Instance (set READY)",
-        "operationId": "execute",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/{id}/csv": {
-      "post": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Upload CSV for Search Instance",
-        "operationId": "uploadCsv",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "required": [
-                  "file"
-                ],
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CsvValidationResult"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/csv/validate-file": {
-      "post": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Validate uploaded CSV file for Search Instance (pre-creation)",
-        "operationId": "validateUploadedCsv",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "required": [
-                  "file"
-                ],
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CsvValidationResult"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -1430,8 +888,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -1443,15 +908,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1487,8 +945,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -1500,15 +965,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1544,8 +1002,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -1557,15 +1022,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1577,12 +1035,12 @@
         ],
         "operationId": "getAccount",
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthUserDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -1597,12 +1055,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthUserDTO"
                 }
               }
             }
@@ -1625,8 +1083,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -1638,15 +1103,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1668,8 +1126,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -1681,15 +1146,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1711,8 +1169,15 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -1724,15 +1189,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1745,6 +1203,26 @@
         "summary": "Actuator root web endpoint",
         "operationId": "links",
         "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -1779,26 +1257,6 @@
                       "$ref": "#/components/schemas/Link"
                     }
                   }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -1814,6 +1272,26 @@
         "summary": "Actuator web endpoint 'info'",
         "operationId": "info",
         "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -1830,26 +1308,6 @@
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -1865,6 +1323,26 @@
         "summary": "Actuator web endpoint 'health'",
         "operationId": "health",
         "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -1881,26 +1359,6 @@
               "application/json": {
                 "schema": {
                   "type": "object"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -1967,15 +1425,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/WorkflowObjectDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -1990,12 +1445,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowObjectDTO"
+                  }
                 }
               }
             }
@@ -2070,12 +1528,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransferPaymentDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -2090,12 +1548,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/TransferPaymentDTO"
                 }
               }
             }
@@ -2120,12 +1578,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenInfoDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -2140,12 +1598,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/TokenInfoDTO"
                 }
               }
             }
@@ -2244,15 +1702,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PositionPaymentExtraDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -2267,12 +1722,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PositionPaymentExtraDTO"
+                  }
                 }
               }
             }
@@ -2339,12 +1797,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PositionPaymentDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -2359,12 +1817,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/PositionPaymentDTO"
                 }
               }
             }
@@ -2389,8 +1847,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -2402,15 +1867,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -2466,778 +1924,32 @@
           }
         ],
         "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ExtraInfoResponseDTO"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/{id}/perimeter/download": {
-      "get": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Download perimeter CSV for Search Instance",
-        "operationId": "downloadPerimeterCsv",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string",
-                  "format": "byte"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/search-instances/{id}/download": {
-      "get": {
-        "tags": [
-          "search-instance-jwt-token-resource"
-        ],
-        "summary": "Download last ZIP result",
-        "operationId": "download",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string",
-                  "format": "byte"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/touchpoints": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup touchpoints (paged) - JWT protected",
-        "operationId": "touchpoints",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/stations": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup stations (paged) - JWT protected",
-        "operationId": "stations",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AnagStazione"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/psp": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup PSP (paged) - JWT protected",
-        "operationId": "psp",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AnagPsp"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/payment-methods": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup payment methods (paged) - JWT protected",
-        "operationId": "paymentMethods",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/intermediaries": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup intermediaries (paged) - JWT protected",
-        "operationId": "intermediaries",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AnagIntermediarioPa"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/intermediaries-psp": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup intermediaries PSP (paged) - JWT protected",
-        "operationId": "intermediariesPsp",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AnagIntermediarioPsp"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/creditor-institutions": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup creditor institutions (paged) - JWT protected",
-        "operationId": "creditorInstitutions",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AnagPaEmittente"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/bulk/lookups/channels": {
-      "get": {
-        "tags": [
-          "search-lookup-jwt-resource"
-        ],
-        "summary": "Lookup channels (paged) - JWT protected",
-        "operationId": "channels",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "Zero-based page index (0..N)",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "type": "integer",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "description": "The size of the page to be returned",
-            "required": false,
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AnagCanale"
-                  }
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Server error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3262,12 +1974,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthUserDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3282,12 +1994,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthUserDTO"
                 }
               }
             }
@@ -3310,8 +2022,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -3323,15 +2042,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -3354,12 +2066,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthUserDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3374,12 +2086,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthUserDTO"
                 }
               }
             }
@@ -3405,12 +2117,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthPermissionDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3425,12 +2137,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthPermissionDTO"
                 }
               }
             }
@@ -3454,8 +2166,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -3467,15 +2186,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -3532,15 +2244,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthPermissionDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3555,12 +2264,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthPermissionDTO"
+                  }
                 }
               }
             }
@@ -3628,15 +2340,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthPermissionDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3651,12 +2360,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthPermissionDTO"
+                  }
                 }
               }
             }
@@ -3682,12 +2394,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthGroupDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3702,12 +2414,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthGroupDTO"
                 }
               }
             }
@@ -3731,8 +2443,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -3744,15 +2463,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -3784,8 +2496,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -3797,15 +2516,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -3828,12 +2540,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthGroupDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3848,12 +2560,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthGroupDTO"
                 }
               }
             }
@@ -3879,12 +2591,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthFunctionDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -3899,12 +2611,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthFunctionDTO"
                 }
               }
             }
@@ -3928,8 +2640,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -3941,15 +2660,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -3981,8 +2693,15 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
           },
           "5XX": {
             "description": "Server error codes",
@@ -3994,15 +2713,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
-                }
-              }
-            }
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -4025,12 +2737,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthFunctionDTO"
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -4045,12 +2757,12 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "$ref": "#/components/schemas/AuthFunctionDTO"
                 }
               }
             }
@@ -4110,15 +2822,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthFunctionDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -4133,12 +2842,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthFunctionDTO"
+                  }
                 }
               }
             }
@@ -4206,15 +2918,12 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuthFunctionDTO"
-                  }
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
                 }
               }
             }
@@ -4229,12 +2938,15 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "200": {
+            "description": "OK",
             "content": {
-              "application/json": {
+              "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthFunctionDTO"
+                  }
                 }
               }
             }
@@ -4263,142 +2975,6 @@
           }
         },
         "description": "Rappresentazione dettagliata di un problema con causa"
-      },
-      "AmountFilter": {
-        "type": "object",
-        "properties": {
-          "exact": {
-            "type": "number"
-          },
-          "min": {
-            "type": "number"
-          },
-          "max": {
-            "type": "number"
-          }
-        }
-      },
-      "PaymentPeriod": {
-        "type": "object",
-        "properties": {
-          "from": {
-            "type": "string",
-            "format": "date"
-          },
-          "to": {
-            "type": "string",
-            "format": "date"
-          }
-        }
-      },
-      "SearchBulkFilterDTO": {
-        "type": "object",
-        "properties": {
-          "paymentPeriod": {
-            "$ref": "#/components/schemas/PaymentPeriod"
-          },
-          "paymentStatuses": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "OK",
-                "KO",
-                "NO_OUTCOME"
-              ]
-            }
-          },
-          "touchpoints": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "paymentMethods": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "amount": {
-            "$ref": "#/components/schemas/AmountFilter"
-          },
-          "creditors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "psps": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "technologicalPartners": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "channels": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "stations": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        }
-      },
-      "SearchInstanceDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "inputType": {
-            "type": "string",
-            "enum": [
-              "FILTER",
-              "CSV"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "DRAFT",
-              "READY",
-              "RUNNING",
-              "EXECUTED",
-              "FAILED",
-              "ARCHIVED"
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "perimeterFilter": {
-            "$ref": "#/components/schemas/SearchBulkFilterDTO"
-          }
-        }
       },
       "AuthUserUpdateRequestBean": {
         "required": [
@@ -4658,58 +3234,6 @@
           "livelloVisibilita": {
             "pattern": "^[0-9]{0,9}$",
             "type": "string"
-          }
-        }
-      },
-      "CsvValidationError": {
-        "type": "object",
-        "properties": {
-          "lineNumber": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "column": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "CsvValidationResult": {
-        "type": "object",
-        "properties": {
-          "valid": {
-            "type": "boolean"
-          },
-          "detectedTemplate": {
-            "type": "string",
-            "enum": [
-              "NAV_PA",
-              "IUV_PA",
-              "NAV",
-              "IUV",
-              "TOKEN",
-              "UNKNOWN"
-            ]
-          },
-          "totalRows": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "validRows": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "invalidRows": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CsvValidationError"
-            }
           }
         }
       },
@@ -5222,7 +3746,7 @@
         "properties": {
           "tokens": {
             "type": "integer",
-            "format": "int64"
+            "format": "int32"
           },
           "payed": {
             "$ref": "#/components/schemas/PayedDTO"
@@ -5282,111 +3806,6 @@
             "items": {
               "$ref": "#/components/schemas/ExtraInfoObjectDTO"
             }
-          }
-        }
-      },
-      "Pageable": {
-        "type": "object",
-        "properties": {
-          "page": {
-            "minimum": 0,
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "minimum": 1,
-            "type": "integer",
-            "format": "int32"
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "AnagStazione": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagPsp": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagIntermediarioPa": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagIntermediarioPsp": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagPaEmittente": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagCanale": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
           }
         }
       }
