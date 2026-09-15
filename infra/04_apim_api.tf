@@ -43,11 +43,15 @@ resource "time_sleep" "wait_after_sert_subkey_vs" {
     azurerm_api_management_api_version_set.api_version_set_sert_subkey
   ]
 
+  triggers = {
+    rollout = "2026-09-14-apim-api-create-v2"
+  }
+
   create_duration = "120s"
 }
 
 module "api_sert_subkey_v1" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+  source                = "git::https://github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v10.22.0"
 
   name                  = format("%s-${local.repo_name}-sert-subkey", var.env_short)
   api_management_name   = local.apim.name
@@ -66,7 +70,7 @@ module "api_sert_subkey_v1" {
 
   service_url = null
 
-  content_format = "openapi"
+  content_format = "openapi+json"
   content_value = templatefile("../openapi/openapi_sert_subkey.json", {
     host = local.host
   })
@@ -93,8 +97,20 @@ resource "azurerm_api_management_api_version_set" "api_version_set_sert" {
   versioning_scheme   = "Segment"
 }
 
+resource "time_sleep" "wait_after_sert_vs" {
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_sert
+  ]
+
+  triggers = {
+    rollout = "2026-09-14-apim-api-create-v2"
+  }
+
+  create_duration = "120s"
+}
+
 module "api_sert_v1" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v8.62.1"
+  source = "git::https://github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v10.22.0"
 
   name                  = format("%s-${local.repo_name}", var.env_short)
   api_management_name   = local.apim.name
@@ -113,7 +129,7 @@ module "api_sert_v1" {
 
   service_url = null
 
-  content_format = "openapi"
+  content_format = "openapi+json"
   content_value = templatefile("../openapi/openapi_sert.json", {
     host = local.host
   })
@@ -122,4 +138,10 @@ module "api_sert_v1" {
     hostname   = var.hostname
     origin     = var.origin
   })
+
+  depends_on = [
+    azurerm_api_management_api_version_set.api_version_set_sert,
+    time_sleep.wait_after_sert_vs,
+    module.api_sert_subkey_v1
+  ]
 }
