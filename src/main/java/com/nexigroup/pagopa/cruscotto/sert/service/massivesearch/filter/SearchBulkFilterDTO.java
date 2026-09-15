@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -54,8 +55,8 @@ public class SearchBulkFilterDTO {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PaymentPeriod {
-        private LocalDate from;
-        private LocalDate to;
+        private LocalDateTime from;
+        private LocalDateTime to;
     }
 
     /** Punctual amount ({@code exact}) or interval ({@code min}/{@code max}). */

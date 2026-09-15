@@ -35,10 +35,7 @@ public class CsvFromFilterGenerator {
         if (filter == null) return new byte[0];
 
         try {
-            Date paymentFrom = (filter.getPaymentPeriod() != null && filter.getPaymentPeriod().getFrom() != null)
-                ? Date.valueOf(filter.getPaymentPeriod().getFrom()) : null;
-            Date paymentTo = (filter.getPaymentPeriod() != null && filter.getPaymentPeriod().getTo() != null)
-                ? Date.valueOf(filter.getPaymentPeriod().getTo()) : null;
+
 
             BigDecimal amountExact = null;
             BigDecimal amountMin = null;
@@ -76,8 +73,8 @@ public class CsvFromFilterGenerator {
             List<Integer> stations = filter.getStations();
 
             List<Object[]> rows = positionRepository.findNavPaByFilter(
-                filter.getPaymentPeriod().getFrom().atStartOfDay(),
-                filter.getPaymentPeriod().getTo().atTime(LocalTime.MAX),
+                filter.getPaymentPeriod().getFrom(),
+                filter.getPaymentPeriod().getTo(),
                 statusStrings,
                 includeNoOutcome ? Boolean.TRUE : Boolean.FALSE,
                 CollectionUtils.isEmpty(touchpoints) ? null : touchpoints,
