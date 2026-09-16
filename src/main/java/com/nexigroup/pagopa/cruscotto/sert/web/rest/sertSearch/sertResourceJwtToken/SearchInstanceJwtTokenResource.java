@@ -1,10 +1,12 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
+import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
+import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.WrapperInstanceCsv;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,15 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.server.ResponseStatusException;
@@ -116,6 +110,52 @@ public class SearchInstanceJwtTokenResource {
 
         service.uploadCsv(id, file);
         return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping(
+        value = "/bulk/search-instances/csv",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @Operation(summary = "Upload CSV for Search Instance")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<WrapperInstanceCsv> saveInstanceCsv(
+        @RequestParam("name") String name,
+        @RequestPart("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "File is empty"
+            );
+        }
+
+        try (InputStream is = file.getInputStream()) {
+            CsvValidationResult result = csvValidator.validate(is);
+
+            if (!result.valid()) {
+                ;
+                return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(WrapperInstanceCsv.builder().result(result).build());
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Unable to read uploaded file",
+                e
+            );
+        }
+
+        SearchInstanceDTO dto = SearchInstanceDTO.builder()
+            .name(name)
+            .inputType(PerimeterSearchType.CSV)
+            .build();
+
+        SearchInstanceDTO instanceDTO = service.create(dto);
+
+        service.uploadCsv(instanceDTO.getId(), file);
+
+        return ResponseEntity.accepted().body(WrapperInstanceCsv.builder().searchInstanceDTO(instanceDTO).build());
     }
 
 

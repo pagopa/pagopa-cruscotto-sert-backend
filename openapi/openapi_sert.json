@@ -2,6 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API",
+    "description": "API Cruscotto Sert",
     "version": "1.0.0-14-feature-sert-mass-search-api"
   },
   "servers": [
@@ -1373,6 +1374,75 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CsvValidationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/search-instances/csv": {
+      "post": {
+        "tags": [
+          "search-instance-jwt-token-resource"
+        ],
+        "summary": "Upload CSV for Search Instance",
+        "operationId": "saveInstanceCsv",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrapperInstanceCsv"
                 }
               }
             }
@@ -4309,11 +4379,11 @@
         "properties": {
           "from": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           },
           "to": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           }
         }
       },
@@ -4482,7 +4552,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -4739,6 +4809,17 @@
           }
         }
       },
+      "WrapperInstanceCsv": {
+        "type": "object",
+        "properties": {
+          "searchInstanceDTO": {
+            "$ref": "#/components/schemas/SearchInstanceDTO"
+          },
+          "result": {
+            "$ref": "#/components/schemas/CsvValidationResult"
+          }
+        }
+      },
       "AuthUserCreateRequestBean": {
         "required": [
           "firstName",
@@ -4751,7 +4832,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -4889,7 +4970,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
