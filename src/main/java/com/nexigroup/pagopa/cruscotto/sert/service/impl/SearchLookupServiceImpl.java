@@ -41,42 +41,66 @@ public class SearchLookupServiceImpl implements SearchLookupService {
     }
 
     @Override
-    public Page<AnagPsp> findPsp(Pageable pageable) {
-        return anagPspRepository.findAll(pageable);
+    public Page<AnagPsp> findPsp(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return anagPspRepository.findAll(pageable);
+        }
+        return anagPspRepository.findAllWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<AnagStazione> findStations(Pageable pageable) {
-        return anagStazioneRepository.findAll(pageable);
+    public Page<AnagStazione> findStations(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return anagStazioneRepository.findAll(pageable);
+        }
+        return anagStazioneRepository.findAllWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<AnagIntermediarioPa> findIntermediaries(Pageable pageable) {
-        return anagIntermediarioPaRepository.findAll(pageable);
+    public Page<AnagIntermediarioPa> findIntermediaries(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return anagIntermediarioPaRepository.findAll(pageable);
+        }
+        return anagIntermediarioPaRepository.findAllWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<AnagIntermediarioPsp> findIntermediariesPsp(Pageable pageable) {
-        return anagIntermediarioPspRepository.findAll(pageable);
+    public Page<AnagIntermediarioPsp> findIntermediariesPsp(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return anagIntermediarioPspRepository.findAll(pageable);
+        }
+        return anagIntermediarioPspRepository.findAllWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<AnagCanale> findChannels(Pageable pageable) {
-        return anagCanaleRepository.findAll(pageable);
+    public Page<AnagCanale> findChannels(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return anagCanaleRepository.findAll(pageable);
+        }
+        return anagCanaleRepository.findAllWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<AnagPaEmittente> findPaEmittente(Pageable pageable) {
-        return anagPaEmittenteRepository.findAll(pageable);
+    public Page<AnagPaEmittente> findPaEmittente(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return anagPaEmittenteRepository.findAll(pageable);
+        }
+        return anagPaEmittenteRepository.findAllWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<String> findTouchpoints(Pageable pageable) {
-        return positionTokensRepository.findDistinctTouchpoints(pageable);
+    public Page<String> findTouchpoints(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return positionTokensRepository.findDistinctTouchpoints(pageable);
+        }
+        return positionTokensRepository.findDistinctTouchpointsWithSearch(search.trim(), pageable);
     }
 
     @Override
-    public Page<String> findPaymentMethods(Pageable pageable) {
-        return positionTokensRepository.findDistinctPaymentMethods(pageable);
+    public Page<String> findPaymentMethods(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return positionTokensRepository.findDistinctPaymentMethods(pageable);
+        }
+        return positionTokensRepository.findDistinctPaymentMethodsWithSearch(search.trim(), pageable);
     }
 }

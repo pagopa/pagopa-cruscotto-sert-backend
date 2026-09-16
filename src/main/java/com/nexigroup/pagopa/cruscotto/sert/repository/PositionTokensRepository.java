@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -14,6 +15,13 @@ public interface PositionTokensRepository extends JpaRepository<PositionTokens, 
     @Query("SELECT DISTINCT p.touchpoint FROM PositionTokens p WHERE p.touchpoint IS NOT NULL")
     Page<String> findDistinctTouchpoints(Pageable pageable);
 
+    @Query("SELECT DISTINCT p.touchpoint FROM PositionTokens p WHERE p.touchpoint IS NOT NULL AND LOWER(p.touchpoint) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<String> findDistinctTouchpointsWithSearch(@Param("search") String search, Pageable pageable);
+
     @Query("SELECT DISTINCT p.paymentMethod FROM PositionTokens p WHERE p.paymentMethod IS NOT NULL")
     Page<String> findDistinctPaymentMethods(Pageable pageable);
+
+    @Query("SELECT DISTINCT p.paymentMethod FROM PositionTokens p WHERE p.paymentMethod IS NOT NULL AND LOWER(p.paymentMethod) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<String> findDistinctPaymentMethodsWithSearch(@Param("search") String search, Pageable pageable);
 }
+

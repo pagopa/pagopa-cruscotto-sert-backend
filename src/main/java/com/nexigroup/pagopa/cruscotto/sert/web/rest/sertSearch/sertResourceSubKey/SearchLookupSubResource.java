@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -34,64 +35,88 @@ public class SearchLookupSubResource {
 
     @GetMapping("/creditor-institutions")
     @Operation(summary = "Lookup creditor institutions (paged) - sub key public")
-    public ResponseEntity<List<AnagPaEmittente>> creditorInstitutions(@ParameterObject Pageable pageable) {
-        Page<AnagPaEmittente> page = service.findPaEmittente(pageable);
+    public ResponseEntity<List<AnagPaEmittente>> creditorInstitutions(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<AnagPaEmittente> page = service.findPaEmittente(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/psp")
     @Operation(summary = "Lookup PSP (paged) - sub key public")
-    public ResponseEntity<List<AnagPsp>> psp(@ParameterObject Pageable pageable) {
-        Page<AnagPsp> page = service.findPsp(pageable);
+    public ResponseEntity<List<AnagPsp>> psp(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<AnagPsp> page = service.findPsp(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/intermediaries")
     @Operation(summary = "Lookup intermediaries (paged) - sub key public")
-    public ResponseEntity<List<AnagIntermediarioPa>> intermediaries(@ParameterObject Pageable pageable) {
-        Page<AnagIntermediarioPa> page = service.findIntermediaries(pageable);
+    public ResponseEntity<List<AnagIntermediarioPa>> intermediaries(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<AnagIntermediarioPa> page = service.findIntermediaries(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/intermediaries-psp")
     @Operation(summary = "Lookup intermediaries PSP (paged) - sub key public")
-    public ResponseEntity<List<AnagIntermediarioPsp>> intermediariesPsp(@ParameterObject Pageable pageable) {
-        Page<AnagIntermediarioPsp> page = service.findIntermediariesPsp(pageable);
+    public ResponseEntity<List<AnagIntermediarioPsp>> intermediariesPsp(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<AnagIntermediarioPsp> page = service.findIntermediariesPsp(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/stations")
     @Operation(summary = "Lookup stations (paged) - sub key public")
-    public ResponseEntity<List<AnagStazione>> stations(@ParameterObject Pageable pageable) {
-        Page<AnagStazione> page = service.findStations(pageable);
+    public ResponseEntity<List<AnagStazione>> stations(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<AnagStazione> page = service.findStations(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/channels")
     @Operation(summary = "Lookup channels (paged) - sub key public")
-    public ResponseEntity<List<AnagCanale>> channels(@ParameterObject Pageable pageable) {
-        Page<AnagCanale> page = service.findChannels(pageable);
+    public ResponseEntity<List<AnagCanale>> channels(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<AnagCanale> page = service.findChannels(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/touchpoints")
     @Operation(summary = "Lookup touchpoints (paged) - sub key public")
-    public ResponseEntity<List<String>> touchpoints(@ParameterObject Pageable pageable) {
-        Page<String> page = service.findTouchpoints(pageable);
+    public ResponseEntity<List<String>> touchpoints(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<String> page = service.findTouchpoints(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
     @GetMapping("/payment-methods")
     @Operation(summary = "Lookup payment methods (paged) - sub key public")
-    public ResponseEntity<List<String>> paymentMethods(@ParameterObject Pageable pageable) {
-        Page<String> page = service.findPaymentMethods(pageable);
+    public ResponseEntity<List<String>> paymentMethods(
+        @RequestParam(name = "search", required = false) String search,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<String> page = service.findPaymentMethods(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
