@@ -2710,6 +2710,14 @@
         "operationId": "touchpoints",
         "parameters": [
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2789,6 +2797,14 @@
         "summary": "Lookup stations (paged) - JWT protected",
         "operationId": "stations",
         "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "page",
             "in": "query",
@@ -2870,6 +2886,14 @@
         "operationId": "psp",
         "parameters": [
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2949,6 +2973,14 @@
         "summary": "Lookup payment methods (paged) - JWT protected",
         "operationId": "paymentMethods",
         "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "page",
             "in": "query",
@@ -3030,6 +3062,14 @@
         "operationId": "intermediaries",
         "parameters": [
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -3109,6 +3149,14 @@
         "summary": "Lookup intermediaries PSP (paged) - JWT protected",
         "operationId": "intermediariesPsp",
         "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "page",
             "in": "query",
@@ -3190,6 +3238,14 @@
         "operationId": "creditorInstitutions",
         "parameters": [
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -3269,6 +3325,14 @@
         "summary": "Lookup channels (paged) - JWT protected",
         "operationId": "channels",
         "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "page",
             "in": "query",
@@ -4552,7 +4616,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -4832,7 +4896,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -4970,7 +5034,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5454,7 +5518,7 @@
         "properties": {
           "id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "codice": {
             "type": "string"
