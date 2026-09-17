@@ -1,6 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
+import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SelectedReports;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
@@ -120,6 +121,7 @@ public class SearchInstanceJwtTokenResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<WrapperInstanceCsv> saveInstanceCsv(
         @RequestParam("name") String name,
+        @RequestParam("selectedReports") SelectedReports selectedReports,
         @RequestPart("file") MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
@@ -148,6 +150,7 @@ public class SearchInstanceJwtTokenResource {
 
         SearchInstanceDTO dto = SearchInstanceDTO.builder()
             .name(name)
+            .selectedReports(selectedReports)
             .inputType(PerimeterSearchType.CSV)
             .build();
 

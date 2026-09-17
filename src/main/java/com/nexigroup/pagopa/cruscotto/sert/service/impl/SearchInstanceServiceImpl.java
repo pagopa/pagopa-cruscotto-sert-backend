@@ -8,6 +8,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.CustomerGeneratedFile;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
+import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SelectedReports;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchFilterRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileRepository;
@@ -31,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -89,11 +91,14 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         this.objectMapper= objectMapper;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
     public SearchInstanceDTO create(SearchInstanceDTO dto) {
+        requireSelectedReports(dto);
         SearchInstance entity = SearchInstance.builder()
             .id(dto.getId() != null ? dto.getId() : UUID.randomUUID())
             .name(dto.getName())
             .inputType(dto.getInputType().name())
+            .selectedReports(dto.getSelectedReports().name())
             .status(dto.getStatus() != null ? dto.getStatus().name() : "DRAFT")
             .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now())
             .updatedAt(Instant.now())
@@ -138,11 +143,14 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         return instanceRepository.findById(id).map(this::toDto);
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
     public SearchInstanceDTO update(UUID id, SearchInstanceDTO dto) {
+        requireSelectedReports(dto);
         SearchInstance entity = instanceRepository.findById(id)
             .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
         entity.setName(dto.getName());
         entity.setInputType(dto.getInputType().name());
+        entity.setSelectedReports(dto.getSelectedReports().name());
         if (dto.getStatus() != null) {
             entity.setStatus(dto.getStatus().name());
         }
@@ -188,6 +196,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .id(UUID.randomUUID())
             .name(entity.getName() + " (copy)")
             .inputType(entity.getInputType())
+            .selectedReports(entity.getSelectedReports())
             .status(SearchInstanceStatus.DRAFT.name())
             .createdAt(Instant.now())
             .updatedAt(Instant.now())
@@ -270,6 +279,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
     public void uploadCsv(UUID id, MultipartFile file)  {
         try {
             SearchInstance instance = instanceRepository.findById(id)
@@ -377,6 +387,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .id(entity.getId())
             .name(entity.getName())
             .inputType(PerimeterSearchType.fromString(entity.getInputType()))
+            .selectedReports(SelectedReports.fromString(entity.getSelectedReports()))
             .status(SearchInstanceStatus.fromString(entity.getStatus()))
             .createdAt(entity.getCreatedAt())
             .updatedAt(entity.getUpdatedAt())
@@ -384,6 +395,12 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .build();
 
 
+    }
+
+    private void requireSelectedReports(SearchInstanceDTO dto) {
+        if (dto.getSelectedReports() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "selectedReports is required");
+        }
     }
 
     private void upsertPerimeterFileContent(SearchInstance instance, String filename, String content, String source) {
