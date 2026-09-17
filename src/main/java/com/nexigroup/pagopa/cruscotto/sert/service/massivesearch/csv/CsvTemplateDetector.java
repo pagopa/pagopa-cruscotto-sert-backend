@@ -6,9 +6,8 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 
 /**
- * Recognizes the {@link CsvTemplate} of an uploaded CSV from its header row and resolves the column
- * index of each logical field. Header matching is case-insensitive and accepts common synonyms for
- * the {@code PA} column (e.g. {@code idDominio}).
+ * recognizes the {@link CsvTemplate} of an uploaded CSV from its header row and resolves the column
+ * index of each logical field. Header matching is case-insensitive.
  */
 @Component
 public class CsvTemplateDetector {
@@ -20,12 +19,7 @@ public class CsvTemplateDetector {
         Map.entry("nav", Field.NAV),
         Map.entry("iuv", Field.IUV),
         Map.entry("token", Field.TOKEN),
-        // idDominio / Ente Creditore column. "EC" is the header used by the client's perimeter CSVs
-        // (NAV;EC, IUV;EC); the other spellings are accepted as tolerant synonyms.
-        Map.entry("ec", Field.PA),
-        Map.entry("pa", Field.PA),
-        Map.entry("iddominio", Field.PA),
-        Map.entry("id_dominio", Field.PA)
+        Map.entry("dominio", Field.PA)
     );
 
     /**

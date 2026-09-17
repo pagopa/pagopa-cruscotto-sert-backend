@@ -3,20 +3,20 @@ package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplateDetector.Field;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplateDetector.TemplateDetection;
-import io.undertow.util.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Validates an uploaded Massive Search CSV and detects its template, streaming the source line by
@@ -27,6 +27,8 @@ import java.util.function.Consumer;
 @Slf4j
 @Service
 public class MassiveSearchCsvValidator {
+
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("[0-9A-Fa-f]{32}.{0,3}");
 
     private final CsvTemplateDetector templateDetector;
     private final CsvInputReader inputReader;
@@ -57,14 +59,17 @@ public class MassiveSearchCsvValidator {
 
         try {
             String headerLine = readHeaderLine(reader);
+            if (headerLine == null || inputReader.isBlank(headerLine)) {
+                throw new IllegalArgumentException(CsvValidationMessage.MISSING_HEADER.format());
+            }
             List<String> headerColumns = inputReader.parseLine(headerLine);
             TemplateDetection detection = templateDetector.detect(headerColumns);
             if (detection.template() == CsvTemplate.UNKNOWN) {
-                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File malformed Unable extract  CSV Template");
+                throw new IllegalArgumentException(CsvValidationMessage.UNKNOWN_HEADER.format());
             }
             return detection.template();
         } catch (IOException e) {
-            throw new UncheckedIOException("Unable extract  CSV TEmplate ", e);
+            throw new UncheckedIOException("Unable to extract CSV template", e);
         }
 
 
@@ -77,8 +82,8 @@ public class MassiveSearchCsvValidator {
             BufferedReader reader = inputReader.newReader(inputStream);
 
             String headerLine = readHeaderLine(reader);
-            if (headerLine == null) {
-                addError(errors, CsvValidationError.row(1, "Missing header row"));
+            if (headerLine == null || inputReader.isBlank(headerLine)) {
+                addError(errors, CsvValidationError.row(1, CsvValidationMessage.MISSING_HEADER.format()));
                 return invalidResult(CsvTemplate.UNKNOWN, errors);
             }
 
@@ -87,12 +92,12 @@ public class MassiveSearchCsvValidator {
             boolean headerValid = validateHeader(detection, errors);
 
             if (detection.template() == CsvTemplate.UNKNOWN) {
-                addError(errors, CsvValidationError.row(1, "Unrecognized CSV template from header"));
+                addError(errors, CsvValidationError.row(1, CsvValidationMessage.UNKNOWN_HEADER.format()));
                 return invalidResult(CsvTemplate.UNKNOWN, errors);
             }
 
             Set<Field> requiredFields = requiredFields(detection.template());
-            int expectedColumnCount = headerColumns.size();
+            int expectedColumnCount = requiredFields.size();
 
             long totalRows = 0;
             long validRows = 0;
@@ -105,7 +110,7 @@ public class MassiveSearchCsvValidator {
                 if (inputReader.isBlank(line)) {
                     totalRows++;
                     invalidRows++;
-                    addError(errors, CsvValidationError.row(lineNumber, "Empty row"));
+                    addError(errors, CsvValidationError.row(lineNumber, CsvValidationMessage.EMPTY_ROW.format()));
                     continue;
                 }
 
@@ -114,7 +119,7 @@ public class MassiveSearchCsvValidator {
                 if (columns.size() != expectedColumnCount) {
                     invalidRows++;
                     addError(errors, CsvValidationError.row(lineNumber,
-                        "Unexpected column count: expected " + expectedColumnCount + " but found " + columns.size()));
+                        CsvValidationMessage.COLUMN_COUNT.format(expectedColumnCount, columns.size())));
                     continue;
                 }
 
@@ -132,7 +137,7 @@ public class MassiveSearchCsvValidator {
             }
 
             if (totalRows == 0) {
-                addError(errors, CsvValidationError.row(1, "No data rows"));
+                addError(errors, CsvValidationError.row(1, CsvValidationMessage.NO_DATA_ROWS.format()));
             }
             boolean valid = headerValid && invalidRows == 0 && totalRows > 0;
             log.info("phase=CSV_VALIDATED template={} valid={} totalRows={} validRows={} invalidRows={} errors={}",
@@ -150,36 +155,75 @@ public class MassiveSearchCsvValidator {
     }
 
     private String readHeaderLine(BufferedReader reader) throws IOException {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (!inputReader.isBlank(line)) {
-                return line;
-            }
-        }
-        return null;
+        return reader.readLine();
     }
 
     private boolean validateHeader(TemplateDetection detection, List<CsvValidationError> errors) {
         boolean valid = true;
         for (String unexpected : detection.unexpectedColumns()) {
             valid = false;
-            addError(errors, CsvValidationError.column(1, unexpected, "Unexpected column"));
+            addError(errors, CsvValidationError.column(1, unexpected,
+                CsvValidationMessage.UNEXPECTED_COLUMN.format()));
         }
         for (String duplicate : detection.duplicateColumns()) {
             valid = false;
-            addError(errors, CsvValidationError.column(1, duplicate, "Duplicate column"));
+            addError(errors, CsvValidationError.column(1, duplicate,
+                CsvValidationMessage.DUPLICATE_COLUMN.format()));
         }
         return valid;
     }
 
-    private List<CsvValidationError> validateRow(long lineNumber, Set<Field> requiredFields, SearchInputRow row) {
+    private List<CsvValidationError> validateRow(
+        long lineNumber,
+        Set<Field> requiredFields,
+        SearchInputRow row
+    ) {
         List<CsvValidationError> rowErrors = new ArrayList<>();
         for (Field field : requiredFields) {
-            if (valueOf(field, row) == null) {
-                rowErrors.add(CsvValidationError.column(lineNumber, field.name(), "Missing mandatory value"));
+            String value = valueOf(field, row);
+            String column = columnName(field);
+            if (value == null) {
+                rowErrors.add(CsvValidationError.column(lineNumber, column,
+                    CsvValidationMessage.MISSING_VALUE.format()));
+            } else if (field == Field.TOKEN) {
+                if (!isValidToken(value)) {
+                    rowErrors.add(CsvValidationError.column(lineNumber, column,
+                        CsvValidationMessage.INVALID_TOKEN.format()));
+                }
+            } else {
+                int expectedLength = CsvColumnLength.forField(field);
+                if (value.length() != expectedLength) {
+                    rowErrors.add(CsvValidationError.column(lineNumber, column,
+                        CsvValidationMessage.INVALID_LENGTH.format(expectedLength, value.length())));
+                }
             }
         }
         return rowErrors;
+    }
+
+    private boolean isValidToken(String value) {
+        if (value.length() < CsvColumnLength.TOKEN_MIN_LENGTH
+            || value.length() > CsvColumnLength.TOKEN_MAX_LENGTH
+            || !TOKEN_PATTERN.matcher(value).matches()) {
+            return false;
+        }
+
+        String baseUuid = value.substring(0, CsvColumnLength.TOKEN_MIN_LENGTH);
+        String uuidWithDashes = baseUuid.substring(0, 8) + "-"
+            + baseUuid.substring(8, 12) + "-"
+            + baseUuid.substring(12, 16) + "-"
+            + baseUuid.substring(16, 20) + "-"
+            + baseUuid.substring(20);
+        try {
+            UUID.fromString(uuidWithDashes);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    private String columnName(Field field) {
+        return field == Field.PA ? "DOMINIO" : field.name();
     }
 
     private String valueOf(Field field, SearchInputRow row) {
@@ -193,11 +237,11 @@ public class MassiveSearchCsvValidator {
 
     private Set<Field> requiredFields(CsvTemplate template) {
         return switch (template) {
-            case NAV_PA -> Set.of(Field.NAV, Field.PA);
-            case IUV_PA -> Set.of(Field.IUV, Field.PA);
-            case NAV -> Set.of(Field.NAV);
-            case IUV -> Set.of(Field.IUV);
-            case TOKEN -> Set.of(Field.TOKEN);
+            case NAV_PA -> EnumSet.of(Field.NAV, Field.PA);
+            case IUV_PA -> EnumSet.of(Field.IUV, Field.PA);
+            case NAV -> EnumSet.of(Field.NAV);
+            case IUV -> EnumSet.of(Field.IUV);
+            case TOKEN -> EnumSet.of(Field.TOKEN);
             case UNKNOWN -> Set.of();
         };
     }

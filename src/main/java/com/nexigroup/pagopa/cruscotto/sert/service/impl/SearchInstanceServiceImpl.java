@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     private static final String ENTITY_NAME = "searchInstance";
-    public static final String HEADER_NAV_PA_N = "\"NAV\";\"PA\"\n";
+    public static final String HEADER_NAV_PA_N = "\"NAV\";\"DOMINIO\"\n";
 
     private final Logger log = LoggerFactory.getLogger(SearchInstanceServiceImpl.class);
 
