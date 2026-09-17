@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.nexigroup.pagopa.cruscotto</groupId>
   <artifactId>pagopa-cruscotto-sert-backend</artifactId>
-  <version>1.0.0-17-feature-sert-mass-search-api</version>
+  <version>1.0.0-18-feature-sert-mass-search-api</version>
   <packaging>jar</packaging>
   <name>PagoPa Ingestor View Backend</name>
   <description>PagoPa Ingestor View  Backend</description>
