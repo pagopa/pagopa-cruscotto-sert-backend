@@ -20,7 +20,7 @@ public class AnagPaEmittente {
 
     @Id
     @Column(name = "ID", nullable = false)
-    private Short id;
+    private Long id;
 
     @Column(name = "CODICE", nullable = false)
     private String codice;

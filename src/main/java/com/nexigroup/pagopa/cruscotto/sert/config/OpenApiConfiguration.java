@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.config;
 
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
@@ -41,9 +42,11 @@ public class OpenApiConfiguration {
     @Bean
     public GroupedOpenApi sertApi() {
         return GroupedOpenApi.builder()
+            .displayName("Cruscotto Sert pagoPA backend service API")
             .group("sertSearch")
             .pathsToMatch(
-                "/management/**", "/api/**"
+                "/management/**",
+                "/api/**"
             )
             .pathsToExclude(
                 "/management/env/**",
@@ -54,19 +57,33 @@ public class OpenApiConfiguration {
                 "/management/caches/**",
                 "/management/jhimetrics/**",
                 "/management/jhiopenapigroups/**",
-                ("/sub/api/**")
-
+                "/sub/api/**"
             )
-
-
+            .addOpenApiCustomizer(openApi ->
+                openApi.info(new Info()
+                    .title("Cruscotto Sert pagoPA backend service API")
+                    .version("1.0.0")
+                    .description("API Cruscotto Sert")
+                )
+            )
             .build();
     }
 
     @Bean
     public GroupedOpenApi subKeySertApi() {
         return GroupedOpenApi.builder()
+            .displayName("Cruscotto Sert pagoPA backend service API (Subscription Key)")
             .group("subKeySertSearchApi")
-            .packagesToScan("com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey")
+            .packagesToScan(
+                "com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey"
+            )
+            .addOpenApiCustomizer(openApi ->
+                openApi.info(new Info()
+                    .title("Cruscotto Sert pagoPA backend service API - Subscription Key")
+                    .version("1.0.0")
+                    .description("API Cruscotto Sert con Subscription Key")
+                )
+            )
             .build();
     }
 }
