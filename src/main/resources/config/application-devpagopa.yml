@@ -26,6 +26,7 @@ spring:
     password: ${ENV_DATASOURCE_PASSWORD:password}
     hikari:
       poolName: Hikari
+      maximum-pool-size: 25
       auto-commit: false
   jpa:
     properties:

@@ -68,22 +68,73 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                    "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, " +
-                   "FUNCTION('STRING_AGG', ei.infoName, ',') AS infoMatch " +
-                   "FROM Position p " +
-                   "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-                   "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
-                   "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-                   "WHERE ei.infoValue = :searchValue " +
-                   "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-                   "GROUP BY p.nav, p.paEmittente, ape.description",
-           countQuery = "SELECT count(distinct p.id) FROM Position p " +
-                        "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-                        "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
-                        "WHERE ei.infoValue = :searchValue AND (:nav IS NULL OR p.nav = :nav) " +
-                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(@Param("searchValue") String searchValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+    @Query(
+        value = """
+        WITH filtered AS MATERIALIZED (
+            SELECT
+                ei.fk_token,
+                ei.info_name
+            FROM sert_ingestor.extra_info ei
+            WHERE ei.info_value = :searchValue
+        ),
+        token_position AS MATERIALIZED (
+            SELECT
+                pt.fk_position,
+                f.info_name
+            FROM filtered f
+            JOIN sert_ingestor.position_tokens pt
+                ON pt.id = f.fk_token
+        )
+        SELECT
+            p.nav AS nav,
+            ape.description AS paEmittente,
+            string_agg(tp.info_name, ',') AS infoMatch
+        FROM token_position tp
+        JOIN sert_ingestor.position p
+            ON p.id = tp.fk_position
+        LEFT JOIN sert_ingestor.anag_pa_emittente ape
+            ON ape.codice = p.pa_emittente
+        WHERE (:nav IS NULL OR p.nav = :nav)
+          AND (:pa IS NULL OR p.pa_emittente = :pa)
+        GROUP BY
+            p.nav,
+            p.pa_emittente,
+            ape.description
+        """,
+        countQuery = """
+        WITH filtered AS MATERIALIZED (
+            SELECT
+                ei.fk_token
+            FROM sert_ingestor.extra_info ei
+            WHERE ei.info_value = :searchValue
+        ),
+        token_position AS MATERIALIZED (
+            SELECT
+                pt.fk_position
+            FROM filtered f
+            JOIN sert_ingestor.position_tokens pt
+                ON pt.id = f.fk_token
+        )
+        SELECT count(*)
+        FROM (
+            SELECT
+                p.id
+            FROM token_position tp
+            JOIN sert_ingestor.position p
+                ON p.id = tp.fk_position
+            WHERE (:nav IS NULL OR p.nav = :nav)
+              AND (:pa IS NULL OR p.pa_emittente = :pa)
+            GROUP BY p.id
+        ) x
+        """,
+        nativeQuery = true
+    )
+    Page<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(
+        @Param("searchValue") String searchValue,
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT " +
         "p.nav AS nav, " +
