@@ -1,10 +1,8 @@
 package com.nexigroup.pagopa.cruscotto.sert.repository;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
-import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -19,60 +17,53 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
     Page<Object[]> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
-                   "WHERE pt.fkPosition = p.id " +
-                   "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
-                   "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-                   "GROUP BY p.nav, p.paEmittente ",
-           countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
-                        "WHERE pt.fkPosition = p.id " +
-                        "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
-                        "AND (:nav IS NULL OR p.nav = :nav) " +
-                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+        "WHERE pt.fkPosition = p.id " +
+        "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Object[]> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
-                   "WHERE pt.fkPosition = p.id " +
-                   "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-                   "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-                   "GROUP BY p.nav, p.paEmittente ",
-           countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
-                        "WHERE pt.fkPosition = p.id " +
-                        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-                        "AND (:nav IS NULL OR p.nav = :nav) " +
-                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+        "WHERE pt.fkPosition = p.id " +
+        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Object[]> findByTokenAndOptionalNavAndPa(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
-                   "WHERE pt.fkPosition = p.id " +
-                   "AND pt.idCarrello = :idCart " +
-                   "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-                   "GROUP BY p.nav, p.paEmittente ",
-           countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
-                        "WHERE pt.fkPosition = p.id " +
-                        "AND pt.idCarrello = :idCart " +
-                        "AND (:nav IS NULL OR p.nav = :nav) " +
-                        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+        "WHERE pt.fkPosition = p.id " +
+        "AND pt.idCarrello = :idCart " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND pt.idCarrello = :idCart " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Object[]> findByCartAndOptionalNavAndPa(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt, ExtraInfo ei " +
-                   "WHERE pt.fkPosition = p.id " +
-                   "AND ei.fkToken = pt.id " +
-                   "AND ei.infoName = :infoName " +
-                   "AND ei.infoValue = :infoValue " +
-                   "AND (:nav IS NULL OR p.nav = :nav) " +
-                   "AND (:pa IS NULL OR p.paEmittente = :pa)")
+        "WHERE pt.fkPosition = p.id " +
+        "AND ei.fkToken = pt.id " +
+        "AND ei.infoName = :infoName " +
+        "AND ei.infoValue = :infoValue " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @QueryHints(
-        value = @QueryHint(
-            name = "org.hibernate.comment",
-            value = "PositionRepository.findGroupedByExtraValueAndOptionalNavAndPa"
-        ),
-        forCounting = false
-    )
     @Query(
         value = """
         WITH filtered AS MATERIALIZED (
@@ -105,40 +96,14 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             p.nav,
             p.pa_emittente,
             ape.description
-        """,
-        countQuery = """
-        WITH filtered AS MATERIALIZED (
-            SELECT
-                ei.fk_token
-            FROM sert_ingestor.extra_info ei
-            WHERE ei.info_value = :searchValue
-        ),
-        token_position AS MATERIALIZED (
-            SELECT
-                pt.fk_position
-            FROM filtered f
-            JOIN sert_ingestor.position_tokens pt
-                ON pt.id = f.fk_token
-        )
-        SELECT count(*)
-        FROM (
-            SELECT
-                p.id
-            FROM token_position tp
-            JOIN sert_ingestor.position p
-                ON p.id = tp.fk_position
-            WHERE (:nav IS NULL OR p.nav = :nav)
-              AND (:pa IS NULL OR p.pa_emittente = :pa)
-            GROUP BY p.id
-        ) x
+        ORDER BY ape.description DESC
         """,
         nativeQuery = true
     )
-    Page<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(
+    List<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(
         @Param("searchValue") String searchValue,
         @Param("nav") String nav,
-        @Param("pa") String pa,
-        Pageable pageable
+        @Param("pa") String pa
     );
 
     @Query(value = "SELECT " +
@@ -219,22 +184,22 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
     List<Object[]> findTokenDetailRow(@Param("token") String token);
 
     @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, p.lastEvent AS lastEvent, " +
-                    "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-                    "(SELECT COUNT(ptr2.id) FROM PositionTransfers ptr2 WHERE ptr2.fkToken = pt.id) AS transfersCount, " +
-                    "ptr.idTransfer AS idTransfer, ptr.isBollo AS isBollo, " +
-                    "ptr.ibanTransfer AS ibanTransfer, ptr.amountTransfer AS amountTransfer, ptr.paTransfer AS paTransfer, " +
-                    "ptr.dateEvent AS transferDateEvent " +
-                    "FROM Position p " +
-                    "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-                    "JOIN PositionTransfers ptr ON ptr.fkToken = pt.id " +
-                    "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-                    "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-                    "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-     Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
+        "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
+        "(SELECT COUNT(ptr2.id) FROM PositionTransfers ptr2 WHERE ptr2.fkToken = pt.id) AS transfersCount, " +
+        "ptr.idTransfer AS idTransfer, ptr.isBollo AS isBollo, " +
+        "ptr.ibanTransfer AS ibanTransfer, ptr.amountTransfer AS amountTransfer, ptr.paTransfer AS paTransfer, " +
+        "ptr.dateEvent AS transferDateEvent " +
+        "FROM Position p " +
+        "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+        "JOIN PositionTransfers ptr ON ptr.fkToken = pt.id " +
+        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
+    Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
 
     @Query(value =
         "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
-        "FROM ( " +
+            "FROM ( " +
             "SELECT " +
             "ew.insertedTimestampResp AS insertedtimestamp, " +
             "ae.nomeEvento AS nomeevento, " +
@@ -268,7 +233,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-        " )"
+            " )"
         ,
         countQuery =
             "SELECT COUNT(*) FROM ( " +
@@ -290,12 +255,12 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
     );
 
     @Query(value = "SELECT " +
-            "p.nav AS nav," +
-            " ape.description AS paEmittente," +
-            " FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-            " ei.infoName AS infoName," +
-            " ei.infoValue AS infoValue, " +
-            " ae.nomeEvento  AS tipoEvento " +
+        "p.nav AS nav," +
+        " ape.description AS paEmittente," +
+        " FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+        " ei.infoName AS infoName," +
+        " ei.infoValue AS infoValue, " +
+        " ae.nomeEvento  AS tipoEvento " +
         "FROM PositionTokens pt " +
         "JOIN Position p ON p.id = pt.fkPosition " +
         "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
@@ -305,8 +270,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
     Page<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
 
     @Query("SELECT COUNT(pt) FROM PositionTokens pt, Position p " +
-           "WHERE p.id = pt.fkPosition " +
-           "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
-           "AND UPPER(pt.outcome) = 'OK'")
+        "WHERE p.id = pt.fkPosition " +
+        "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
+        "AND UPPER(pt.outcome) = 'OK'")
     long countOkTokensByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
 }

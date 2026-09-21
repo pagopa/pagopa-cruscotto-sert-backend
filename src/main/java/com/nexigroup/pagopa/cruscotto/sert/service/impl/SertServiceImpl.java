@@ -109,19 +109,30 @@ public class SertServiceImpl implements SertService {
 
         log.info(searchValue +" :chiamata alla query in positionrepository");
 
-        Page<Object[]> groupedRowsPage = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+        List<Object[]> groupedRows = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
-            pa,
-            pageable
+            pa
         );
         log.info(searchValue +" :fine chiamata alla query in positionrepository");
 
-        return groupedRowsPage.map(row -> PositionPaymentExtraDTO.builder()
-            .nav((String) row[0])
-            .paEmittente((String) row[1])
-            .match(parseInfoMatch(row[2]))
-            .build());
+        List<PositionPaymentExtraDTO> allRows = (List<PositionPaymentExtraDTO>) groupedRows.stream()
+            .map(row -> PositionPaymentExtraDTO.builder()
+                .nav((String) row[0])
+                .paEmittente((String) row[1])
+                .match(parseInfoMatch(row[2]))
+                .build())
+            .toList();
+
+        if (allRows.isEmpty() || pageable.getOffset() >= allRows.size()) {
+            return new PageImpl<PositionPaymentExtraDTO>(Collections.emptyList(), pageable, allRows.size());
+        }
+
+        int fromIndex = (int) pageable.getOffset();
+        int toIndex = Math.min(fromIndex + pageable.getPageSize(), allRows.size());
+        List<PositionPaymentExtraDTO> pageContent = allRows.subList(fromIndex, toIndex);
+
+        return new PageImpl<PositionPaymentExtraDTO>(pageContent, pageable, allRows.size());
     }
 
     @Override
