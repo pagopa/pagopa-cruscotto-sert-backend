@@ -14,6 +14,8 @@ logging:
   level:
     ROOT: DEBUG
     com.nexigroup.pagopa.cruscotto: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
 
 spring:
   cloud:

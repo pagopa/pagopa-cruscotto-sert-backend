@@ -1,8 +1,10 @@
 package com.nexigroup.pagopa.cruscotto.sert.repository;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -64,6 +66,13 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                    "AND (:pa IS NULL OR p.paEmittente = :pa)")
     Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
+    @QueryHints(
+        value = @QueryHint(
+            name = "org.hibernate.comment",
+            value = "PositionRepository.findGroupedByExtraValueAndOptionalNavAndPa"
+        ),
+        forCounting = false
+    )
     @Query(
         value = """
         WITH filtered AS MATERIALIZED (

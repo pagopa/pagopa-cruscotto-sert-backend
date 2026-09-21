@@ -107,6 +107,7 @@ public class SertServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
+        log.info(searchValue +" :chiamata alla query in positionrepository");
 
         Page<Object[]> groupedRowsPage = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
@@ -114,6 +115,7 @@ public class SertServiceImpl implements SertService {
             pa,
             pageable
         );
+        log.info(searchValue +" :fine chiamata alla query in positionrepository");
 
         return groupedRowsPage.map(row -> PositionPaymentExtraDTO.builder()
             .nav((String) row[0])
