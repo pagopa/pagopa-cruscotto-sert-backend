@@ -3,6 +3,8 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -57,8 +59,12 @@ public class SertSearchCommonResource {
         String idCarrello,
         String info,
         Pageable pageable
-    ) {
-        log.info("START REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
+    ){
+        String addMessage = !StringUtils.isEmpty(info) ? info:"";
+
+
+
+        log.info(addMessage +" :START REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
 
         try {
             // Validate sort fields
@@ -101,7 +107,10 @@ public class SertSearchCommonResource {
             } else if (idCarrello != null) {
                 page = sertService.searchByCart(pa, nav, idCarrello, pageable);
             } else if (info != null) {
+                log.info(addMessage +" :chiamata alla query");
                 page = sertService.searchExtra(pa, nav, info, pageable);
+                log.info(addMessage +" :fine chiamata alla query");
+
             }
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
@@ -112,7 +121,7 @@ public class SertSearchCommonResource {
             }
 
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            log.info("END REST request to search with params ");
+            log.info(addMessage +" :END REST request to search with params ");
             return ResponseEntity.ok().headers(headers).body(page.getContent());
         } catch (ResponseStatusException e) {
                 throw e;
