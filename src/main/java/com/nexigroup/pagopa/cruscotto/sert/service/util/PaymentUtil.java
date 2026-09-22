@@ -177,6 +177,8 @@ public final class PaymentUtil {
     );
     public static final Map<String, String> SEARCH_SORT_MAPPING = Map.of(
         "nav", "nav",
+        "pa-emittente", "paEmittente",
+        "pa-emittente-desc", "paEmittenteDesc",
         "paEmittente", "paEmittente"
     );
 

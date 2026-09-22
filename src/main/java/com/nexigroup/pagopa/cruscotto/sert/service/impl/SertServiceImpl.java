@@ -11,7 +11,9 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -116,23 +118,47 @@ public class SertServiceImpl implements SertService {
         );
         log.info(searchValue +" :fine chiamata alla query in positionrepository");
 
-        List<PositionPaymentExtraDTO> allRows = (List<PositionPaymentExtraDTO>) groupedRows.stream()
+        List<PositionPaymentExtraDTO> allRows = new ArrayList<>(groupedRows.stream()
             .map(row -> PositionPaymentExtraDTO.builder()
                 .nav((String) row[0])
-                .paEmittente((String) row[1])
+                .paEmittenteDsc((String) row[1])
                 .match(parseInfoMatch(row[2]))
+                .paEmittente((String) row[3])
                 .build())
-            .toList();
+            .toList());
 
         if (allRows.isEmpty() || pageable.getOffset() >= allRows.size()) {
             return new PageImpl<PositionPaymentExtraDTO>(Collections.emptyList(), pageable, allRows.size());
         }
+
+        allRows.sort((left, right) -> {
+            for (Sort.Order order : pageable.getSort()) {
+                String leftValue = extraSortValue(left, order.getProperty());
+                String rightValue = extraSortValue(right, order.getProperty());
+                int comparison = Comparator.nullsLast(String::compareTo).compare(leftValue, rightValue);
+                if (comparison != 0) {
+                    return order.isAscending() ? comparison : -comparison;
+                }
+            }
+            return 0;
+        });
+
+
 
         int fromIndex = (int) pageable.getOffset();
         int toIndex = Math.min(fromIndex + pageable.getPageSize(), allRows.size());
         List<PositionPaymentExtraDTO> pageContent = allRows.subList(fromIndex, toIndex);
 
         return new PageImpl<PositionPaymentExtraDTO>(pageContent, pageable, allRows.size());
+    }
+
+    private String extraSortValue(PositionPaymentExtraDTO row, String property) {
+        return switch (property) {
+            case "nav" -> row.getNav();
+            case "pa-emittente", "paEmittente" -> row.getPaEmittente();
+            case "pa-emittente-desc", "paEmittenteDesc" -> row.getPaEmittenteDsc();
+            default -> null;
+        };
     }
 
     @Override
