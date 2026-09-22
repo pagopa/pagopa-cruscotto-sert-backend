@@ -3,6 +3,8 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchFilter;
+import com.nexigroup.pagopa.cruscotto.sert.domain.SearchExecution;
+import com.nexigroup.pagopa.cruscotto.sert.domain.SearchResult;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.CustomerGeneratedFile;
@@ -10,11 +12,15 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchTyp
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SelectedReports;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchFilterRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.SearchExecutionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.SearchResultRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplate;
@@ -62,6 +68,10 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     private final SearchInstanceRepository instanceRepository;
 
+    private final SearchExecutionRepository executionRepository;
+
+    private final SearchResultRepository resultRepository;
+
 
     private final SearchPerimeterFileRepository perimeterFileRepository;
 
@@ -76,6 +86,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     public SearchInstanceServiceImpl(
         SearchInstanceRepository instanceRepository,
+        SearchExecutionRepository executionRepository,
+        SearchResultRepository resultRepository,
         SearchPerimeterFileRepository perimeterFileRepository,
         BlobStorageService blobStorageService,
         CsvFromFilterGenerator csvFromFilterGenerator,
@@ -83,6 +95,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         ObjectMapper objectMapper
     ) {
         this.instanceRepository = instanceRepository;
+        this.executionRepository = executionRepository;
+        this.resultRepository = resultRepository;
         this.perimeterFileRepository = perimeterFileRepository;
         this.blobStorageService = blobStorageService;
         this.csvFromFilterGenerator = csvFromFilterGenerator;
@@ -116,11 +130,11 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .updatedAt((dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now()))
                     .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
                     .build());
-                byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
-                if (csvBytes != null && csvBytes.length > 0) {
-                    String content = HEADER_NAV_PA_N +new String(csvBytes, StandardCharsets.UTF_8);
-                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
-                }
+                //byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
+                //if (csvBytes != null && csvBytes.length > 0) {
+                //    String content = HEADER_NAV_PA_N +new String(csvBytes, StandardCharsets.UTF_8);
+                //    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
+                //}
             }
         } catch (Exception e) {
             // Log and continue: do not block creation if generation fails
@@ -136,6 +150,48 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         return new PageCustomImpl<SearchInstanceDTO>(collect,
             pageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
 
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SearchExecutionDTO> findExecutions(UUID instanceId, Pageable pageable) {
+        return executionRepository.findByInstance_Id(instanceId, pageable).map(this::toExecutionDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<SearchResultDTO> findResult(UUID instanceId) {
+        return resultRepository.findById(instanceId).map(this::toResultDto);
+    }
+
+    private SearchExecutionDTO toExecutionDto(SearchExecution execution) {
+        return SearchExecutionDTO.builder()
+            .id(execution.getId())
+            .instanceId(execution.getInstance().getId())
+            .status(execution.getStatus())
+            .startedAt(execution.getStartedAt())
+            .completedAt(execution.getCompletedAt())
+            .totalInputRows(execution.getTotalInputRows())
+            .processedRows(execution.getProcessedRows())
+            .generatedFiles(execution.getGeneratedFiles())
+            .errorCode(execution.getErrorCode())
+            .errorMessage(execution.getErrorMessage())
+            .createdAt(execution.getCreatedAt())
+            .updatedAt(execution.getUpdatedAt())
+            .build();
+    }
+
+    private SearchResultDTO toResultDto(SearchResult result) {
+        return SearchResultDTO.builder()
+            .instanceId(result.getId())
+            .executionId(result.getExecutionId())
+            .zipFileName(result.getZipFileName())
+            .zipFilePath(result.getZipFilePath())
+            .zipSizeBytes(result.getZipSizeBytes())
+            .positionRows(result.getPositionRows())
+            .attemptRows(result.getAttemptRows())
+            .transferRows(result.getTransferRows())
+            .generatedAt(result.getGeneratedAt())
+            .updatedAt(result.getUpdatedAt())
+            .build();
     }
 
     @Transactional(readOnly = true)
@@ -169,11 +225,11 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
                     .build());
 
-                byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
-                if (csvBytes != null && csvBytes.length > 0) {
-                    String content = HEADER_NAV_PA_N + new String(csvBytes, StandardCharsets.UTF_8);
-                    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
-                }
+                //byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
+                //if (csvBytes != null && csvBytes.length > 0) {
+                //    String content = HEADER_NAV_PA_N + new String(csvBytes, StandardCharsets.UTF_8);
+                //    upsertPerimeterFileContent(entity, "generated-perimeter.csv", content, CustomerGeneratedFile.GENERATED_FROM_FILTERS.name());
+                //}
             }
         } catch (Exception e) {
             log.error("Failed to generate perimeter CSV on update for instance {}: {}", entity.getId(), e.getMessage(), e);
@@ -214,21 +270,21 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                         SearchBulkFilterDTO.class
                     );
 
-                    if (filterDto != null) {
-                        byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
+                    //if (filterDto != null) {
+                    //    byte[] csvBytes = csvFromFilterGenerator.generateCsv(filterDto);
 
-                        if (csvBytes != null && csvBytes.length > 0) {
-                            String content = HEADER_NAV_PA_N
-                                + new String(csvBytes, StandardCharsets.UTF_8);
+                    //    if (csvBytes != null && csvBytes.length > 0) {
+                    //        String content = HEADER_NAV_PA_N
+                    //            + new String(csvBytes, StandardCharsets.UTF_8);
 
-                            upsertPerimeterFileContent(
-                                copy,
-                                "generated-perimeter.csv",
-                                content,
-                                CustomerGeneratedFile.GENERATED_FROM_FILTERS.name()
-                            );
-                        }
-                    }
+                    //        upsertPerimeterFileContent(
+                    //            copy,
+                    //            "generated-perimeter.csv",
+                    //            content,
+                    //            CustomerGeneratedFile.GENERATED_FROM_FILTERS.name()
+                    //        );
+                    //    }
+                    //}
                 } catch (Exception ex) {
                     log.error(
                         "Failed to deserialize SearchFilter.filterJson for instance {}: {}",
@@ -365,9 +421,16 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     public Optional<byte[]> getLastResult(UUID id) {
-        // For now, try to find SearchResult linked to instance and download the zipBlobPath
-        // This code is left as a no-op until SearchResultRepository integration is required.
-        return Optional.empty();
+        return resultRepository.findById(id)
+            .map(result -> buildBlobPath(result.getZipFilePath(), result.getZipFileName()))
+            .flatMap(blobStorageService::download);
+    }
+
+    private String buildBlobPath(String zipFilePath, String zipFileName) {
+        if (zipFilePath.endsWith("/")) {
+            return zipFilePath + zipFileName;
+        }
+        return zipFilePath + "/" + zipFileName;
     }
 
     private SearchInstanceDTO toDto(SearchInstance entity) {

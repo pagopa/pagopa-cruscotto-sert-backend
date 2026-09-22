@@ -2608,6 +2608,58 @@
         }
       }
     },
+    "/api/bulk/search-instances/{id}/result": {
+      "get": {
+        "tags": [
+          "search-instance-jwt-token-resource"
+        ],
+        "summary": "Get Search Result for a Search Instance",
+        "operationId": "result",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bulk/search-instances/{id}/perimeter/download": {
       "get": {
         "tags": [
@@ -2654,6 +2706,95 @@
                 "schema": {
                   "type": "string",
                   "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/search-instances/{id}/executions": {
+      "get": {
+        "tags": [
+          "search-instance-jwt-token-resource"
+        ],
+        "summary": "List Search Executions for a Search Instance",
+        "operationId": "executions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SearchExecutionDTO"
+                  }
                 }
               }
             }
@@ -4637,7 +4778,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -4917,7 +5058,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5055,7 +5196,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5406,6 +5547,9 @@
           },
           "pa-emittente": {
             "type": "string"
+          },
+          "pa-emittente-desc": {
+            "type": "string"
           }
         }
       },
@@ -5474,6 +5618,99 @@
             "items": {
               "$ref": "#/components/schemas/ExtraInfoObjectDTO"
             }
+          }
+        }
+      },
+      "SearchResultDTO": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zipFileName": {
+            "type": "string"
+          },
+          "zipFilePath": {
+            "type": "string"
+          },
+          "zipSizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "positionRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "attemptRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "transferRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SearchExecutionDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalInputRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "processedRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "generatedFiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

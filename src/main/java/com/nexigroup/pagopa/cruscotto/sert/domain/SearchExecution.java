@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "SEARCH_EXECUTION")
+@Table(name = "SEARCH_EXECUTION", schema = "sert_ingestor")
 public class SearchExecution {
 
     @Id
@@ -33,7 +33,7 @@ public class SearchExecution {
     @JoinColumn(name = "INSTANCE_ID", nullable = false)
     private SearchInstance instance;
 
-    @Column(name = "STATUS")
+    @Column(name = "STATUS", nullable = false, length = 16)
     private String status;
 
     @Column(name = "STARTED_AT")
@@ -42,12 +42,24 @@ public class SearchExecution {
     @Column(name = "COMPLETED_AT")
     private Instant completedAt;
 
-    @Column(name = "ROWS")
-    private Integer rowsProcessed;
+    @Column(name = "TOTAL_INPUT_ROWS")
+    private Long totalInputRows;
 
-    @Column(name = "ERRORS")
-    private Integer errors;
+    @Column(name = "PROCESSED_ROWS")
+    private Long processedRows;
 
-    @Column(name = "CREATED_AT")
+    @Column(name = "GENERATED_FILES")
+    private Integer generatedFiles;
+
+    @Column(name = "ERROR_CODE", length = 128)
+    private String errorCode;
+
+    @Column(name = "ERROR_MESSAGE", columnDefinition = "text")
+    private String errorMessage;
+
+    @Column(name = "CREATED_AT", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "UPDATED_AT", nullable = false)
+    private Instant updatedAt;
 }

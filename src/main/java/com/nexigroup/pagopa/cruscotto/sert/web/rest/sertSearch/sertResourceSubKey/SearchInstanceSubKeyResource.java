@@ -6,6 +6,8 @@ import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.WrapperInstanceCsv;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
@@ -22,6 +24,7 @@ import java.util.UUID;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.undertow.util.BadRequestException;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
@@ -66,6 +69,25 @@ public class SearchInstanceSubKeyResource {
     public ResponseEntity<SearchInstanceDTO> get(@PathVariable("id") UUID id) {
         Optional<SearchInstanceDTO> dto = service.findOne(id);
         return dto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping(value = "/bulk/search-instances/{id}/executions", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "List Search Executions for a Search Instance (public /sub)")
+    public ResponseEntity<List<SearchExecutionDTO>> executions(
+        @PathVariable("id") UUID id,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+    ) {
+        Page<SearchExecutionDTO> page = service.findExecutions(id, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    @GetMapping(value = "/bulk/search-instances/{id}/result", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get Search Result for a Search Instance (public /sub)")
+    public ResponseEntity<SearchResultDTO> result(@PathVariable("id") UUID id) {
+        return service.findResult(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping(value = "/bulk/search-instances/{id}")

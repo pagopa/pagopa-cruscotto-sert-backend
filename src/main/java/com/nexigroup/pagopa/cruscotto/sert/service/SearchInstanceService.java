@@ -3,6 +3,8 @@ package com.nexigroup.pagopa.cruscotto.sert.service;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import io.undertow.util.BadRequestException;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,10 @@ public interface SearchInstanceService {
     SearchInstanceDTO create(SearchInstanceDTO dto);
     @Transactional(readOnly = true)
     Page<SearchInstanceDTO> findAll(Pageable pageable);
+    @Transactional(readOnly = true)
+    Page<SearchExecutionDTO> findExecutions(UUID instanceId, Pageable pageable);
+    @Transactional(readOnly = true)
+    Optional<SearchResultDTO> findResult(UUID instanceId);
     @Transactional(readOnly = true)
     Optional<SearchInstanceDTO> findOne(UUID id);
     SearchInstanceDTO update(UUID id, SearchInstanceDTO dto);
