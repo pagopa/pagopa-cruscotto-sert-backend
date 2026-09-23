@@ -1,8 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
-import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SelectedReports;
-import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
@@ -22,13 +20,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.undertow.util.BadRequestException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,7 +48,7 @@ public class SearchInstanceSubKeyResource {
 
     @PostMapping(value = "/bulk/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a new Search Instance (public /sub)")
-    public ResponseEntity<SearchInstanceDTO> create(@RequestBody SearchInstanceDTO dto) {
+    public ResponseEntity<SearchInstanceDTO> create(@Valid @RequestBody SearchInstanceDTO dto) {
         SearchInstanceDTO result = service.create(dto);
         return ResponseEntity.ok(result);
     }
@@ -133,7 +130,12 @@ public class SearchInstanceSubKeyResource {
     @Operation(summary = "Upload CSV for Search Instance")
     public ResponseEntity<WrapperInstanceCsv> saveInstanceCsv(
         @RequestParam("name") String name,
-        @RequestParam("selectedReports") SelectedReports selectedReports,
+        @RequestParam(value = "selectedReports", required = false)
+        @Pattern(
+            regexp = "^(?!.*\\b(POSITION|TOKEN|TRANSFER)\\b,.*\\b\\1\\b)(POSITION|TOKEN|TRANSFER)(,(POSITION|TOKEN|TRANSFER)){0,2}$",
+            message = "selectedReports must contain unique values among POSITION, TOKEN and TRANSFER"
+        )
+        String selectedReports,
         @RequestPart("file") MultipartFile file) {
 
         if (file == null || file.isEmpty()) {

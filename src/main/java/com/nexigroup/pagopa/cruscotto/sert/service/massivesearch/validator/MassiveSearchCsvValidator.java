@@ -91,7 +91,7 @@ public class MassiveSearchCsvValidator {
             TemplateDetection detection = templateDetector.detect(headerColumns);
             boolean headerValid = validateHeader(detection, errors);
 
-            if (detection.template() == CsvTemplate.UNKNOWN) {
+            if (detection.template() == CsvTemplate.UNKNOWN || !errors.isEmpty()) {
                 addError(errors, CsvValidationError.row(1, CsvValidationMessage.UNKNOWN_HEADER.format()));
                 return invalidResult(CsvTemplate.UNKNOWN, errors);
             }
