@@ -7,7 +7,7 @@ public final class CsvColumnLength {
 
     public static int NAV_LENGTH = 18;
     public static int IUV_LENGTH = 18;
-    public static int DOMINIO_LENGTH = 11;
+    public static int EC_LENGTH = 11;
     public static int TOKEN_MIN_LENGTH = 32;
     public static int TOKEN_MAX_LENGTH = 35;
 
@@ -18,7 +18,7 @@ public final class CsvColumnLength {
         return switch (field) {
             case NAV -> NAV_LENGTH;
             case IUV -> IUV_LENGTH;
-            case PA -> DOMINIO_LENGTH;
+            case PA -> EC_LENGTH;
             case TOKEN -> TOKEN_MIN_LENGTH;
         };
     }

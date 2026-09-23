@@ -19,7 +19,7 @@ public class CsvTemplateDetector {
         Map.entry("nav", Field.NAV),
         Map.entry("iuv", Field.IUV),
         Map.entry("token", Field.TOKEN),
-        Map.entry("dominio", Field.PA)
+        Map.entry("ec", Field.PA)
     );
 
     /**

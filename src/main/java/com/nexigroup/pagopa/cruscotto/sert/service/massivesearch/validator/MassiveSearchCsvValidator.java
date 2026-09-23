@@ -223,7 +223,7 @@ public class MassiveSearchCsvValidator {
     }
 
     private String columnName(Field field) {
-        return field == Field.PA ? "DOMINIO" : field.name();
+        return field == Field.PA ? "EC" : field.name();
     }
 
     private String valueOf(Field field, SearchInputRow row) {

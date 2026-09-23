@@ -4,9 +4,9 @@ package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv;
  * Supported Massive Search CSV templates. Mirrors the {@code search_perimeter_file.template} domain.
  */
 public enum CsvTemplate {
-    /** NAV + idDominio/PA. */
+    /** NAV + PA. */
     NAV_PA,
-    /** IUV + idDominio/PA. */
+    /** IUV + PA. */
     IUV_PA,
     /** Only NAV. */
     NAV,
