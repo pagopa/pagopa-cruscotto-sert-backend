@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API (Subscription Key)",
-    "version": "1.1.2-3-feature-sert-mass-search-api"
+    "version": "1.1.2-4-feature-sert-mass-search-api"
   },
   "servers": [
     {
