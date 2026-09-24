@@ -5,6 +5,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.WrapperInstanceCsv;
@@ -75,6 +76,17 @@ public class SearchInstanceSubKeyResource {
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         Page<SearchExecutionDTO> page = service.findExecutions(id, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    @GetMapping(value = "/bulk/search-instances/executions/{executionId}/steps", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "List Search Execution Steps (public /sub)")
+    public ResponseEntity<List<SearchExecutionStepDTO>> executionSteps(
+        @PathVariable UUID executionId,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+    ) {
+        Page<SearchExecutionStepDTO> page = service.findExecutionSteps(executionId, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

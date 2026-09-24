@@ -3,8 +3,6 @@ package com.nexigroup.pagopa.cruscotto.sert.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -39,7 +37,8 @@ public class SearchExecutionStep {
     private String phase;
 
     @Column(name = "ATTEMPT_NO", nullable = false)
-    private Integer attemptNo;
+    @Builder.Default
+    private Integer attemptNo = 1;
 
     @Column(name = "STATUS", nullable = false, length = 16)
     private String status;

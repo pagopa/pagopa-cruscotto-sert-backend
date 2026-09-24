@@ -4,6 +4,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import io.undertow.util.BadRequestException;
@@ -22,6 +23,8 @@ public interface SearchInstanceService {
     Page<SearchInstanceDTO> findAll(Pageable pageable);
     @Transactional(readOnly = true)
     Page<SearchExecutionDTO> findExecutions(UUID instanceId, Pageable pageable);
+    @Transactional(readOnly = true)
+    Page<SearchExecutionStepDTO> findExecutionSteps(UUID executionId, Pageable pageable);
     @Transactional(readOnly = true)
     Optional<SearchResultDTO> findResult(UUID instanceId);
     @Transactional(readOnly = true)

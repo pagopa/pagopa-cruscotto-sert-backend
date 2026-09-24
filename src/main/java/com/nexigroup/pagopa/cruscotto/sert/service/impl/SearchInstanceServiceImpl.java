@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchFilter;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchExecution;
+import com.nexigroup.pagopa.cruscotto.sert.domain.SearchExecutionStep;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchResult;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
@@ -12,6 +13,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchTyp
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchFilterRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchExecutionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.SearchExecutionStepRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchResultRepository;
@@ -19,6 +21,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
@@ -69,6 +72,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     private final SearchExecutionRepository executionRepository;
 
+    private final SearchExecutionStepRepository executionStepRepository;
+
     private final SearchResultRepository resultRepository;
 
 
@@ -86,6 +91,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     public SearchInstanceServiceImpl(
         SearchInstanceRepository instanceRepository,
         SearchExecutionRepository executionRepository,
+        SearchExecutionStepRepository executionStepRepository,
         SearchResultRepository resultRepository,
         SearchPerimeterFileRepository perimeterFileRepository,
         BlobStorageService blobStorageService,
@@ -95,6 +101,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     ) {
         this.instanceRepository = instanceRepository;
         this.executionRepository = executionRepository;
+        this.executionStepRepository = executionStepRepository;
         this.resultRepository = resultRepository;
         this.perimeterFileRepository = perimeterFileRepository;
         this.blobStorageService = blobStorageService;
@@ -157,6 +164,11 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     @Transactional(readOnly = true)
+    public Page<SearchExecutionStepDTO> findExecutionSteps(UUID executionId, Pageable pageable) {
+        return executionStepRepository.findByExecutionId(executionId, pageable).map(this::toExecutionStepDto);
+    }
+
+    @Transactional(readOnly = true)
     public Optional<SearchResultDTO> findResult(UUID instanceId) {
         return resultRepository.findById(instanceId).map(this::toResultDto);
     }
@@ -175,6 +187,26 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .errorMessage(execution.getErrorMessage())
             .createdAt(execution.getCreatedAt())
             .updatedAt(execution.getUpdatedAt())
+            .build();
+    }
+
+    private SearchExecutionStepDTO toExecutionStepDto(SearchExecutionStep step) {
+        return SearchExecutionStepDTO.builder()
+            .id(step.getId())
+            .executionId(step.getExecutionId())
+            .instanceId(step.getInstanceId())
+            .phase(step.getPhase())
+            .attemptNo(step.getAttemptNo())
+            .status(step.getStatus())
+            .windowFrom(step.getWindowFrom())
+            .windowTo(step.getWindowTo())
+            .rowsProcessed(step.getRowsProcessed())
+            .startedAt(step.getStartedAt())
+            .endedAt(step.getEndedAt())
+            .durationMs(step.getDurationMs())
+            .errorCode(step.getErrorCode())
+            .errorMessage(step.getErrorMessage())
+            .createdAt(step.getCreatedAt())
             .build();
     }
 
