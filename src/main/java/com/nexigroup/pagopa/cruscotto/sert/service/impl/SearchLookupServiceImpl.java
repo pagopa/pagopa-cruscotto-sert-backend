@@ -20,6 +20,8 @@ public class SearchLookupServiceImpl implements SearchLookupService {
     private final AnagIntermediarioPspRepository anagIntermediarioPspRepository;
     private final AnagCanaleRepository anagCanaleRepository;
     private final AnagPaEmittenteRepository anagPaEmittenteRepository;
+    private final AnagTouchpointRepository anagTouchpointRepository;
+    private final AnagPaymentMethodRepository anagPaymentMethodRepository;
     private final PositionTokensRepository positionTokensRepository;
 
     public SearchLookupServiceImpl(
@@ -29,6 +31,8 @@ public class SearchLookupServiceImpl implements SearchLookupService {
         AnagIntermediarioPspRepository anagIntermediarioPspRepository,
         AnagCanaleRepository anagCanaleRepository,
         AnagPaEmittenteRepository anagPaEmittenteRepository,
+        AnagTouchpointRepository anagTouchpointRepository,
+        AnagPaymentMethodRepository anagPaymentMethodRepository,
         PositionTokensRepository positionTokensRepository
     ) {
         this.anagPspRepository = anagPspRepository;
@@ -37,6 +41,8 @@ public class SearchLookupServiceImpl implements SearchLookupService {
         this.anagIntermediarioPspRepository = anagIntermediarioPspRepository;
         this.anagCanaleRepository = anagCanaleRepository;
         this.anagPaEmittenteRepository = anagPaEmittenteRepository;
+        this.anagTouchpointRepository = anagTouchpointRepository;
+        this.anagPaymentMethodRepository = anagPaymentMethodRepository;
         this.positionTokensRepository = positionTokensRepository;
     }
 
@@ -91,16 +97,16 @@ public class SearchLookupServiceImpl implements SearchLookupService {
     @Override
     public Page<String> findTouchpoints(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {
-            return positionTokensRepository.findDistinctTouchpoints(pageable);
+            return anagTouchpointRepository.findAllCodes(pageable);
         }
-        return positionTokensRepository.findDistinctTouchpointsWithSearch(search.trim(), pageable);
+        return anagTouchpointRepository.findAllCodesWithSearch(search.trim(), pageable);
     }
 
     @Override
     public Page<String> findPaymentMethods(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {
-            return positionTokensRepository.findDistinctPaymentMethods(pageable);
+            return anagPaymentMethodRepository.findAllCodes(pageable);
         }
-        return positionTokensRepository.findDistinctPaymentMethodsWithSearch(search.trim(), pageable);
+        return anagPaymentMethodRepository.findAllCodesWithSearch(search.trim(), pageable);
     }
 }
