@@ -13,14 +13,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface SearchInstanceService {
     SearchInstanceDTO create(SearchInstanceDTO dto);
     @Transactional(readOnly = true)
-    Page<SearchInstanceDTO> findAll(Pageable pageable);
+    Page<SearchInstanceDTO> findAll(String search, LocalDate createdFrom, LocalDate createdTo, Pageable pageable);
     @Transactional(readOnly = true)
     Page<SearchExecutionDTO> findExecutions(UUID instanceId, Pageable pageable);
     @Transactional(readOnly = true)

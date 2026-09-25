@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,11 +57,16 @@ public class SearchInstanceSubKeyResource {
 
     @GetMapping(value = "/bulk/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List Search Instances (public /sub)")
-    public ResponseEntity<List<SearchInstanceDTO>> list( Pageable pageable) {
-            Page<SearchInstanceDTO> page = service.findAll(pageable);
-            HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            return ResponseEntity.ok().headers(headers).body(page.getContent());
-        }
+    public ResponseEntity<List<SearchInstanceDTO>> list(
+        @RequestParam(value = "search", required = false) String search,
+        @RequestParam(value = "createdFrom", required = false) LocalDate createdFrom,
+        @RequestParam(value = "createdTo", required = false) LocalDate createdTo,
+        Pageable pageable
+    ) {
+        Page<SearchInstanceDTO> page = service.findAll(search, createdFrom, createdTo, pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
 
     @GetMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Get Search Instance by id (public /sub)")

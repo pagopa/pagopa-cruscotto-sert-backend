@@ -15,6 +15,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.Massi
 import io.swagger.v3.oas.annotations.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -64,8 +65,13 @@ public class SearchInstanceJwtTokenResource {
     @GetMapping(value = "/bulk/search-instances", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List Search Instances")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<SearchInstanceDTO>> list(  @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable) {
-        Page<SearchInstanceDTO> page = service.findAll(pageable);
+    public ResponseEntity<List<SearchInstanceDTO>> list(
+        @RequestParam(value = "search", required = false) String search,
+        @RequestParam(value = "createdFrom", required = false) LocalDate createdFrom,
+        @RequestParam(value = "createdTo", required = false) LocalDate createdTo,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+    ) {
+        Page<SearchInstanceDTO> page = service.findAll(search, createdFrom, createdTo, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

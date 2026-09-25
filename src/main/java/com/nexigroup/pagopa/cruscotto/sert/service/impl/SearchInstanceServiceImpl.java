@@ -53,6 +53,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.stream.Collectors;
 
 /**
@@ -150,8 +153,17 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SearchInstanceDTO> findAll(Pageable pageable) {
-        Page<SearchInstance> all = instanceRepository.findAll(pageable);
+    public Page<SearchInstanceDTO> findAll(String search, LocalDate createdFrom, LocalDate createdTo, Pageable pageable) {
+        String normalizedSearch = search == null || search.isBlank() ? null : search.trim();
+        ZoneId zoneId = ZoneId.systemDefault();
+        Instant createdFromInstant = createdFrom == null ? null : createdFrom.atStartOfDay(zoneId).toInstant();
+        Instant createdToInstant = createdTo == null ? null : createdTo.plusDays(1).atStartOfDay(zoneId).toInstant();
+        Page<SearchInstance> all = instanceRepository.findBySearchAndCreatedAtBetween(
+            normalizedSearch,
+            createdFromInstant,
+            createdToInstant,
+            pageable
+        );
         List<SearchInstanceDTO> collect = all.getContent().stream().map(this::toDto).collect(Collectors.toList());
         return new PageCustomImpl<SearchInstanceDTO>(collect,
             pageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
