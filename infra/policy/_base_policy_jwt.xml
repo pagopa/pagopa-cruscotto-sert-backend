@@ -30,12 +30,12 @@
       Extend this list only for endpoints that are intentionally exposed without authentication.
     -->
     <set-variable name="isPublicPath" value="@(
-      context.Request.Url.Path.Contains("management/info")
+      context.Request.Url.Path.Contains(&quot;management/info&quot;)
     )" />
 
     <choose>
       <!-- Skip authentication entirely for public endpoints. -->
-      <when condition="@(context.Variables.GetValueOrDefault<bool>(&quot;isPublicPath&quot;, false))" />
+      <when condition="@(context.Variables.GetValueOrDefault&lt;bool&gt;(&quot;isPublicPath&quot;, false))" />
       <otherwise>
         <!--
           For all other requests APIM requires a Bearer JWT issued by Entra ID.

@@ -182,6 +182,16 @@ public final class PaymentUtil {
         "paEmittente", "paEmittente"
     );
 
+    public static final Map<String, String> SEARCH_INSTANCE_SORT_MAPPINGS = Map.ofEntries(
+        Map.entry("id", "id"),
+        Map.entry("name", "name"),
+        Map.entry("inputType", "input_type"),
+        Map.entry("selectedReports", "selected_reports"),
+        Map.entry("status", "status"),
+        Map.entry("createdAt", "created_at"),
+        Map.entry("updatedAt", "updated_at")
+    );
+
     public static final Map<String, String> WORKFLOW_QUERY_TO_DTO_MAPPING = Map.of(
         "insertedtimestamp", "insertedtimestamp",
         "tipoevento", "nomeevento",

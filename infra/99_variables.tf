@@ -10,9 +10,6 @@ variable "prefix" {
   }
 }
 
-variable "env" {
-  type = string
-}
 
 variable "env_short" {
   type = string
@@ -24,12 +21,6 @@ variable "env_short" {
   }
 }
 
-variable "tags" {
-  type = map(any)
-  default = {
-    CreatedBy = "Terraform"
-  }
-}
 
 variable "apim_dns_zone_prefix" {
   type        = string

@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -276,4 +280,48 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
         "AND UPPER(pt.outcome) = 'OK'")
     long countOkTokensByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
+
+    @Query(
+        "SELECT DISTINCT p.nav AS nav, p.paEmittente AS paEmittente " +
+            "FROM Position p " +
+            "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+            "WHERE pt.paymentDate >= COALESCE(:paymentFrom, pt.paymentDate) " +
+            "AND pt.paymentDate <= COALESCE(:paymentTo, pt.paymentDate) " +
+            "AND ( " +
+            "    :paymentStatuses IS NULL OR " +
+            "    (COALESCE(:includeNoOutcome, false) = true AND " +
+            "        (pt.outcome IS NULL OR trim(pt.outcome) = '')) OR " +
+            "    pt.outcome IN (:paymentStatuses) " +
+            ") " +
+            "AND (:touchpoints IS NULL OR pt.touchpoint IN (:touchpoints)) " +
+            "AND (:paymentMethods IS NULL OR pt.paymentMethod IN (:paymentMethods)) " +
+            "AND pt.amount >= COALESCE(:amountMin, pt.amount) " +
+            "AND pt.amount <= COALESCE(:amountMax, pt.amount) " +
+            "AND pt.amount = COALESCE(:amountExact, pt.amount) " +
+            "AND (:creditors IS NULL OR p.paEmittente IN (:creditors)) " +
+            "AND (:psps IS NULL OR pt.psp IN (:psps)) " +
+            "AND (:techPartners IS NULL OR " +
+            "     pt.intermediarioPa IN (:techPartners) OR " +
+            "     pt.intermediarioPsp IN (:techPartners)) " +
+            "AND (:channels IS NULL OR pt.canale IN (:channels)) " +
+            "AND (:stations IS NULL OR pt.stazione IN (:stations)) " +
+            "ORDER BY p.nav, p.paEmittente"
+    )
+    List<Object[]> findNavPaByFilter(
+        @Param("paymentFrom") LocalDateTime paymentFrom,
+        @Param("paymentTo") LocalDateTime paymentTo,
+        @Param("paymentStatuses") List<String> paymentStatuses,
+        @Param("includeNoOutcome") Boolean includeNoOutcome,
+        @Param("touchpoints") List<String> touchpoints,
+        @Param("paymentMethods") List<String> paymentMethods,
+        @Param("amountExact") BigDecimal amountExact,
+        @Param("amountMin") BigDecimal amountMin,
+        @Param("amountMax") BigDecimal amountMax,
+        @Param("creditors") List<String> creditors,
+        @Param("psps") List<Integer> psps,
+        @Param("techPartners") List<Integer> techPartners,
+        @Param("channels") List<Integer> channels,
+        @Param("stations") List<Integer> stations,
+        Pageable pageable
+    );
 }

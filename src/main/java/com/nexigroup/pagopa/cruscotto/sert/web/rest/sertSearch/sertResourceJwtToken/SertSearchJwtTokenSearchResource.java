@@ -3,7 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtT
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
-import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertResource;
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
@@ -22,11 +22,11 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
-public class SertResourceJwtToken extends SertResource {
+public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
 
-    private final Logger log = LoggerFactory.getLogger(SertResourceJwtToken.class);
+    private final Logger log = LoggerFactory.getLogger(SertSearchJwtTokenSearchResource.class);
 
-    public SertResourceJwtToken(SertService sertService) {
+    public SertSearchJwtTokenSearchResource(SertService sertService) {
         super(sertService);
     }
 

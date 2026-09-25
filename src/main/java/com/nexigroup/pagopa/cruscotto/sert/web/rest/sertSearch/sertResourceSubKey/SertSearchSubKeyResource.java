@@ -2,7 +2,7 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubK
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
-import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertResource;
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
@@ -20,11 +20,11 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(value = "/sub/api", produces = MediaType.APPLICATION_JSON_VALUE)
-public class SertResourceSubKey extends SertResource {
+public class SertSearchSubKeyResource extends SertSearchCommonResource {
 
-    private final Logger log = LoggerFactory.getLogger(SertResourceSubKey.class);
+    private final Logger log = LoggerFactory.getLogger(SertSearchSubKeyResource.class);
 
-    public SertResourceSubKey(SertService sertService) {
+    public SertSearchSubKeyResource(SertService sertService) {
         super(sertService);
     }
 
