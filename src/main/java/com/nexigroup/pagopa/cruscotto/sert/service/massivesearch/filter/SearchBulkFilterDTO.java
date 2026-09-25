@@ -36,7 +36,7 @@ public class SearchBulkFilterDTO {
     private AmountFilter amount;
 
     /** Creditor institutions / ente creditore ({@code position.pa_emittente}). */
-    private List<String> creditors;
+    private List<Integer> creditors;
 
     /** PSP ids ({@code position_tokens.psp}). */
     private List<Integer> psps;
