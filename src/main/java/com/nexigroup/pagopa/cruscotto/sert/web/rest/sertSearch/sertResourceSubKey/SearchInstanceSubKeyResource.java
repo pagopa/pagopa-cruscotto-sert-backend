@@ -61,7 +61,7 @@ public class SearchInstanceSubKeyResource {
         @RequestParam(value = "search", required = false) String search,
         @RequestParam(value = "createdFrom", required = false) LocalDate createdFrom,
         @RequestParam(value = "createdTo", required = false) LocalDate createdTo,
-        Pageable pageable
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         Page<SearchInstanceDTO> page = service.findAll(search, createdFrom, createdTo, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);

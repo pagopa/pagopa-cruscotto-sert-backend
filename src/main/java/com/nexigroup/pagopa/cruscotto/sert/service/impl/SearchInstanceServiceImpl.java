@@ -31,12 +31,15 @@ import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBu
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
+import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.errors.BadRequestAlertException;
 import io.undertow.util.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,13 +53,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.stream.Collectors;
+
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.SEARCH_INSTANCE_SORT_MAPPINGS;
 
 /**
  * Service implementation for Search Instance lifecycle. Methods are implemented minimally to support
@@ -153,22 +157,40 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SearchInstanceDTO> findAll(String search, LocalDate createdFrom, LocalDate createdTo, Pageable pageable) {
+    public Page<SearchInstanceDTO> findAll(String search, LocalDate createdFrom, LocalDate createdTo, Pageable pageable)  {
         String normalizedSearch = search == null || search.isBlank() ? null : search.trim();
         ZoneId zoneId = ZoneId.systemDefault();
         Instant createdFromInstant = createdFrom == null ? null : createdFrom.atStartOfDay(zoneId).toInstant();
         Instant createdToInstant = createdTo == null ? null : createdTo.plusDays(1).atStartOfDay(zoneId).toInstant();
-        Page<SearchInstance> all = instanceRepository.findBySearchAndCreatedAtBetween(
-            normalizedSearch,
-            createdFromInstant,
-            createdToInstant,
-            pageable
-        );
-        List<SearchInstanceDTO> collect = all.getContent().stream().map(this::toDto).collect(Collectors.toList());
-        return new PageCustomImpl<SearchInstanceDTO>(collect,
-            pageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
+
+        try{
+            PaymentUtil.validatePageable(pageable, PaymentUtil.SEARCH_INSTANCE_SORT_MAPPINGS);
+
+            Pageable mappedPageable = PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_INSTANCE_SORT_MAPPINGS, List.of(Sort.Order.desc("created_at")));
+
+
+            Page<SearchInstance> all = instanceRepository.findBySearchAndCreatedAtBetween(
+                normalizedSearch,
+                createdFromInstant,
+                createdToInstant,
+                mappedPageable
+            );
+            List<SearchInstanceDTO> collect = all.getContent().stream().map(this::toDto).collect(Collectors.toList());
+            return new PageCustomImpl<SearchInstanceDTO>(collect,
+                mappedPageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        }catch (Exception e) {
+            log.error("Error occurred during search operation. ", e);
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An error occurred while processing your request. Please try again later."
+            );
+        }
 
     }
+
 
     @Transactional(readOnly = true)
     public Page<SearchExecutionDTO> findExecutions(UUID instanceId, Pageable pageable) {
