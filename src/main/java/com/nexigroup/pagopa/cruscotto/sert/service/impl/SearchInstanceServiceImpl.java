@@ -157,8 +157,9 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SearchInstanceDTO> findAll(String search, LocalDate createdFrom, LocalDate createdTo, Pageable pageable)  {
-        String normalizedSearch = search == null || search.isBlank() ? null : search.trim();
+    public Page<SearchInstanceDTO> findAll(String name,String status, LocalDate createdFrom, LocalDate createdTo, Pageable pageable)  {
+        String normalizedName = name == null || name.isBlank() ? null : name.trim();
+        String normalizedStatus = status == null || status.isBlank() ? null : status.trim();
         ZoneId zoneId = ZoneId.systemDefault();
         Instant createdFromInstant = createdFrom == null ? null : createdFrom.atStartOfDay(zoneId).toInstant();
         Instant createdToInstant = createdTo == null ? null : createdTo.plusDays(1).atStartOfDay(zoneId).toInstant();
@@ -170,7 +171,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
 
             Page<SearchInstance> all = instanceRepository.findBySearchAndCreatedAtBetween(
-                normalizedSearch,
+                normalizedName,
+                normalizedStatus,
                 createdFromInstant,
                 createdToInstant,
                 mappedPageable

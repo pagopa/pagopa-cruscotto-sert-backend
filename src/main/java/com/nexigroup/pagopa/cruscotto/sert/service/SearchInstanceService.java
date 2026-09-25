@@ -20,7 +20,7 @@ import java.util.UUID;
 public interface SearchInstanceService {
     SearchInstanceDTO create(SearchInstanceDTO dto);
     @Transactional(readOnly = true)
-    Page<SearchInstanceDTO> findAll(String search, LocalDate createdFrom, LocalDate createdTo, Pageable pageable);
+    Page<SearchInstanceDTO> findAll(String name, String status,LocalDate createdFrom, LocalDate createdTo, Pageable pageable);
     @Transactional(readOnly = true)
     Page<SearchExecutionDTO> findExecutions(UUID instanceId, Pageable pageable);
     @Transactional(readOnly = true)
