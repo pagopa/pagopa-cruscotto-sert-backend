@@ -16,6 +16,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SearchInstanceRepository extends JpaRepository<SearchInstance, UUID> {
 
+    boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
+
     @Query(value = """
         SELECT *
         FROM sert_ingestor.search_instance instance

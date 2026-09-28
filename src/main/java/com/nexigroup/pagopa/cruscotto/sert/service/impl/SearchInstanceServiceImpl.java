@@ -120,6 +120,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
     public SearchInstanceDTO create(SearchInstanceDTO dto) {
+        validateUniqueName(dto.getName(), null);
 
         SearchInstance entity = SearchInstance.builder()
             .id(dto.getId() != null ? dto.getId() : UUID.randomUUID())
@@ -271,6 +272,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
         SearchInstance entity = instanceRepository.findById(id)
             .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
+        validateUniqueName(dto.getName(), id);
         entity.setName(dto.getName());
         entity.setInputType(dto.getInputType().name());
         entity.setSelectedReports(dto.getSelectedReports());
@@ -310,6 +312,21 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             throw new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound");
         }
         instanceRepository.deleteById(id);
+    }
+
+    private void validateUniqueName(String name, UUID ignoredId) {
+        if (!StringUtils.hasText(name)) {
+            return;
+        }
+
+        String normalizedName = name.trim();
+        boolean exists = ignoredId == null
+            ? instanceRepository.existsByNameIgnoreCase(normalizedName)
+            : instanceRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, ignoredId);
+
+        if (exists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "SearchInstance name already exists");
+        }
     }
 
     public SearchInstanceDTO duplicate(UUID id) {
