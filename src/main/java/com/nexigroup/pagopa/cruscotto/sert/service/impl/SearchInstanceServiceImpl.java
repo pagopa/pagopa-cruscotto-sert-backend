@@ -23,6 +23,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.WrapperFileResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplate;
@@ -504,10 +505,13 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         execute(id);
     }
 
-    public Optional<byte[]> getLastResult(UUID id) {
+    public Optional<WrapperFileResultDTO> getLastResult(UUID id) {
         return resultRepository.findById(id)
-            .map(result -> buildBlobPath(result.getZipFilePath(), result.getZipFileName()))
-            .flatMap(blobStorageService::download);
+            .flatMap(result -> {
+                String fileName = StringUtils.hasText(result.getZipFileName()) ? result.getZipFileName() : "result.zip";
+                return blobStorageService.download(result.getZipFilePath())
+                    .map(content -> WrapperFileResultDTO.builder().fileName(fileName).content(content).build());
+            });
     }
 
     private String buildBlobPath(String zipFilePath, String zipFileName) {

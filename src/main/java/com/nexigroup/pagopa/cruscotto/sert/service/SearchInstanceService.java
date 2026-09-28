@@ -6,6 +6,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.WrapperFileResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import io.undertow.util.BadRequestException;
 import org.springframework.data.domain.Page;
@@ -35,7 +36,7 @@ public interface SearchInstanceService {
     void  uploadCsv(UUID id, MultipartFile file);
     void execute(UUID id);
     void rerun(UUID id);
-    Optional<byte[]> getLastResult(UUID id);
+    Optional<WrapperFileResultDTO> getLastResult(UUID id);
 
 
     Optional<byte[]> downloadPerimeterCsv(UUID instanceId);

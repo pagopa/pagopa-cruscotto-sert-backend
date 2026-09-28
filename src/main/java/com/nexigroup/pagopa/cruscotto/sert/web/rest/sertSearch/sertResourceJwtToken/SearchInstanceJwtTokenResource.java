@@ -8,6 +8,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.WrapperFileResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.WrapperInstanceCsv;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
@@ -278,9 +279,15 @@ public class SearchInstanceJwtTokenResource {
     @Operation(summary = "Download last ZIP result")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
-        Optional<byte[]> maybe = service.getLastResult(id);
-        return maybe.map(bytes -> ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(bytes))
-            .orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<WrapperFileResultDTO> maybe = service.getLastResult(id);
+        return maybe.map(result -> {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("application/zip"));
+            headers.setContentDisposition(ContentDisposition.builder("attachment")
+                .filename(result.getFileName())
+                .build());
+            return ResponseEntity.ok().headers(headers).body(result.getContent());
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping(value = "/bulk/search-instances/{id}/perimeter/download")
