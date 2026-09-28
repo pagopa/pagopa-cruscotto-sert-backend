@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API",
     "description": "API Cruscotto Sert",
-    "version": "1.1.2-9-feature-sert-mass-search-api"
+    "version": "1.1.2-10-feature-sert-mass-search-api"
   },
   "servers": [
     {
