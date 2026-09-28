@@ -275,7 +275,7 @@ public class SearchInstanceJwtTokenResource {
     }
 
 
-    @GetMapping(value = "/bulk/search-instances/{id}/download")
+    @GetMapping(value = "/bulk/search-instances/{id}/result/download")
     @Operation(summary = "Download last ZIP result")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
     public ResponseEntity<byte[]> download(@PathVariable("id") UUID id) {
