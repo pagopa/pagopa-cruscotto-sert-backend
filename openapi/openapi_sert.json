@@ -3062,6 +3062,58 @@
         }
       }
     },
+    "/api/bulk/lookups/touchpoints/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get touchpoint by id - JWT protected",
+        "operationId": "touchpointById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bulk/lookups/stations": {
       "get": {
         "tags": [
@@ -3143,6 +3195,58 @@
                   "items": {
                     "$ref": "#/components/schemas/AnagStazione"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/lookups/stations/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get station by id - JWT protected",
+        "operationId": "stationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
                 }
               }
             }
@@ -3238,6 +3342,58 @@
         }
       }
     },
+    "/api/bulk/lookups/psp/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get PSP by id - JWT protected",
+        "operationId": "pspById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bulk/lookups/payment-methods": {
       "get": {
         "tags": [
@@ -3319,6 +3475,58 @@
                   "items": {
                     "type": "string"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/lookups/payment-methods/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get payment method by id - JWT protected",
+        "operationId": "paymentMethodById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
                 }
               }
             }
@@ -3414,6 +3622,58 @@
         }
       }
     },
+    "/api/bulk/lookups/intermediaries/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get intermediary by id - JWT protected",
+        "operationId": "intermediaryById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bulk/lookups/intermediaries-psp": {
       "get": {
         "tags": [
@@ -3495,6 +3755,58 @@
                   "items": {
                     "$ref": "#/components/schemas/AnagIntermediarioPsp"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/lookups/intermediaries-psp/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get PSP intermediary by id - JWT protected",
+        "operationId": "intermediaryPspById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
                 }
               }
             }
@@ -3590,6 +3902,58 @@
         }
       }
     },
+    "/api/bulk/lookups/creditor-institutions/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get creditor institution by id - JWT protected",
+        "operationId": "creditorInstitutionById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bulk/lookups/channels": {
       "get": {
         "tags": [
@@ -3671,6 +4035,58 @@
                   "items": {
                     "$ref": "#/components/schemas/AnagCanale"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/lookups/channels/{id}": {
+      "get": {
+        "tags": [
+          "search-lookup-jwt-resource"
+        ],
+        "summary": "Get channel by id - JWT protected",
+        "operationId": "channelById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLookupDTO"
                 }
               }
             }
@@ -4894,7 +5310,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5174,7 +5590,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5312,7 +5728,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5888,6 +6304,21 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "SearchLookupDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codice": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           }
         }
       },
