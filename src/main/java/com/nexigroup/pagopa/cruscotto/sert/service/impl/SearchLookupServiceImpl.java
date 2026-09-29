@@ -3,9 +3,12 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 import com.nexigroup.pagopa.cruscotto.sert.domain.*;
 import com.nexigroup.pagopa.cruscotto.sert.repository.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 /**
  * Service providing lookup operations used by SearchLookupResource. Returns paged and sortable results
@@ -108,5 +111,56 @@ public class SearchLookupServiceImpl implements SearchLookupService {
             return anagPaymentMethodRepository.findAllCodes(pageable);
         }
         return anagPaymentMethodRepository.findAllCodesWithSearch(search.trim(), pageable);
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findPspById(Long id) {
+        return toShortId(id).flatMap(anagPspRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), entity.getDescription()));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findStationsById(Long id) {
+        return toShortId(id).flatMap(anagStazioneRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findIntermediaryById(Long id) {
+        return toShortId(id).flatMap(anagIntermediarioPaRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), entity.getDescription()));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findIntermediaryPspById(Long id) {
+        return toShortId(id).flatMap(anagIntermediarioPspRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), entity.getDescription()));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findChannelById(Long id) {
+        return toShortId(id).flatMap(anagCanaleRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findPaEmittenteById(Long id) {
+        return anagPaEmittenteRepository.findById(id).map(entity -> toDto(entity.getId(), entity.getCodice(), entity.getDescription()));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findTouchpointById(Long id) {
+        return toShortId(id).flatMap(anagTouchpointRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findPaymentMethodById(Long id) {
+        return toShortId(id).flatMap(anagPaymentMethodRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
+    }
+
+    private Optional<Short> toShortId(Long id) {
+        if (id < Short.MIN_VALUE || id > Short.MAX_VALUE) {
+            return Optional.empty();
+        }
+        return Optional.of(id.shortValue());
+    }
+
+    private SearchLookupDTO toDto(Long id, String codice, String description) {
+        return SearchLookupDTO.builder().id(id).codice(codice).description(description).build();
     }
 }

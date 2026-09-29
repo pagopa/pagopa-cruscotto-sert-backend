@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AnagPaEmittenteRepository extends JpaRepository<AnagPaEmittente, Short> {
+public interface AnagPaEmittenteRepository extends JpaRepository<AnagPaEmittente, Long> {
     Optional<AnagPaEmittente> findOneByCodice(String codice);
 
     @Query("SELECT e FROM AnagPaEmittente e WHERE LOWER(e.codice) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(e.description) LIKE LOWER(CONCAT('%', :search, '%'))")

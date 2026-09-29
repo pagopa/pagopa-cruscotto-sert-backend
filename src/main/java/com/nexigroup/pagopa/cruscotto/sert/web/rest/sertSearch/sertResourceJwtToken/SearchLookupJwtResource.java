@@ -8,6 +8,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPsp;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AnagStazione;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.PaginationUtil;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/bulk/lookups")
@@ -129,5 +132,69 @@ public class SearchLookupJwtResource {
         Page<String> page = service.findPaymentMethods(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    @GetMapping("/creditor-institutions/{id}")
+    @Operation(summary = "Get creditor institution by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> creditorInstitutionById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findPaEmittenteById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/psp/{id}")
+    @Operation(summary = "Get PSP by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> pspById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findPspById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/intermediaries/{id}")
+    @Operation(summary = "Get intermediary by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> intermediaryById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findIntermediaryById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/intermediaries-psp/{id}")
+    @Operation(summary = "Get PSP intermediary by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> intermediaryPspById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findIntermediaryPspById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/stations/{id}")
+    @Operation(summary = "Get station by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> stationById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findStationsById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/channels/{id}")
+    @Operation(summary = "Get channel by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> channelById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findChannelById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/touchpoints/{id}")
+    @Operation(summary = "Get touchpoint by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> touchpointById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findTouchpointById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/payment-methods/{id}")
+    @Operation(summary = "Get payment method by id - JWT protected")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
+    public ResponseEntity<SearchLookupDTO> paymentMethodById(@PathVariable Long id) {
+        Optional<SearchLookupDTO> result = service.findPaymentMethodById(id);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
