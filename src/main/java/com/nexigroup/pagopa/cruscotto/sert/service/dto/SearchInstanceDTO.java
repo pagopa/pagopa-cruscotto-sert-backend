@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
 import jakarta.validation.constraints.Pattern;
@@ -31,5 +32,6 @@ public class SearchInstanceDTO implements Serializable {
     private SearchInstanceStatus status; // DRAFT, READY, RUNNING, EXECUTED, FAILED, ARCHIVED
     private Instant createdAt;
     private Instant updatedAt;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private SearchInstancePerimeterFilterDTO perimeterFilter;
 }
