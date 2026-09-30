@@ -41,8 +41,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -51,8 +51,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -101,8 +101,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -111,8 +111,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -151,8 +151,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -161,8 +161,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -220,8 +220,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -230,8 +230,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -271,8 +271,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -281,8 +281,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -319,8 +319,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -329,8 +329,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -370,8 +370,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -380,8 +380,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -459,8 +459,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -469,8 +469,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -510,8 +510,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -520,8 +520,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -558,8 +558,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -568,8 +568,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -654,8 +654,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -664,8 +664,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -705,8 +705,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -715,8 +715,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -753,8 +753,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -763,8 +763,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -806,8 +806,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -816,8 +816,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -895,8 +895,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -905,8 +905,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -946,8 +946,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -956,8 +956,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -994,8 +994,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1004,8 +1004,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1105,8 +1105,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1115,8 +1115,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1157,8 +1157,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1167,8 +1167,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1222,8 +1222,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1232,8 +1232,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1274,8 +1274,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1284,8 +1284,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1319,8 +1319,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1329,8 +1329,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1382,8 +1382,8 @@
           }
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1392,8 +1392,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1460,8 +1460,8 @@
           }
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1470,8 +1470,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1519,8 +1519,8 @@
           }
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1529,8 +1529,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1569,8 +1569,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1579,8 +1579,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1626,8 +1626,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1636,8 +1636,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1683,8 +1683,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1693,8 +1693,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1716,8 +1716,8 @@
         ],
         "operationId": "getAccount",
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1726,8 +1726,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1764,8 +1764,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1774,8 +1774,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1807,8 +1807,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1817,8 +1817,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1850,8 +1850,8 @@
           "required": true
         },
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1860,8 +1860,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1884,8 +1884,8 @@
         "summary": "Actuator root web endpoint",
         "operationId": "links",
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1894,8 +1894,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1953,8 +1953,8 @@
         "summary": "Actuator web endpoint 'info'",
         "operationId": "info",
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -1963,8 +1963,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2004,8 +2004,8 @@
         "summary": "Actuator web endpoint 'health'",
         "operationId": "health",
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2014,8 +2014,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2106,8 +2106,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2116,8 +2116,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2209,8 +2209,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2219,8 +2219,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2259,8 +2259,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2269,8 +2269,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2383,8 +2383,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2393,8 +2393,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2478,8 +2478,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2488,8 +2488,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2528,8 +2528,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2538,8 +2538,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2605,8 +2605,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2615,8 +2615,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2657,8 +2657,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2667,8 +2667,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2709,8 +2709,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2719,8 +2719,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2762,8 +2762,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2772,8 +2772,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2849,8 +2849,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2859,8 +2859,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2938,8 +2938,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -2948,8 +2948,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3026,8 +3026,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3036,8 +3036,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3081,8 +3081,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3091,8 +3091,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3166,8 +3166,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3176,8 +3176,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3221,8 +3221,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3231,8 +3231,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3306,8 +3306,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3316,8 +3316,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3361,8 +3361,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3371,8 +3371,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3446,8 +3446,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3456,8 +3456,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3501,8 +3501,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3511,8 +3511,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3586,8 +3586,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3596,8 +3596,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3641,8 +3641,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3651,8 +3651,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3726,8 +3726,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3736,8 +3736,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3781,8 +3781,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3791,8 +3791,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3866,8 +3866,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3876,8 +3876,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3921,8 +3921,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -3931,8 +3931,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4006,8 +4006,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4016,8 +4016,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4061,8 +4061,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4071,8 +4071,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4111,8 +4111,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4121,8 +4121,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4159,8 +4159,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4169,8 +4169,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4203,8 +4203,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4213,8 +4213,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4254,8 +4254,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4264,8 +4264,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4303,8 +4303,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4313,8 +4313,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4381,8 +4381,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4391,8 +4391,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4477,8 +4477,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4487,8 +4487,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4531,8 +4531,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4541,8 +4541,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4580,8 +4580,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4590,8 +4590,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4633,8 +4633,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4643,8 +4643,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4677,8 +4677,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4687,8 +4687,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4728,8 +4728,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4738,8 +4738,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4777,8 +4777,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4787,8 +4787,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4830,8 +4830,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4840,8 +4840,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4874,8 +4874,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4884,8 +4884,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4959,8 +4959,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -4969,8 +4969,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -5055,8 +5055,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -5065,8 +5065,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -5140,75 +5140,6 @@
           }
         }
       },
-      "SearchBulkFilterDTO": {
-        "type": "object",
-        "properties": {
-          "paymentPeriod": {
-            "$ref": "#/components/schemas/PaymentPeriod"
-          },
-          "paymentStatuses": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "OK",
-                "KO",
-                "NO_OUTCOME"
-              ]
-            }
-          },
-          "touchpoints": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "paymentMethods": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "amount": {
-            "$ref": "#/components/schemas/AmountFilter"
-          },
-          "creditors": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "psps": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "technologicalPartners": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "channels": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "stations": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        }
-      },
       "SearchInstanceDTO": {
         "type": "object",
         "properties": {
@@ -5250,7 +5181,86 @@
             "format": "date-time"
           },
           "perimeterFilter": {
-            "$ref": "#/components/schemas/SearchBulkFilterDTO"
+            "$ref": "#/components/schemas/SearchInstancePerimeterFilterDTO"
+          }
+        }
+      },
+      "SearchInstancePerimeterFilterDTO": {
+        "type": "object",
+        "properties": {
+          "paymentPeriod": {
+            "$ref": "#/components/schemas/PaymentPeriod"
+          },
+          "paymentStatuses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "OK",
+                "KO",
+                "NO_OUTCOME"
+              ]
+            }
+          },
+          "touchpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "amount": {
+            "$ref": "#/components/schemas/AmountFilter"
+          },
+          "creditors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "psps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "technologicalPartners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "stations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          }
+        }
+      },
+      "SearchLookupDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codice": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           }
         }
       },
@@ -5310,7 +5320,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5590,7 +5600,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5728,7 +5738,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -6304,21 +6314,6 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "SearchLookupDTO": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
           }
         }
       },
