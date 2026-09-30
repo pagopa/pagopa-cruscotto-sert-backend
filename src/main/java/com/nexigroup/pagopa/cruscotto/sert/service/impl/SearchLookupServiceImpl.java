@@ -153,6 +153,16 @@ public class SearchLookupServiceImpl implements SearchLookupService {
         return toShortId(id).flatMap(anagPaymentMethodRepository::findById).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
     }
 
+    @Override
+    public Optional<SearchLookupDTO> findTouchpointByCode(String code) {
+        return anagTouchpointRepository.findByCodice(code).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
+    }
+
+    @Override
+    public Optional<SearchLookupDTO> findPaymentMethodByCode(String code) {
+        return anagPaymentMethodRepository.findByCodice(code).map(entity -> toDto(entity.getId().longValue(), entity.getCodice(), null));
+    }
+
     private Optional<Short> toShortId(Long id) {
         if (id < Short.MIN_VALUE || id > Short.MAX_VALUE) {
             return Optional.empty();

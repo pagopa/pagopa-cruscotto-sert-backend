@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
-import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,5 +31,5 @@ public class SearchInstanceDTO implements Serializable {
     private SearchInstanceStatus status; // DRAFT, READY, RUNNING, EXECUTED, FAILED, ARCHIVED
     private Instant createdAt;
     private Instant updatedAt;
-    private SearchBulkFilterDTO perimeterFilter;
+    private SearchInstancePerimeterFilterDTO perimeterFilter;
 }

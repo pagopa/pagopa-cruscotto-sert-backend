@@ -39,4 +39,8 @@ public interface SearchLookupService {
     Optional<SearchLookupDTO> findTouchpointById(Long id);
 
     Optional<SearchLookupDTO> findPaymentMethodById(Long id);
+
+    Optional<SearchLookupDTO> findTouchpointByCode(String code);
+
+    Optional<SearchLookupDTO> findPaymentMethodByCode(String code);
 }

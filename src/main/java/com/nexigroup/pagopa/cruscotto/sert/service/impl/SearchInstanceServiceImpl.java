@@ -19,7 +19,10 @@ import com.nexigroup.pagopa.cruscotto.sert.repository.SearchPerimeterFileReposit
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchResultRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
+import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstancePerimeterFilterDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
@@ -93,6 +96,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     private final SearchFilterRepository searchFilterRepository;
 
+    private final SearchLookupService searchLookupService;
+
     private final MassiveSearchCsvValidator csvValidator;
     private final ObjectMapper objectMapper ;
 
@@ -105,7 +110,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         BlobStorageService blobStorageService,
         CsvFromFilterGenerator csvFromFilterGenerator,
         SearchFilterRepository searchFilterRepository, MassiveSearchCsvValidator csvValidator,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper,
+        SearchLookupService searchLookupService
     ) {
         this.instanceRepository = instanceRepository;
         this.executionRepository = executionRepository;
@@ -115,6 +121,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         this.blobStorageService = blobStorageService;
         this.csvFromFilterGenerator = csvFromFilterGenerator;
         this.searchFilterRepository = searchFilterRepository;
+        this.searchLookupService = searchLookupService;
         this.csvValidator = csvValidator;
         this.objectMapper= objectMapper;
     }
@@ -143,7 +150,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .instanceId(entity.getId())
                     .createdAt((dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now()))
                     .updatedAt((dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now()))
-                    .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
+                    .filterJson(objectMapper.writeValueAsString(toBulkFilterDTO(dto.getPerimeterFilter())))
                     .build());
                 //byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 //if (csvBytes != null && csvBytes.length > 0) {
@@ -179,7 +186,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                 createdToInstant,
                 mappedPageable
             );
-            List<SearchInstanceDTO> collect = all.getContent().stream().map(this::toDto).collect(Collectors.toList());
+            List<SearchInstanceDTO> collect = all.getContent().stream().map(entity -> toDto(entity, false)).collect(Collectors.toList());
             return new PageCustomImpl<SearchInstanceDTO>(collect,
                 mappedPageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
 
@@ -292,7 +299,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .instanceId(entity.getId())
                     .createdAt(entity.getCreatedAt())
                     .updatedAt(( Instant.now()))
-                    .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
+                    .filterJson(objectMapper.writeValueAsString(toBulkFilterDTO(dto.getPerimeterFilter())))
                     .build());
 
                 //byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
@@ -522,18 +529,27 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     private SearchInstanceDTO toDto(SearchInstance entity) {
-        SearchFilter searchFilter = searchFilterRepository.findById(entity.getId())
-            .orElse(null);
-        SearchBulkFilterDTO searchBulkFilterDTO= null;
-        if (searchFilter!=null ){
-            try {
-                searchBulkFilterDTO = objectMapper.readValue(searchFilter.getFilterJson(), SearchBulkFilterDTO.class);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+        return toDto(entity, true);
+    }
+
+    private SearchInstanceDTO toDto(SearchInstance entity, boolean includePerimeterFilter) {
+        return toDto(entity, includePerimeterFilter ? loadPerimeterFilter(entity) : null);
+    }
+
+    private SearchInstancePerimeterFilterDTO loadPerimeterFilter(SearchInstance entity) {
+        SearchFilter searchFilter = searchFilterRepository.findById(entity.getId()).orElse(null);
+        if (searchFilter == null) {
+            return null;
         }
+        try {
+            SearchBulkFilterDTO searchBulkFilterDTO = objectMapper.readValue(searchFilter.getFilterJson(), SearchBulkFilterDTO.class);
+            return toViewFilterDTO(searchBulkFilterDTO);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-
+    private SearchInstanceDTO toDto(SearchInstance entity, SearchInstancePerimeterFilterDTO perimeterFilter) {
         return SearchInstanceDTO.builder()
             .id(entity.getId())
             .name(entity.getName())
@@ -542,10 +558,115 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .status(SearchInstanceStatus.fromString(entity.getStatus()))
             .createdAt(entity.getCreatedAt())
             .updatedAt(entity.getUpdatedAt())
-            .perimeterFilter(searchBulkFilterDTO)
+            .perimeterFilter(perimeterFilter)
             .build();
 
 
+    }
+
+    private SearchBulkFilterDTO toBulkFilterDTO(SearchInstancePerimeterFilterDTO viewFilter) {
+        SearchBulkFilterDTO filter = new SearchBulkFilterDTO();
+        filter.setPaymentStatuses(viewFilter.getPaymentStatuses());
+        filter.setPaymentPeriod(toBulkPaymentPeriod(viewFilter.getPaymentPeriod()));
+        filter.setAmount(toBulkAmountFilter(viewFilter.getAmount()));
+        filter.setCreditors(toIds(viewFilter.getCreditors()));
+        filter.setPsps(toIds(viewFilter.getPsps()));
+        filter.setTechnologicalPartners(toIds(viewFilter.getTechnologicalPartners()));
+        filter.setChannels(toIds(viewFilter.getChannels()));
+        filter.setStations(toIds(viewFilter.getStations()));
+        filter.setTouchpoints(toCodes(viewFilter.getTouchpoints()));
+        filter.setPaymentMethods(toCodes(viewFilter.getPaymentMethods()));
+        return filter;
+    }
+
+    private SearchInstancePerimeterFilterDTO toViewFilterDTO(SearchBulkFilterDTO filter) {
+        SearchInstancePerimeterFilterDTO viewFilter = new SearchInstancePerimeterFilterDTO();
+        viewFilter.setPaymentStatuses(filter.getPaymentStatuses());
+        viewFilter.setPaymentPeriod(toViewPaymentPeriod(filter.getPaymentPeriod()));
+        viewFilter.setAmount(toViewAmountFilter(filter.getAmount()));
+        viewFilter.setCreditors(resolveIds(filter.getCreditors(), searchLookupService::findPaEmittenteById));
+        viewFilter.setPsps(resolveIds(filter.getPsps(), searchLookupService::findPspById));
+        viewFilter.setTechnologicalPartners(resolveTechnologicalPartners(filter.getTechnologicalPartners()));
+        viewFilter.setChannels(resolveIds(filter.getChannels(), searchLookupService::findChannelById));
+        viewFilter.setStations(resolveIds(filter.getStations(), searchLookupService::findStationsById));
+        viewFilter.setTouchpoints(resolveCodes(filter.getTouchpoints(), searchLookupService::findTouchpointByCode));
+        viewFilter.setPaymentMethods(resolveCodes(filter.getPaymentMethods(), searchLookupService::findPaymentMethodByCode));
+        return viewFilter;
+    }
+
+    private List<SearchLookupDTO> resolveIds(List<Integer> ids, java.util.function.Function<Long, Optional<SearchLookupDTO>> lookup) {
+        if (ids == null) {
+            return null;
+        }
+        return ids.stream().map(Integer::longValue).map(lookup).flatMap(Optional::stream).collect(Collectors.toList());
+    }
+
+    private List<SearchLookupDTO> resolveCodes(List<String> codes, java.util.function.Function<String, Optional<SearchLookupDTO>> lookup) {
+        if (codes == null) {
+            return null;
+        }
+        return codes.stream().map(lookup).flatMap(Optional::stream).collect(Collectors.toList());
+    }
+
+    private List<SearchLookupDTO> resolveTechnologicalPartners(List<Integer> ids) {
+        if (ids == null) {
+            return null;
+        }
+        return ids.stream()
+            .map(Integer::longValue)
+            .map(id -> searchLookupService.findIntermediaryById(id).or(() -> searchLookupService.findIntermediaryPspById(id)))
+            .flatMap(Optional::stream)
+            .collect(Collectors.toList());
+    }
+
+    private List<Integer> toIds(List<SearchLookupDTO> lookups) {
+        return lookups == null ? null : lookups.stream().map(lookup -> Math.toIntExact(lookup.getId())).collect(Collectors.toList());
+    }
+
+    private List<String> toCodes(List<SearchLookupDTO> lookups) {
+        return lookups == null ? null : lookups.stream().map(SearchLookupDTO::getCodice).collect(Collectors.toList());
+    }
+
+    private SearchBulkFilterDTO.PaymentPeriod toBulkPaymentPeriod(SearchInstancePerimeterFilterDTO.PaymentPeriod period) {
+        if (period == null) {
+            return null;
+        }
+        SearchBulkFilterDTO.PaymentPeriod result = new SearchBulkFilterDTO.PaymentPeriod();
+        result.setFrom(period.getFrom());
+        result.setTo(period.getTo());
+        return result;
+    }
+
+    private SearchInstancePerimeterFilterDTO.PaymentPeriod toViewPaymentPeriod(SearchBulkFilterDTO.PaymentPeriod period) {
+        if (period == null) {
+            return null;
+        }
+        SearchInstancePerimeterFilterDTO.PaymentPeriod result = new SearchInstancePerimeterFilterDTO.PaymentPeriod();
+        result.setFrom(period.getFrom());
+        result.setTo(period.getTo());
+        return result;
+    }
+
+    private SearchBulkFilterDTO.AmountFilter toBulkAmountFilter(SearchInstancePerimeterFilterDTO.AmountFilter amount) {
+        if (amount == null) {
+            return null;
+        }
+        SearchBulkFilterDTO.AmountFilter result = new SearchBulkFilterDTO.AmountFilter();
+        result.setExact(amount.getExact());
+        result.setMin(amount.getMin());
+        result.setMax(amount.getMax());
+        return result;
+    }
+
+    private SearchInstancePerimeterFilterDTO.AmountFilter toViewAmountFilter(SearchBulkFilterDTO.AmountFilter amount) {
+        if (amount == null) {
+            return null;
+        }
+        SearchInstancePerimeterFilterDTO.AmountFilter result = new SearchInstancePerimeterFilterDTO.AmountFilter();
+        result.setExact(amount.getExact());
+        result.setMin(amount.getMin());
+        result.setMax(amount.getMax());
+        return result;
     }
 
 
