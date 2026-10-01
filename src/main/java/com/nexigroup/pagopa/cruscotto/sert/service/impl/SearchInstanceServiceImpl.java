@@ -22,6 +22,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstancePerimeterFilterDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceWriteDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
@@ -128,7 +129,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
-    public SearchInstanceDTO create(SearchInstanceDTO dto) {
+    public SearchInstanceDTO create(SearchInstanceWriteDTO dto) {
         validateUniqueName(dto.getName(), null);
 
         SearchInstance entity = SearchInstance.builder()
@@ -151,7 +152,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .instanceId(entity.getId())
                     .createdAt((dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now()))
                     .updatedAt((dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now()))
-                    .filterJson(objectMapper.writeValueAsString(toBulkFilterDTO(dto.getPerimeterFilter())))
+                    .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
                     .build());
                 //byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
                 //if (csvBytes != null && csvBytes.length > 0) {
@@ -289,7 +290,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
-    public SearchInstanceDTO update(UUID id, SearchInstanceDTO dto) {
+    public SearchInstanceDTO update(UUID id, SearchInstanceWriteDTO dto) {
 
         SearchInstance entity = instanceRepository.findById(id)
             .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
@@ -312,7 +313,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                     .instanceId(entity.getId())
                     .createdAt(entity.getCreatedAt())
                     .updatedAt(( Instant.now()))
-                    .filterJson(objectMapper.writeValueAsString(toBulkFilterDTO(dto.getPerimeterFilter())))
+                    .filterJson(objectMapper.writeValueAsString(dto.getPerimeterFilter()))
                     .build());
 
                 //byte[] csvBytes = csvFromFilterGenerator.generateCsv(dto.getPerimeterFilter());
@@ -577,23 +578,6 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     }
 
-    private SearchBulkFilterDTO toBulkFilterDTO(SearchInstancePerimeterFilterDTO viewFilter) {
-        SearchBulkFilterDTO filter = new SearchBulkFilterDTO();
-        filter.setPaymentStatuses(viewFilter.getPaymentStatuses());
-        filter.setPaymentPeriod(toBulkPaymentPeriod(viewFilter.getPaymentPeriod()));
-        filter.setAmount(toBulkAmountFilter(viewFilter.getAmount()));
-        filter.setCreditors(toIds(viewFilter.getCreditors()));
-        filter.setPsps(toIds(viewFilter.getPsps()));
-        filter.setTechnologicalPartnersPa(toIds(viewFilter.getTechnologicalPartnersPa()));
-        filter.setTechnologicalPartnersPsp(toIds(viewFilter.getTechnologicalPartnersPsp()));
-
-        filter.setChannels(toIds(viewFilter.getChannels()));
-        filter.setStations(toIds(viewFilter.getStations()));
-        filter.setTouchpoints(toCodes(viewFilter.getTouchpoints()));
-        filter.setPaymentMethods(toCodes(viewFilter.getPaymentMethods()));
-        return filter;
-    }
-
     private SearchInstancePerimeterFilterDTO toViewFilterDTO(SearchBulkFilterDTO filter) {
         SearchInstancePerimeterFilterDTO viewFilter = new SearchInstancePerimeterFilterDTO();
         viewFilter.setPaymentStatuses(filter.getPaymentStatuses());
@@ -636,24 +620,6 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .collect(Collectors.toList());
     }
 
-    private List<Integer> toIds(List<SearchLookupDTO> lookups) {
-        return lookups == null ? null : lookups.stream().map(lookup -> Math.toIntExact(lookup.getId())).collect(Collectors.toList());
-    }
-
-    private List<String> toCodes(List<SearchLookupDTO> lookups) {
-        return lookups == null ? null : lookups.stream().map(SearchLookupDTO::getCodice).collect(Collectors.toList());
-    }
-
-    private SearchBulkFilterDTO.PaymentPeriod toBulkPaymentPeriod(SearchInstancePerimeterFilterDTO.PaymentPeriod period) {
-        if (period == null) {
-            return null;
-        }
-        SearchBulkFilterDTO.PaymentPeriod result = new SearchBulkFilterDTO.PaymentPeriod();
-        result.setFrom(period.getFrom());
-        result.setTo(period.getTo());
-        return result;
-    }
-
     private SearchInstancePerimeterFilterDTO.PaymentPeriod toViewPaymentPeriod(SearchBulkFilterDTO.PaymentPeriod period) {
         if (period == null) {
             return null;
@@ -661,17 +627,6 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         SearchInstancePerimeterFilterDTO.PaymentPeriod result = new SearchInstancePerimeterFilterDTO.PaymentPeriod();
         result.setFrom(period.getFrom());
         result.setTo(period.getTo());
-        return result;
-    }
-
-    private SearchBulkFilterDTO.AmountFilter toBulkAmountFilter(SearchInstancePerimeterFilterDTO.AmountFilter amount) {
-        if (amount == null) {
-            return null;
-        }
-        SearchBulkFilterDTO.AmountFilter result = new SearchBulkFilterDTO.AmountFilter();
-        result.setExact(amount.getExact());
-        result.setMin(amount.getMin());
-        result.setMax(amount.getMax());
         return result;
     }
 

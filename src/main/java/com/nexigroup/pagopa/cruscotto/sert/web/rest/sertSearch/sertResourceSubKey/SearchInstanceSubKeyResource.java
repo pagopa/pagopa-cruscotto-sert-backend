@@ -4,6 +4,7 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchTyp
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceWriteDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
@@ -51,7 +52,7 @@ public class SearchInstanceSubKeyResource {
 
     @PostMapping(value = "/bulk/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a new Search Instance (public /sub)")
-    public ResponseEntity<SearchInstanceDTO> create(@Valid @RequestBody SearchInstanceDTO dto) {
+    public ResponseEntity<SearchInstanceDTO> create(@Valid @RequestBody SearchInstanceWriteDTO dto) {
         SearchInstanceDTO result = service.create(dto);
         return ResponseEntity.ok(result);
     }
@@ -109,7 +110,7 @@ public class SearchInstanceSubKeyResource {
 
     @PutMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Update Search Instance (public /sub)")
-    public ResponseEntity<SearchInstanceDTO> update(@PathVariable("id") UUID id, @RequestBody SearchInstanceDTO dto) {
+    public ResponseEntity<SearchInstanceDTO> update(@PathVariable("id") UUID id, @RequestBody SearchInstanceWriteDTO dto) {
         SearchInstanceDTO updated = service.update(id, dto);
         return ResponseEntity.ok(updated);
     }
@@ -182,7 +183,7 @@ public class SearchInstanceSubKeyResource {
             );
         }
 
-        SearchInstanceDTO dto = SearchInstanceDTO.builder()
+        SearchInstanceWriteDTO dto = SearchInstanceWriteDTO.builder()
             .name(name)
             .selectedReports(selectedReports)
             .inputType(PerimeterSearchType.CSV)

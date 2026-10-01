@@ -5,6 +5,7 @@ import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceAction;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchInstanceService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceWriteDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
@@ -56,7 +57,7 @@ public class SearchInstanceJwtTokenResource {
     @PostMapping(value = "/bulk/search-instances", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a new Search Instance")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<SearchInstanceDTO> create(@Valid  @RequestBody SearchInstanceDTO dto) throws URISyntaxException {
+    public ResponseEntity<SearchInstanceDTO> create(@Valid  @RequestBody SearchInstanceWriteDTO dto) throws URISyntaxException {
         SearchInstanceDTO result = service.create(dto);
         URI location = new URI("/api/bulk/search-instances/" + (result != null && result.getId() != null ? result.getId() : ""));
         HttpHeaders headers = new HttpHeaders();
@@ -122,7 +123,7 @@ public class SearchInstanceJwtTokenResource {
     @PutMapping(value = "/bulk/search-instances/{id}")
     @Operation(summary = "Update Search Instance")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<SearchInstanceDTO> update(@PathVariable("id") UUID id, @RequestBody SearchInstanceDTO dto) {
+    public ResponseEntity<SearchInstanceDTO> update(@PathVariable("id") UUID id, @RequestBody SearchInstanceWriteDTO dto) {
         SearchInstanceDTO updated = service.update(id, dto);
         return ResponseEntity.ok(updated);
     }
@@ -198,7 +199,7 @@ public class SearchInstanceJwtTokenResource {
             );
         }
 
-        SearchInstanceDTO dto = SearchInstanceDTO.builder()
+        SearchInstanceWriteDTO dto = SearchInstanceWriteDTO.builder()
             .name(name)
             .selectedReports(selectedReports)
             .inputType(PerimeterSearchType.CSV)

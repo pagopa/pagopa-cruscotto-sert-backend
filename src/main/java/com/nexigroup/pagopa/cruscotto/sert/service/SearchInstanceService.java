@@ -3,6 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchInstanceWriteDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchExecutionStepDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchResultDTO;
@@ -19,7 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SearchInstanceService {
-    SearchInstanceDTO create(SearchInstanceDTO dto);
+    SearchInstanceDTO create(SearchInstanceWriteDTO dto);
     @Transactional(readOnly = true)
     Page<SearchInstanceDTO> findAll(String name, String status,LocalDate createdFrom, LocalDate createdTo, Pageable pageable);
     @Transactional(readOnly = true)
@@ -30,7 +31,7 @@ public interface SearchInstanceService {
     Optional<SearchResultDTO> findResult(UUID instanceId);
     @Transactional(readOnly = true)
     Optional<SearchInstanceDTO> findOne(UUID id);
-    SearchInstanceDTO update(UUID id, SearchInstanceDTO dto);
+    SearchInstanceDTO update(UUID id, SearchInstanceWriteDTO dto);
     void delete(UUID id);
     Optional<SearchInstanceDTO> performAction(UUID id, SearchInstanceAction action);
     void  uploadCsv(UUID id, MultipartFile file);
