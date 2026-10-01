@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API",
     "description": "API Cruscotto Sert",
-    "version": "2.1.2"
+    "version": "1.0.0"
   },
   "servers": [
     {
@@ -94,7 +94,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SearchInstanceDTO"
+                "$ref": "#/components/schemas/SearchInstanceWriteDTO"
               }
             }
           },
@@ -1150,7 +1150,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SearchInstanceDTO"
+                "$ref": "#/components/schemas/SearchInstanceWriteDTO"
               }
             }
           },
@@ -5140,6 +5140,127 @@
           }
         }
       },
+      "SearchBulkFilterDTO": {
+        "type": "object",
+        "properties": {
+          "paymentPeriod": {
+            "$ref": "#/components/schemas/PaymentPeriod"
+          },
+          "paymentStatuses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "OK",
+                "KO",
+                "NO_OUTCOME"
+              ]
+            }
+          },
+          "touchpoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "amount": {
+            "$ref": "#/components/schemas/AmountFilter"
+          },
+          "creditors": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "psps": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "technologicalPartnersPa": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "technologicalPartnersPsp": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "stations": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "SearchInstanceWriteDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "inputType": {
+            "type": "string",
+            "enum": [
+              "FILTER",
+              "CSV"
+            ]
+          },
+          "selectedReports": {
+            "pattern": "^(?!.*\\b(POSITION|TOKEN|TRANSFER)\\b,.*\\b\\1\\b)(POSITION|TOKEN|TRANSFER)(,(POSITION|TOKEN|TRANSFER)){0,2}$",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "RUNNING",
+              "EXECUTED",
+              "FAILED",
+              "ARCHIVED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "perimeterFilter": {
+            "$ref": "#/components/schemas/SearchBulkFilterDTO"
+          }
+        }
+      },
       "SearchInstanceDTO": {
         "type": "object",
         "properties": {
@@ -5179,6 +5300,9 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "presentCsv": {
+            "type": "boolean"
           },
           "perimeterFilter": {
             "$ref": "#/components/schemas/SearchInstancePerimeterFilterDTO"
@@ -5229,7 +5353,13 @@
               "$ref": "#/components/schemas/SearchLookupDTO"
             }
           },
-          "technologicalPartners": {
+          "technologicalPartnersPa": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchLookupDTO"
+            }
+          },
+          "technologicalPartnersPsp": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SearchLookupDTO"
@@ -5320,7 +5450,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5600,7 +5730,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 0,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
@@ -5738,7 +5868,7 @@
           "login": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(?>[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?>[_.@A-Za-z0-9-]+)$",
+            "pattern": "^(?\u003E[a-zA-Z0-9!$&*+=?^_`{|}~.-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)|(?\u003E[_.@A-Za-z0-9-]+)$",
             "type": "string"
           },
           "firstName": {
