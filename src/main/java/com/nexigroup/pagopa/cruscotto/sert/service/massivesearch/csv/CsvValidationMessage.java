@@ -11,6 +11,7 @@ public enum CsvValidationMessage {
     COLUMN_COUNT("CSV_COLUMN_COUNT", "Numero di colonne non valido: previsto %d, trovato %d"),
     MISSING_VALUE("CSV_VALUE_MISSING", "Valore obbligatorio mancante"),
     INVALID_LENGTH("CSV_VALUE_LENGTH", "Lunghezza del valore non valida: prevista %d, trovata %d"),
+    INVALID_IUV_LENGTH("CSV_IUV_LENGTH", "Lunghezza IUV non valida: prevista tra 1 e 35, trovata %d"),
     INVALID_TOKEN("CSV_TOKEN_INVALID", "Token non valido: i primi 32 caratteri devono essere un UUID senza trattini; il suffisso può avere al massimo 3 caratteri");
 
     private final String key;

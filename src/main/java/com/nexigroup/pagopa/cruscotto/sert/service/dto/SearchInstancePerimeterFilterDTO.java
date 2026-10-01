@@ -21,7 +21,9 @@ public class SearchInstancePerimeterFilterDTO {
     private AmountFilter amount;
     private List<SearchLookupDTO> creditors;
     private List<SearchLookupDTO> psps;
-    private List<SearchLookupDTO> technologicalPartners;
+    private List<SearchLookupDTO> technologicalPartnersPa;
+    private List<SearchLookupDTO> technologicalPartnersPsp;
+
     private List<SearchLookupDTO> channels;
     private List<SearchLookupDTO> stations;
 

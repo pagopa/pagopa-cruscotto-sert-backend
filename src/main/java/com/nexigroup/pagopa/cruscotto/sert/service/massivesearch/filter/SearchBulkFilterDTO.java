@@ -41,8 +41,11 @@ public class SearchBulkFilterDTO {
     /** PSP ids ({@code position_tokens.psp}). */
     private List<Integer> psps;
 
-    /** Technological partners / intermediaries ({@code position_tokens.intermediario_pa|intermediario_psp}). */
-    private List<Integer> technologicalPartners;
+    /** Technological partners / intermediaries ({@code position_tokens.intermediario_pa}). */
+    private List<Integer> technologicalPartnersPa;
+
+    /** Technological partners / intermediaries ({@code position_tokens.intermediario_psp}). */
+    private List<Integer> technologicalPartnersPsp;
 
     /** Channels ({@code position_tokens.canale}). */
     private List<Integer> channels;

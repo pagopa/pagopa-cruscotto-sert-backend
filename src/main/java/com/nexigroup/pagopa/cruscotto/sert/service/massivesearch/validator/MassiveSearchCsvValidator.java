@@ -190,6 +190,12 @@ public class MassiveSearchCsvValidator {
                     rowErrors.add(CsvValidationError.column(lineNumber, column,
                         CsvValidationMessage.INVALID_TOKEN.format()));
                 }
+            } else if (field == Field.IUV) {
+                if (value.length() < CsvColumnLength.IUV_MIN_LENGTH ||
+                    value.length() > CsvColumnLength.IUV_MAX_LENGTH) {
+                    rowErrors.add(CsvValidationError.column(lineNumber, column,
+                        CsvValidationMessage.INVALID_IUV_LENGTH.format(value.length())));
+                }
             } else {
                 int expectedLength = CsvColumnLength.forField(field);
                 if (value.length() != expectedLength) {

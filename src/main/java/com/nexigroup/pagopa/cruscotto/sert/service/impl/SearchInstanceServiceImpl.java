@@ -60,9 +60,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.SEARCH_INSTANCE_SORT_MAPPINGS;
 
@@ -186,7 +187,15 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
                 createdToInstant,
                 mappedPageable
             );
-            List<SearchInstanceDTO> collect = all.getContent().stream().map(entity -> toDto(entity, false)).collect(Collectors.toList());
+            List<UUID> instanceIds = all.getContent().stream().map(SearchInstance::getId).collect(Collectors.toList());
+            Set<UUID> instanceIdsWithCsv = instanceIds.isEmpty()
+                ? Set.of()
+                : Set.copyOf(perimeterFileRepository.findInstanceIdsWithContent(instanceIds));
+            List<SearchInstanceDTO> collect = all.getContent().stream().map(entity -> {
+                SearchInstanceDTO dto = toDto(entity, false);
+                dto.setPresentCsv(instanceIdsWithCsv.contains(entity.getId()));
+                return dto;
+            }).collect(Collectors.toList());
             return new PageCustomImpl<SearchInstanceDTO>(collect,
                 mappedPageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
 
@@ -272,7 +281,11 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     @Transactional(readOnly = true)
     public Optional<SearchInstanceDTO> findOne(UUID id) {
-        return instanceRepository.findById(id).map(this::toDto);
+        return instanceRepository.findById(id).map(entity -> {
+            SearchInstanceDTO dto = toDto(entity);
+            dto.setPresentCsv(!perimeterFileRepository.findInstanceIdsWithContent(List.of(id)).isEmpty());
+            return dto;
+        });
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
@@ -571,7 +584,9 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         filter.setAmount(toBulkAmountFilter(viewFilter.getAmount()));
         filter.setCreditors(toIds(viewFilter.getCreditors()));
         filter.setPsps(toIds(viewFilter.getPsps()));
-        filter.setTechnologicalPartners(toIds(viewFilter.getTechnologicalPartners()));
+        filter.setTechnologicalPartnersPa(toIds(viewFilter.getTechnologicalPartnersPa()));
+        filter.setTechnologicalPartnersPsp(toIds(viewFilter.getTechnologicalPartnersPsp()));
+
         filter.setChannels(toIds(viewFilter.getChannels()));
         filter.setStations(toIds(viewFilter.getStations()));
         filter.setTouchpoints(toCodes(viewFilter.getTouchpoints()));
@@ -586,7 +601,9 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         viewFilter.setAmount(toViewAmountFilter(filter.getAmount()));
         viewFilter.setCreditors(resolveIds(filter.getCreditors(), searchLookupService::findPaEmittenteById));
         viewFilter.setPsps(resolveIds(filter.getPsps(), searchLookupService::findPspById));
-        viewFilter.setTechnologicalPartners(resolveTechnologicalPartners(filter.getTechnologicalPartners()));
+        viewFilter.setTechnologicalPartnersPa(resolveTechnologicalPartners(filter.getTechnologicalPartnersPa()));
+        viewFilter.setTechnologicalPartnersPsp(resolveTechnologicalPartners(filter.getTechnologicalPartnersPsp()));
+
         viewFilter.setChannels(resolveIds(filter.getChannels(), searchLookupService::findChannelById));
         viewFilter.setStations(resolveIds(filter.getStations(), searchLookupService::findStationsById));
         viewFilter.setTouchpoints(resolveCodes(filter.getTouchpoints(), searchLookupService::findTouchpointByCode));
