@@ -31,6 +31,6 @@ public enum CsvValidationMessage {
     }
 
     public String format(Object... values) {
-        return key + ": " + text.formatted(values);
+        return  text.formatted(values);
     }
 }

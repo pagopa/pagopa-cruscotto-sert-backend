@@ -83,7 +83,7 @@ public class MassiveSearchCsvValidator {
 
             String headerLine = readHeaderLine(reader);
             if (headerLine == null || inputReader.isBlank(headerLine)) {
-                addError(errors, CsvValidationError.row(1, CsvValidationMessage.MISSING_HEADER.format()));
+                addError(errors, CsvValidationError.row(1, CsvValidationMessage.MISSING_HEADER));
                 return invalidResult(CsvTemplate.UNKNOWN, errors);
             }
 
@@ -92,7 +92,7 @@ public class MassiveSearchCsvValidator {
             boolean headerValid = validateHeader(detection, errors);
 
             if (detection.template() == CsvTemplate.UNKNOWN || !errors.isEmpty()) {
-                addError(errors, CsvValidationError.row(1, CsvValidationMessage.UNKNOWN_HEADER.format()));
+                addError(errors, CsvValidationError.row(1, CsvValidationMessage.UNKNOWN_HEADER));
                 return invalidResult(CsvTemplate.UNKNOWN, errors);
             }
 
@@ -110,7 +110,7 @@ public class MassiveSearchCsvValidator {
                 if (inputReader.isBlank(line)) {
                     totalRows++;
                     invalidRows++;
-                    addError(errors, CsvValidationError.row(lineNumber, CsvValidationMessage.EMPTY_ROW.format()));
+                    addError(errors, CsvValidationError.row(lineNumber, CsvValidationMessage.EMPTY_ROW));
                     continue;
                 }
 
@@ -118,7 +118,7 @@ public class MassiveSearchCsvValidator {
                 List<String> columns = inputReader.parseLine(line);
                 if (columns.size() != expectedColumnCount) {
                     invalidRows++;
-                    addError(errors, CsvValidationError.row(lineNumber,
+                    addError(errors, CsvValidationError.rowKeyText(lineNumber,CsvValidationMessage.COLUMN_COUNT.key(),
                         CsvValidationMessage.COLUMN_COUNT.format(expectedColumnCount, columns.size())));
                     continue;
                 }
@@ -137,7 +137,7 @@ public class MassiveSearchCsvValidator {
             }
 
             if (totalRows == 0) {
-                addError(errors, CsvValidationError.row(1, CsvValidationMessage.NO_DATA_ROWS.format()));
+                addError(errors, CsvValidationError.row(1, CsvValidationMessage.NO_DATA_ROWS));
             }
             boolean valid = headerValid && invalidRows == 0 && totalRows > 0;
             log.info("phase=CSV_VALIDATED template={} valid={} totalRows={} validRows={} invalidRows={} errors={}",
@@ -163,12 +163,12 @@ public class MassiveSearchCsvValidator {
         for (String unexpected : detection.unexpectedColumns()) {
             valid = false;
             addError(errors, CsvValidationError.column(1, unexpected,
-                CsvValidationMessage.UNEXPECTED_COLUMN.format()));
+                CsvValidationMessage.UNEXPECTED_COLUMN));
         }
         for (String duplicate : detection.duplicateColumns()) {
             valid = false;
             addError(errors, CsvValidationError.column(1, duplicate,
-                CsvValidationMessage.DUPLICATE_COLUMN.format()));
+                CsvValidationMessage.DUPLICATE_COLUMN));
         }
         return valid;
     }
@@ -184,22 +184,22 @@ public class MassiveSearchCsvValidator {
             String column = columnName(field);
             if (value == null) {
                 rowErrors.add(CsvValidationError.column(lineNumber, column,
-                    CsvValidationMessage.MISSING_VALUE.format()));
+                    CsvValidationMessage.MISSING_VALUE));
             } else if (field == Field.TOKEN) {
                 if (!isValidToken(value)) {
                     rowErrors.add(CsvValidationError.column(lineNumber, column,
-                        CsvValidationMessage.INVALID_TOKEN.format()));
+                        CsvValidationMessage.INVALID_TOKEN));
                 }
             } else if (field == Field.IUV) {
                 if (value.length() < CsvColumnLength.IUV_MIN_LENGTH ||
                     value.length() > CsvColumnLength.IUV_MAX_LENGTH) {
-                    rowErrors.add(CsvValidationError.column(lineNumber, column,
+                    rowErrors.add(CsvValidationError.columnKeyText(lineNumber, column,CsvValidationMessage.INVALID_LENGTH.key(),
                         CsvValidationMessage.INVALID_IUV_LENGTH.format(value.length())));
                 }
             } else {
                 int expectedLength = CsvColumnLength.forField(field);
                 if (value.length() != expectedLength) {
-                    rowErrors.add(CsvValidationError.column(lineNumber, column,
+                    rowErrors.add(CsvValidationError.columnKeyText(lineNumber, column,CsvValidationMessage.INVALID_LENGTH.key(),
                         CsvValidationMessage.INVALID_LENGTH.format(expectedLength, value.length())));
                 }
             }
