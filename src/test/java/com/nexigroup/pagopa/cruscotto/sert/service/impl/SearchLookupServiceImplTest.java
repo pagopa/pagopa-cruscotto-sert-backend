@@ -7,6 +7,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPsp;
+import com.nexigroup.pagopa.cruscotto.sert.domain.AnagStazione;
+import com.nexigroup.pagopa.cruscotto.sert.domain.AnagTouchpoint;
+import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPaymentMethod;
 import com.nexigroup.pagopa.cruscotto.sert.repository.AnagCanaleRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.AnagIntermediarioPaRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.AnagIntermediarioPspRepository;
@@ -73,5 +76,29 @@ class SearchLookupServiceImplTest {
         assertThat(service.findPspById(Short.MAX_VALUE + 1L)).isEmpty();
         verifyNoInteractions(stationRepository, intermediaryPaRepository, intermediaryPspRepository,
             channelRepository, paRepository, touchpointRepository, paymentMethodRepository, positionTokensRepository);
+    }
+
+    @Test
+    void mapsStationAndCodeLookupsAndSkipsOutOfRangeStationIds() {
+        when(stationRepository.findById((short) 7)).thenReturn(Optional.of(AnagStazione.builder().id((short) 7).codice("STA-7").build()));
+        when(touchpointRepository.findByCodice("WEB")).thenReturn(Optional.of(
+            AnagTouchpoint.builder().id((short) 2).codice("WEB").build()
+        ));
+        when(paymentMethodRepository.findByCodice("CARD")).thenReturn(Optional.of(
+            AnagPaymentMethod.builder().id((short) 3).codice("CARD").build()
+        ));
+
+        var station = service.findStationsById(7L);
+        var touchpoint = service.findTouchpointByCode("WEB");
+        var paymentMethod = service.findPaymentMethodByCode("CARD");
+
+        assertThat(station).get().satisfies(dto -> {
+            assertThat(dto.getId()).isEqualTo(7L);
+            assertThat(dto.getCodice()).isEqualTo("STA-7");
+            assertThat(dto.getDescription()).isNull();
+        });
+        assertThat(touchpoint).get().satisfies(dto -> assertThat(dto.getCodice()).isEqualTo("WEB"));
+        assertThat(paymentMethod).get().satisfies(dto -> assertThat(dto.getCodice()).isEqualTo("CARD"));
+        assertThat(service.findStationsById((long) Short.MAX_VALUE + 1)).isEmpty();
     }
 }

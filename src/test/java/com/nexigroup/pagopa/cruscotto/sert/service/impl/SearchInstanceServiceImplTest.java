@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
+import com.nexigroup.pagopa.cruscotto.sert.domain.SearchResult;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
 import com.nexigroup.pagopa.cruscotto.sert.repository.SearchExecutionRepository;
@@ -45,6 +46,7 @@ class SearchInstanceServiceImplTest {
     private SearchPerimeterFileRepository perimeterFileRepository;
     private SearchFilterRepository searchFilterRepository;
     private MassiveSearchCsvValidator csvValidator;
+    private BlobStorageService blobStorageService;
     private SearchInstanceServiceImpl service;
 
     @BeforeEach
@@ -56,13 +58,14 @@ class SearchInstanceServiceImplTest {
         perimeterFileRepository = mock(SearchPerimeterFileRepository.class);
         searchFilterRepository = mock(SearchFilterRepository.class);
         csvValidator = mock(MassiveSearchCsvValidator.class);
+        blobStorageService = mock(BlobStorageService.class);
         service = new SearchInstanceServiceImpl(
             instanceRepository,
             executionRepository,
             executionStepRepository,
             resultRepository,
             perimeterFileRepository,
-            mock(BlobStorageService.class),
+            blobStorageService,
             mock(CsvFromFilterGenerator.class),
             searchFilterRepository,
             csvValidator,
@@ -192,5 +195,32 @@ class SearchInstanceServiceImplTest {
 
         service.delete(id);
         verify(instanceRepository).deleteById(id);
+    }
+
+    @Test
+    void getsLastResultWithFallbackFilenameAndDownloadsPerimeterCsvContent() {
+        UUID id = UUID.randomUUID();
+        SearchResult result = SearchResult.builder().id(id).zipFileName(" ").zipFilePath("results/archive.zip").build();
+        when(resultRepository.findById(id)).thenReturn(Optional.of(result));
+        byte[] archive = new byte[] { 1, 2, 3 };
+        when(blobStorageService.download("results/archive.zip")).thenReturn(Optional.of(archive));
+        SearchInstance instance = SearchInstance.builder().id(id).build();
+        SearchPerimeterFile file = SearchPerimeterFile.builder().instance(instance).content("NAV;EC\n").build();
+        when(instanceRepository.findById(id)).thenReturn(Optional.of(instance));
+        when(perimeterFileRepository.findTopByInstanceOrderByCreatedAtDesc(instance)).thenReturn(Optional.of(file));
+
+        var wrapper = service.getLastResult(id);
+        var perimeter = service.downloadPerimeterCsv(id);
+
+        assertThat(wrapper).get().satisfies(download -> {
+            assertThat(download.getFileName()).isEqualTo("result.zip");
+            assertThat(download.getContent()).containsExactly(1, 2, 3);
+        });
+        assertThat(perimeter).get().satisfies(bytes -> assertThat(bytes).containsExactly("NAV;EC\n".getBytes(StandardCharsets.UTF_8)));
+
+        when(blobStorageService.download("results/archive.zip")).thenReturn(Optional.empty());
+        when(perimeterFileRepository.findTopByInstanceOrderByCreatedAtDesc(instance)).thenReturn(Optional.empty());
+        assertThat(service.getLastResult(id)).isEmpty();
+        assertThat(service.downloadPerimeterCsv(id)).isEmpty();
     }
 }

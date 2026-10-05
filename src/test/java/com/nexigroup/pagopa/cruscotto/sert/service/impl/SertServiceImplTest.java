@@ -88,4 +88,84 @@ class SertServiceImplTest {
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
         assertThat(service.getTokenInfo(" ")).isNull();
     }
+
+    @Test
+    void mapsTransferRowsAndReturnsNullWhenRequiredSearchKeysAreMissing() {
+        var pageable = PageRequest.of(0, 10);
+        Object[] row = new Object[12];
+        row[0] = "NAV-1";
+        row[1] = "PA-1";
+        row[2] = Instant.parse("2026-02-01T00:00:00Z");
+        row[3] = "IUV-1";
+        row[4] = "CRID-1";
+        row[5] = "61626364";
+        row[6] = 1;
+        row[7] = "7";
+        row[8] = true;
+        row[9] = "IBAN-1";
+        row[10] = new java.math.BigDecimal("25.00");
+        row[11] = "FISCAL-1";
+        when(positionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
+            .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
+
+        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", pageable);
+
+        assertThat(result.getContent()).singleElement().satisfies(transferPage -> {
+            assertThat(transferPage.getToken()).isEqualTo("abcd");
+            assertThat(transferPage.getTransfersCount()).isEqualTo(1.0);
+            assertThat(transferPage.getTransfers()).singleElement().satisfies(transfer -> {
+                assertThat(transfer.getIdTransfer()).isEqualTo(7);
+                assertThat(transfer.getTypeTransfer()).isEqualTo("bollo");
+                assertThat(transfer.getIban()).isEqualTo("IBAN-1");
+                assertThat(transfer.getPaFiscalCode()).isEqualTo("FISCAL-1");
+                assertThat(transfer.getAmount()).isEqualTo(25.0);
+            });
+        });
+        assertThat(service.getTransfers(null, "PA-1", "token", pageable)).isNull();
+    }
+
+    @Test
+    void mapsWorkflowEventsAndFiltersExtraInfoRowsWithoutName() {
+        var pageable = PageRequest.of(0, 10);
+        Object[] event = new Object[9];
+        event[0] = Instant.parse("2026-02-01T00:00:00Z");
+        event[1] = "payment";
+        event[2] = "REQ/RESP";
+        event[3] = "OK";
+        event[4] = "event-1";
+        event[5] = "fault";
+        event[6] = "61626364";
+        event[7] = "REQ";
+        event[8] = "id-1";
+        when(positionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
+            .thenReturn(new PageImpl<>(List.<Object[]>of(event), pageable, 1));
+        var workflows = service.getWorkflows("NAV-1", "PA-1", pageable);
+        assertThat(workflows.getContent()).singleElement().satisfies(response -> {
+            assertThat(response.getEventsPosition()).singleElement().satisfies(item -> {
+                assertThat(item.getSottotipoevento()).isEqualTo("REQ");
+                assertThat(item.getFaultcode()).isNull();
+            });
+        });
+
+        Object[] visible = new Object[6];
+        visible[0] = "NAV-1";
+        visible[1] = "PA-1";
+        visible[2] = "61626364";
+        visible[3] = "info-name";
+        visible[4] = "value";
+        visible[5] = "event";
+        Object[] nameless = new Object[] { "NAV-2", "PA-2", "61626364", null, "ignored", "event" };
+        when(positionRepository.findExtraInfoByToken("token", pageable))
+            .thenReturn(new PageImpl<>(List.<Object[]>of(visible, nameless), pageable, 2));
+
+        var extraInfo = service.getExtraInfo("token", pageable);
+        assertThat(extraInfo.getContent()).singleElement().satisfies(response -> {
+            assertThat(response.getCount()).isEqualTo(2L);
+            assertThat(response.getResults()).singleElement().satisfies(item -> {
+                assertThat(item.getName()).isEqualTo("info-name");
+                assertThat(item.getValue()).isEqualTo("value");
+                assertThat(item.getToken()).isEqualTo("abcd");
+            });
+        });
+    }
 }
