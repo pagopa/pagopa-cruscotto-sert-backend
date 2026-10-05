@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.security.helper;
+package com.nexigroup.pagopa.cruscotto.security.helper;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +27,7 @@ public class CookieUtils {
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
         cookie.setMaxAge(maxAge);
         response.addCookie(cookie);
     }
@@ -38,6 +39,7 @@ public class CookieUtils {
                 if (cookie.getName().equals(name)) {
                     cookie.setValue("");
                     cookie.setPath("/");
+                    cookie.setSecure(true);
                     cookie.setMaxAge(0);
                     response.addCookie(cookie);
                 }
