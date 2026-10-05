@@ -13,9 +13,9 @@ public interface AnagTouchpointRepository extends JpaRepository<AnagTouchpoint, 
 
     Optional<AnagTouchpoint> findByCodice(String codice);
 
-    @Query("SELECT e.codice FROM AnagTouchpoint e")
-    Page<String> findAllCodes(Pageable pageable);
+    @Query("SELECT e FROM AnagTouchpoint e")
+    Page<AnagTouchpoint> findAllPaged(Pageable pageable);
 
-    @Query("SELECT e.codice FROM AnagTouchpoint e WHERE LOWER(e.codice) LIKE LOWER(CONCAT('%', :search, '%'))")
-    Page<String> findAllCodesWithSearch(@Param("search") String search, Pageable pageable);
+    @Query("SELECT e FROM AnagTouchpoint e WHERE LOWER(e.codice) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<AnagTouchpoint> findAllPagedWithSearch(@Param("search") String search, Pageable pageable);
 }
