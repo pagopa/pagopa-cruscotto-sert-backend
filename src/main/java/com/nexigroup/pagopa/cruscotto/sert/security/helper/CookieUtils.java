@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.security.helper;
+package com.nexigroup.pagopa.cruscotto.sert.security.helper;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
