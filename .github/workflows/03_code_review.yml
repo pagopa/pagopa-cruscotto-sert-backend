@@ -17,8 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_KEY: pagopa_cruscotto-sert-backend
-
+  PROJECT_KEY:  pagopa_pagopa-cruscotto-sert-backend
 
 permissions:
   id-token: write
