@@ -1,11 +1,5 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
-import com.nexigroup.pagopa.cruscotto.sert.domain.AnagCanale;
-import com.nexigroup.pagopa.cruscotto.sert.domain.AnagIntermediarioPa;
-import com.nexigroup.pagopa.cruscotto.sert.domain.AnagIntermediarioPsp;
-import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPaEmittente;
-import com.nexigroup.pagopa.cruscotto.sert.domain.AnagPsp;
-import com.nexigroup.pagopa.cruscotto.sert.domain.AnagStazione;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
@@ -41,11 +35,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/creditor-institutions")
     @Operation(summary = "Lookup creditor institutions (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<AnagPaEmittente>> creditorInstitutions(
+    public ResponseEntity<List<SearchLookupDTO>> creditorInstitutions(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<AnagPaEmittente> page = service.findPaEmittente(search, pageable);
+        Page<SearchLookupDTO> page = service.findPaEmittente(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -53,11 +47,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/psp")
     @Operation(summary = "Lookup PSP (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<AnagPsp>> psp(
+    public ResponseEntity<List<SearchLookupDTO>> psp(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<AnagPsp> page = service.findPsp(search, pageable);
+        Page<SearchLookupDTO> page = service.findPsp(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -65,11 +59,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/intermediaries")
     @Operation(summary = "Lookup intermediaries (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<AnagIntermediarioPa>> intermediaries(
+    public ResponseEntity<List<SearchLookupDTO>> intermediaries(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<AnagIntermediarioPa> page = service.findIntermediaries(search, pageable);
+        Page<SearchLookupDTO> page = service.findIntermediaries(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -77,11 +71,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/intermediaries-psp")
     @Operation(summary = "Lookup intermediaries PSP (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<AnagIntermediarioPsp>> intermediariesPsp(
+    public ResponseEntity<List<SearchLookupDTO>> intermediariesPsp(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<AnagIntermediarioPsp> page = service.findIntermediariesPsp(search, pageable);
+        Page<SearchLookupDTO> page = service.findIntermediariesPsp(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -89,11 +83,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/stations")
     @Operation(summary = "Lookup stations (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<AnagStazione>> stations(
+    public ResponseEntity<List<SearchLookupDTO>> stations(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<AnagStazione> page = service.findStations(search, pageable);
+        Page<SearchLookupDTO> page = service.findStations(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -101,11 +95,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/channels")
     @Operation(summary = "Lookup channels (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<AnagCanale>> channels(
+    public ResponseEntity<List<SearchLookupDTO>> channels(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<AnagCanale> page = service.findChannels(search, pageable);
+        Page<SearchLookupDTO> page = service.findChannels(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -113,11 +107,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/touchpoints")
     @Operation(summary = "Lookup touchpoints (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<String>> touchpoints(
+    public ResponseEntity<List<SearchLookupDTO>> touchpoints(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<String> page = service.findTouchpoints(search, pageable);
+        Page<SearchLookupDTO> page = service.findTouchpoints(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -125,11 +119,11 @@ public class SearchLookupJwtResource {
     @GetMapping("/payment-methods")
     @Operation(summary = "Lookup payment methods (paged) - JWT protected")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_SEARCH + "\")")
-    public ResponseEntity<List<String>> paymentMethods(
+    public ResponseEntity<List<SearchLookupDTO>> paymentMethods(
         @RequestParam(name = "search", required = false) String search,
         @ParameterObject Pageable pageable
     ) {
-        Page<String> page = service.findPaymentMethods(search, pageable);
+        Page<SearchLookupDTO> page = service.findPaymentMethods(search, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

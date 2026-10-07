@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API",
     "description": "API Cruscotto Sert",
-    "version": "2.1.4"
+    "version": "2.1.6"
   },
   "servers": [
     {
@@ -3053,7 +3053,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -3193,7 +3193,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnagStazione"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -3333,7 +3333,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnagPsp"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -3473,7 +3473,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -3613,7 +3613,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnagIntermediarioPa"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -3753,7 +3753,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnagIntermediarioPsp"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -3893,7 +3893,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnagPaEmittente"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -4033,7 +4033,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AnagCanale"
+                    "$ref": "#/components/schemas/SearchLookupDTO"
                   }
                 }
               }
@@ -6447,90 +6447,6 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "AnagStazione": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagPsp": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagIntermediarioPa": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagIntermediarioPsp": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagPaEmittente": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "codice": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        }
-      },
-      "AnagCanale": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codice": {
-            "type": "string"
           }
         }
       }

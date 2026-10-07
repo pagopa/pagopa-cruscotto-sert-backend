@@ -13,9 +13,9 @@ public interface AnagPaymentMethodRepository extends JpaRepository<AnagPaymentMe
 
     Optional<AnagPaymentMethod> findByCodice(String codice);
 
-    @Query("SELECT e.codice FROM AnagPaymentMethod e")
-    Page<String> findAllCodes(Pageable pageable);
+    @Query("SELECT e FROM AnagPaymentMethod e")
+    Page<AnagPaymentMethod> findAllPaged(Pageable pageable);
 
-    @Query("SELECT e.codice FROM AnagPaymentMethod e WHERE LOWER(e.codice) LIKE LOWER(CONCAT('%', :search, '%'))")
-    Page<String> findAllCodesWithSearch(@Param("search") String search, Pageable pageable);
+    @Query("SELECT e FROM AnagPaymentMethod e WHERE LOWER(e.codice) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<AnagPaymentMethod> findAllPagedWithSearch(@Param("search") String search, Pageable pageable);
 }
