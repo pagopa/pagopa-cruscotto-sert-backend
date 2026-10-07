@@ -48,7 +48,10 @@ public class TokenProvider {
     public Authentication getAuthentication(String token) {
         Map<String, Object> claims = jwtDecoder.decode(token).getClaims();
 
-        Instant iat = Instant.ofEpochSecond(Long.parseLong(claims.get("iat").toString()));
+        Object issuedAtClaim = claims.get("iat");
+        Instant iat = issuedAtClaim instanceof Instant instant
+            ? instant
+            : Instant.ofEpochSecond(Long.parseLong(issuedAtClaim.toString()));
 
         Collection<? extends GrantedAuthority> authorities = grantAuthoritiesLoad.load(
             claims,
