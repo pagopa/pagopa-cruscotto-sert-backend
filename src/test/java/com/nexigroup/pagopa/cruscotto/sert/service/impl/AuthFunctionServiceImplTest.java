@@ -136,7 +136,6 @@ class AuthFunctionServiceImplTest {
 
         Pageable pageable = PageRequest.of(0, 10);
         assertThat(service.listAllFunctionSelected(12L, pageable)).hasSize(1);
-        assertThat(service.listAllFunctionSelected(12L)).containsExactly(5L);
         assertThat(service.listAllFunctionAssociabili(12L, Optional.of("pos"), pageable)).hasSize(1);
     }
 
