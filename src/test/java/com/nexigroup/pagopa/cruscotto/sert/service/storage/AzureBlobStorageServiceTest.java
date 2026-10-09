@@ -107,7 +107,7 @@ class AzureBlobStorageServiceTest {
         Optional<byte[]> result = service.download(BLOB_PATH);
 
         assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo("content".getBytes(StandardCharsets.UTF_8));
+        assertThat(result.orElseThrow()).isEqualTo("content".getBytes(StandardCharsets.UTF_8));
         verify(blobClient).exists();
         verify(blobClient).download(any(OutputStream.class));
     }
