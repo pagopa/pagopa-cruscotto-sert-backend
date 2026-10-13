@@ -6,8 +6,6 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -23,8 +21,6 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
-
-    private final Logger log = LoggerFactory.getLogger(SertSearchJwtTokenSearchResource.class);
 
     public SertSearchJwtTokenSearchResource(SertService sertService) {
         super(sertService);
@@ -43,7 +39,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false) String info,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        log.info("CALL WITH SUBKEY SEARCH");
         return super.search(pa,nav,iuv,token,idCarrello,info,pageable);
     }
 
@@ -57,7 +52,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @PathVariable("pa-emittente") String paEmittente,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        log.info("CALL WITH SUBKEY GET POSITION");
         return super.getPosition(nav,paEmittente,pageable);
     }
 
@@ -65,7 +59,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TOKEN_DETAIL + "\")")
     public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
-        log.info("CALL WITH SUBKEY GET POSITION");
         return super.getTokenInfo(token);
     }
 
@@ -78,7 +71,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @PathVariable("token") String token,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        log.info("CALL WITH SUBKEY GET TRANSFERS");
         return super.getTransfers(nav, paEmittente, token, pageable);
     }
 
@@ -90,7 +82,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @PathVariable("pa-emittente") String paEmittente,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        log.info("CALL WITH SUBKEY GET WORKFLOWS");
         return super.getWorkflows(nav,paEmittente,pageable);
     }
 
@@ -100,7 +91,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(@PathVariable("token") String token,
                                           @Parameter(description = "Pageable", required = true)
                                           @ParameterObject Pageable pageable) {
-        log.info("CALL WITH SUBKEY GET EXTRA INFO");
         return super.getExtraInfo(token,pageable);
     }
 }

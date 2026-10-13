@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.slf4j.MDC;
 import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.web.util.HeaderUtil;
 
@@ -136,6 +137,9 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             MESSAGE_KEY,
             getMappedMessageKey(err) != null ? getMappedMessageKey(err) : "error.http." + problem.getStatus()
         );
+
+        String correlationId = MDC.get(com.nexigroup.pagopa.cruscotto.sert.config.RequestLoggingFilter.CORRELATION_ID_MDC_KEY);
+        if (correlationId != null) problem.setProperty("correlationId", correlationId);
 
         if (problemProperties == null || !problemProperties.containsKey(PATH_KEY)) problem.setProperty(PATH_KEY, getPathValue(request));
 
