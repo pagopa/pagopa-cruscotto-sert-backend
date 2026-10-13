@@ -54,9 +54,15 @@ public class ApiRequestResponseLoggingAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         String action = actionName(method);
+        String correlationId = MDC.get(RequestLoggingFilter.CORRELATION_ID_MDC_KEY);
         int status = 500;
         Object responseBody = null;
         Throwable failure = null;
+
+        MDC.put("event_action", action);
+        MDC.put("event_outcome", "started");
+        MDC.put("request", toJson(requestArguments(signature, joinPoint.getArgs())));
+        LOG.info("API request started: {} correlationId={}", action, correlationId);
 
         try {
             Object result = joinPoint.proceed();
@@ -77,9 +83,8 @@ public class ApiRequestResponseLoggingAspect {
                 MDC.put("event_action", action);
                 MDC.put("event_outcome", failure == null && status < 400 ? "success" : "failure");
                 MDC.put("http.response.status_code", Integer.toString(status));
-                MDC.put("request", toJson(requestArguments(signature, joinPoint.getArgs())));
                 MDC.put("response", toJson(responseFields(responseBody, failure)));
-                LOG.info("API request completed");
+                LOG.info("API request completed: {} correlationId={}", action, correlationId);
             } finally {
                 if (previousContext == null) {
                     MDC.clear();
