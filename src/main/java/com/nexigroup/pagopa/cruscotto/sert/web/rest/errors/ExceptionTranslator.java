@@ -39,8 +39,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.slf4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.web.util.HeaderUtil;
 
@@ -52,6 +55,7 @@ import tech.jhipster.web.util.HeaderUtil;
 @ControllerAdvice
 public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ExceptionTranslator.class);
     private static final String FIELD_ERRORS_KEY = "fieldErrors";
     private static final String MESSAGE_KEY = "message";
     private static final String PATH_KEY = "path";
@@ -79,6 +83,9 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     )
     @ExceptionHandler
     public ResponseEntity<Object> handleAnyException(Throwable ex, NativeWebRequest request) {
+        if (ex instanceof MaxUploadSizeExceededException) {
+            LOG.error("Multipart upload rejected because it exceeds the configured size limit: {}", ex.getMessage());
+        }
         ProblemDetailWithCause pdCause = wrapAndCustomizeProblem(ex, request);
         return handleExceptionInternal((Exception) ex, pdCause, buildHeaders(ex), HttpStatusCode.valueOf(pdCause.getStatus()), request);
     }
@@ -92,6 +99,9 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         HttpStatusCode statusCode,
         WebRequest request
     ) {
+        if (ex instanceof MaxUploadSizeExceededException) {
+            LOG.error("Multipart upload rejected because it exceeds the configured size limit: {}", ex.getMessage());
+        }
         body = body == null ? wrapAndCustomizeProblem((Throwable) ex, (NativeWebRequest) request) : body;
         return super.handleExceptionInternal(ex, body, headers, statusCode, request);
     }
