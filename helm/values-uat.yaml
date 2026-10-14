@@ -70,6 +70,8 @@ microservice-chart:
           value: "80"
   envConfig:
     SPRING_PROFILES_ACTIVE: 'devpagopa'
+    SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: '21MB'
+    SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: '22MB'
     ASPNETCORE_URLS: "http://*:8080"
     WEBSITE_SITE_NAME: "pagopacruscottosertbackend" # required to show cloud role name in application insights
     FUNCTIONS_WORKER_RUNTIME: "java"
