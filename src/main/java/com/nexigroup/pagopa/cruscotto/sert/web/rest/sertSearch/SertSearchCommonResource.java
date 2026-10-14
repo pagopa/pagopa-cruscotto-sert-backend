@@ -4,7 +4,6 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -60,12 +59,6 @@ public class SertSearchCommonResource {
         String info,
         Pageable pageable
     ){
-        String addMessage = !StringUtils.isEmpty(info) ? info:"";
-
-
-
-        log.info(addMessage +" :START REST request to search with params - pa: {}, nav: {}, iuv: {}, token: {}, idCarrello: {}, info: {}", pa, nav, iuv, token, idCarrello, info);
-
         try {
             // Validate sort fields
             PaymentUtil.validatePageable(pageable, PaymentUtil.SEARCH_SORT_MAPPING);
@@ -107,9 +100,7 @@ public class SertSearchCommonResource {
             } else if (idCarrello != null) {
                 page = sertService.searchByCart(pa, nav, idCarrello, pageable);
             } else if (info != null) {
-                log.info(addMessage +" :chiamata alla query");
                 page = sertService.searchExtra(pa, nav, info, pageable);
-                log.info(addMessage +" :fine chiamata alla query");
 
             }
 
@@ -121,7 +112,6 @@ public class SertSearchCommonResource {
             }
 
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            log.info(addMessage +" :END REST request to search with params ");
             return ResponseEntity.ok().headers(headers).body(page.getContent());
         } catch (ResponseStatusException e) {
                 throw e;
@@ -140,7 +130,6 @@ public class SertSearchCommonResource {
          String paEmittente,
          Pageable pageable
     ) {
-        log.info ("START REST request to get Position : {}, {}", nav, paEmittente);
         try {
             PaymentUtil.validatePageable(pageable, PaymentUtil.POSITION_TOKEN_SORT_MAPPING);
 
@@ -156,8 +145,6 @@ public class SertSearchCommonResource {
             }
 
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            log.info ("END REST request to get Position" );
-
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 
         } catch (ResponseStatusException e) {
@@ -171,7 +158,6 @@ public class SertSearchCommonResource {
     }
 
     public ResponseEntity<TokenInfoDTO> getTokenInfo( String token) {
-        log.info("START REST request to get Token Info : {}", token);
         try {
             TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
             if (tokenInfo == null) {
@@ -180,7 +166,6 @@ public class SertSearchCommonResource {
                     ""
                 );
             }
-            log.info("END REST request to get Token Info ");
             return ResponseEntity.ok(tokenInfo);
         } catch (ResponseStatusException e) {
             throw e;
@@ -198,7 +183,6 @@ public class SertSearchCommonResource {
         String token,
         Pageable pageable
     ) {
-        log.info("START REST request to get Transfers : {}, {}, {}", nav, paEmittente, token);
         try {
             // Validate transfer sort fields (frontend names) and check idTransfer is not passed
             PaymentUtil.validatePageable(pageable, PaymentUtil.TRANSFER_SORT_MAPPING);
@@ -216,7 +200,6 @@ public class SertSearchCommonResource {
             }
 
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            log.info("END REST request to get Transfers ");
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 
         } catch (ResponseStatusException e) {
@@ -235,7 +218,6 @@ public class SertSearchCommonResource {
         String paEmittente,
         Pageable pageable
     ) {
-        log.info("START REST request to get Workflows : {}, {}", nav, paEmittente);
         try {
 
            PaymentUtil.validatePageable(pageable, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING);
@@ -267,8 +249,6 @@ public class SertSearchCommonResource {
             }
 
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-            log.info("END REST request to get Workflows ");
-
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0).getEventsPosition());
 
 
@@ -286,7 +266,6 @@ public class SertSearchCommonResource {
         String token,
         Pageable pageable) {
 
-        log.info("START REST request to get Extra Info : {}", token);
         try {
             PaymentUtil.validatePageable(pageable, PaymentUtil.EXTRA_INFO_SORT_MAPPING);
 
@@ -302,8 +281,6 @@ public class SertSearchCommonResource {
                 );
             }
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-
-            log.info("END REST request to get Extra Info");
 
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 

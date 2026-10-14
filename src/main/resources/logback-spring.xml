@@ -8,30 +8,14 @@
 
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <springProfile name="dev">
-      <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-    </springProfile>
+    <springProperty scope="context" name="service.name" source="spring.application.name" defaultValue="cruscotto-sert-backend" />
+    <springProperty scope="context" name="environment" source="spring.profiles.active" defaultValue="unknown" />
 
-  <springProfile name="devpapa">
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-  </springProfile>
-
-
-  <springProfile name="local">
-      <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-    </springProfile>
-
-    <springProfile name="devpagopa">
-      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
-          <jsonFormatter
-            class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
-            <prettyPrint>true</prettyPrint>
-          </jsonFormatter>
-          <timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
-        </layout>
-      </appender>
-    </springProfile>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+        <layout class="com.nexigroup.pagopa.cruscotto.sert.config.EcsJsonLayout" />
+      </encoder>
+    </appender>
 
     <logger name="com.nexigroup.pagopa.cruscotto" level="INFO"/>
 

@@ -143,7 +143,6 @@ public class AuthUserResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_CREATION + "\")")
     public ResponseEntity<AuthUser> createAuthUser(@Valid @RequestBody AuthUserCreateRequestBean authUserCreateRequestBean)
         throws URISyntaxException {
-        log.info("REST request to save AuthUser : {}", authUserCreateRequestBean);
 
         if (
             authUserRepository
@@ -184,7 +183,6 @@ public class AuthUserResource {
     @PutMapping("/auth-users")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_MODIFICATION + "\")")
     public ResponseEntity<AuthUserDTO> updateAuthUser(@Valid @RequestBody AuthUserUpdateRequestBean authUserUpdateRequestBean) {
-        log.info("REST request to update AuthUser : {}", authUserUpdateRequestBean);
 
         String loginUtenteLoggato = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new RuntimeException(CURRENT_USER_LOGIN_NOT_FOUND));
@@ -242,7 +240,6 @@ public class AuthUserResource {
     @PutMapping("/auth-users/changeState/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_MODIFICATION + "\")")
     public ResponseEntity<Void> changeState(@PathVariable Long id) {
-        log.info("REST request to update state AuthUser : {}", id);
 
         String loginUtenteLoggato = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new RuntimeException(CURRENT_USER_LOGIN_NOT_FOUND));
@@ -288,7 +285,6 @@ public class AuthUserResource {
     @PostMapping("/auth-users/reset")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_MODIFICATION + "\")")
     public ResponseEntity<Void> resetPasswordUser(@RequestBody String login) {
-        log.info("Reset password User : {}", login);
 
         //        Optional<AuthenticationType> authenticationType = SecurityUtils.getAuthenticationTypeUserLogin();
         //
@@ -347,7 +343,6 @@ public class AuthUserResource {
     @GetMapping("/auth-users/{login:" + Constants.LOGIN_REGEX + "}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_DETAIL + "\")")
     public ResponseEntity<AuthUserDTO> getAuthUser(@PathVariable String login) {
-        log.info("REST request to get AuthUser : {}", login);
 
         String loginUtenteLoggato = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new RuntimeException(CURRENT_USER_LOGIN_NOT_FOUND));
@@ -372,7 +367,6 @@ public class AuthUserResource {
     @DeleteMapping("/auth-users/{login:" + Constants.LOGIN_REGEX + "}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_DELETION + "\")")
     public ResponseEntity<Void> deleteAuthUser(@PathVariable String login) {
-        log.info("REST request to delete AuthUser: {}", login);
 
         String loginUtenteLoggato = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new RuntimeException(CURRENT_USER_LOGIN_NOT_FOUND));
@@ -401,7 +395,6 @@ public class AuthUserResource {
     @GetMapping("/auth-users/{id}/view")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.USER_DETAIL + "\")")
     public ResponseEntity<AuthUserDTO> getAuthUserById(@PathVariable Long id) {
-        log.info("REST request to get AuthUser by id: {}", id);
 
         String loginUtenteLoggato = SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new RuntimeException(CURRENT_USER_LOGIN_NOT_FOUND));

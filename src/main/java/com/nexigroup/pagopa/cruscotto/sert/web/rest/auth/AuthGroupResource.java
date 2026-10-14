@@ -75,7 +75,6 @@ public class AuthGroupResource {
     @PostMapping("/auth-groups")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_CREATION + "\")")
     public ResponseEntity<AuthGroupDTO> createAuthGroup(@Valid @RequestBody AuthGroupDTO authGroupDTO) throws URISyntaxException {
-        log.info("REST request to save AuthGroup : {}", authGroupDTO);
         if (authGroupDTO.getId() != null) {
             throw new BadRequestAlertException("A new authGroup cannot already have an ID", ENTITY_NAME, "idexists");
         }
@@ -97,7 +96,6 @@ public class AuthGroupResource {
     @PutMapping("/auth-groups")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_MODIFICATION + "\")")
     public ResponseEntity<AuthGroupDTO> updateAuthGroup(@Valid @RequestBody AuthGroupDTO authGroupDTO) throws URISyntaxException {
-        log.info("REST request to update AuthGroup : {}", authGroupDTO);
         if (authGroupDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
@@ -121,7 +119,6 @@ public class AuthGroupResource {
         @Parameter(description = "Filter", required = false) @Valid @ParameterObject AuthGroupFilter filter,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        log.info("REST request to get AuthGroups by filter: {}", filter);
         Page<AuthGroupDTO> page = authGroupService.findAll(filter, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -136,7 +133,6 @@ public class AuthGroupResource {
     @GetMapping("/auth-groups/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_DETAIL + "\")")
     public ResponseEntity<AuthGroupDTO> getAuthGroup(@PathVariable Long id) {
-        log.info("REST request to get AuthGroup : {}", id);
         Optional<AuthGroupDTO> authGroupDTO = authGroupService.findOne(id);
         return ResponseUtil.wrapOrNotFound(authGroupDTO);
     }
@@ -150,7 +146,6 @@ public class AuthGroupResource {
     @GetMapping("/auth-groups/detail/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_DETAIL + "\")")
     public ResponseEntity<AuthGroupDTO> getAuthGroupWithFunction(@PathVariable Long id) {
-        log.info("REST request to get AuthGroup : {}", id);
         Optional<AuthGroupDTO> authGroupDTO = authGroupService.findOneWithEagerRelationships(id);
         return ResponseUtil.wrapOrNotFound(authGroupDTO);
     }
@@ -164,7 +159,6 @@ public class AuthGroupResource {
     @DeleteMapping("/auth-groups/{id}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_DELETION + "\")")
     public ResponseEntity<Void> deleteAuthGroup(@PathVariable Long id) {
-        log.info("REST request to delete AuthGroup : {}", id);
         authGroupService.delete(id);
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
@@ -175,7 +169,6 @@ public class AuthGroupResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_MODIFICATION_FUNCTION_ASSOCIATION + "\")")
     public ResponseEntity<Void> aggiungiAssociazioneFunzione(@PathVariable Long idGroup, @Valid @RequestBody AuthFunctionDTO[] funzioni)
         throws URISyntaxException {
-        log.info("REST request to save function da associare al gruppo");
 
         if (funzioni == null || funzioni.length == 0) throw new BadRequestAlertException(
             "Selezionare almeno una funzione da associare al gruppo",
@@ -208,7 +201,6 @@ public class AuthGroupResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.GROUP_MODIFICATION_FUNCTION_DISASSOCIATION + "\")")
     public ResponseEntity<Void> rimuoviAssociazioneFunzione(@PathVariable Long idGroup, @PathVariable Long funzioneId)
         throws URISyntaxException {
-        log.info("Rimuovi associazione funzione (id) {} al gruppo (id) {}", funzioneId, idGroup);
 
         // Dissocia funzione
         authGroupService.rimuoviAssociazioneFunzione(idGroup, funzioneId);
@@ -222,7 +214,6 @@ public class AuthGroupResource {
     @PreAuthorize("hasAnyAuthority(\"" + AuthoritiesConstants.GROUP_CREATION + "\", \"" + AuthoritiesConstants.GROUP_MODIFICATION + "\")")
     public ResponseEntity<Void> aggiornaLivelloVisibilitaGruppi(@Valid @RequestBody AuthGroupUpdateRequestBean[] authGroups)
         throws URISyntaxException {
-        log.info("REST request to update groups visibility level");
 
         authGroupService.aggiornaLivelloVisibilitaGruppi(authGroups);
 

@@ -282,6 +282,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
 
     @Transactional(readOnly = true)
     public Optional<SearchInstanceDTO> findOne(UUID id) {
+        log.info("find by uuid :  {}" ,id );
         return instanceRepository.findById(id).map(entity -> {
             SearchInstanceDTO dto = toDto(entity);
             dto.setPresentCsv(!perimeterFileRepository.findInstanceIdsWithContent(List.of(id)).isEmpty());

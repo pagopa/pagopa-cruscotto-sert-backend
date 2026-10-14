@@ -186,8 +186,7 @@ public class SearchInstanceJwtTokenResource {
             CsvValidationResult result = csvValidator.validate(is);
 
             if (!result.valid()) {
-                ;
-                return ResponseEntity
+               return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(WrapperInstanceCsv.builder().result(result).build());
             }
