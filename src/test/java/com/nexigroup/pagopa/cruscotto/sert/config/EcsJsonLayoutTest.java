@@ -16,7 +16,7 @@ class EcsJsonLayoutTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void writesRequestContextAsTopLevelJsonFields() throws Exception {
+    void writesContextAndDetailsAsJsonFields() throws Exception {
         LoggerContext context = new LoggerContext();
         context.putProperty("service.name", "sert-test");
         context.putProperty("environment", "test");
@@ -38,7 +38,8 @@ class EcsJsonLayoutTest {
             );
             event.setMDCPropertyMap(Map.of(
                 "ctx_transaction_id", "7b7a347d-2440-4274-8b76-5aee56f1bf7d",
-                "correlation_id", "cfd0b210-3724-4339-a126-e421f45b2132"
+                "correlation_id", "cfd0b210-3724-4339-a126-e421f45b2132",
+                "ctx_details", "{\"total_time_executon\":42}"
             ));
 
             JsonNode json = objectMapper.readTree(layout.doLayout(event));
@@ -51,6 +52,7 @@ class EcsJsonLayoutTest {
             assertThat(json.get("message").asText()).isEqualTo("request completed");
             assertThat(json.get("ctx_transaction_id").asText()).isEqualTo("7b7a347d-2440-4274-8b76-5aee56f1bf7d");
             assertThat(json.get("correlation_id").asText()).isEqualTo("cfd0b210-3724-4339-a126-e421f45b2132");
+            assertThat(json.get("ctx_details").get("total_time_executon").asLong()).isEqualTo(42);
             assertThat(json.has("mdc")).isFalse();
             assertThat(json.has("trace.id")).isFalse();
         } finally {

@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -24,7 +24,6 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.multipart.MultipartFile;
 
 @Aspect
 @Component
@@ -50,6 +49,14 @@ public class ApiRequestResponseLoggingAspect {
         "execution(public * com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch..*Resource.*(..))"
     )
     public Object logApiRequestAndResponse(ProceedingJoinPoint joinPoint) throws Throwable {
+        long startNanos = System.nanoTime();
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null) {
+            Object requestStartNanos = requestAttributes.getRequest().getAttribute(RequestLoggingFilter.REQUEST_START_NANOS_ATTRIBUTE);
+            if (requestStartNanos instanceof Long receivedAtNanos) {
+                startNanos = receivedAtNanos;
+            }
+        }
         Map<String, String> previousContext = MDC.getCopyOfContextMap();
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
@@ -61,8 +68,6 @@ public class ApiRequestResponseLoggingAspect {
 
         MDC.put("event_action", action);
         MDC.put("event_outcome", "started");
-        MDC.put("request", toJson(requestArguments(signature, joinPoint.getArgs())));
-        LOG.info("API request started: {} correlationId={}", action, correlationId);
 
         try {
             Object result = joinPoint.proceed();
@@ -80,9 +85,11 @@ public class ApiRequestResponseLoggingAspect {
             throw throwable;
         } finally {
             try {
+                long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
                 MDC.put("event_action", action);
                 MDC.put("event_outcome", failure == null && status < 400 ? "success" : "failure");
                 MDC.put("http.response.status_code", Integer.toString(status));
+                MDC.put("ctx_details", toJson(Map.of("total_time_executon", formatElapsedTime(elapsedMillis))));
                 MDC.put("response", toJson(responseFields(responseBody, failure)));
                 LOG.info("API request completed: {} correlationId={}", action, correlationId);
             } finally {
@@ -95,19 +102,15 @@ public class ApiRequestResponseLoggingAspect {
         }
     }
 
-    private Map<String, Object> requestArguments(MethodSignature signature, Object[] arguments) {
-        String[] parameterNames = signature.getParameterNames();
-        Map<String, Object> request = new LinkedHashMap<>();
-        for (int index = 0; index < arguments.length; index++) {
-            Object argument = arguments[index];
-            if (argument == null || argument instanceof ServletRequest || argument instanceof ServletResponse || argument instanceof java.security.Principal) {
-                continue;
-            }
+    static String formatElapsedTime(long elapsedMillis) {
+        long minutes = elapsedMillis / 60_000;
+        long seconds = (elapsedMillis % 60_000) / 1_000;
+        long milliseconds = elapsedMillis % 1_000;
 
-            String name = index < parameterNames.length ? parameterNames[index] : "arg" + index;
-            request.put(name, argument instanceof MultipartFile file ? fileMetadata(file) : argument);
+        if (minutes == 0) {
+            return seconds + "." + String.format(Locale.ROOT, "%03d", milliseconds);
         }
-        return request;
+        return minutes + ":" + String.format(Locale.ROOT, "%02d,%03d", seconds, milliseconds);
     }
 
     private Map<String, Object> responseFields(Object body, Throwable failure) {
@@ -121,14 +124,6 @@ public class ApiRequestResponseLoggingAspect {
             response.put("body", body);
         }
         return response;
-    }
-
-    private Map<String, Object> fileMetadata(MultipartFile file) {
-        Map<String, Object> metadata = new LinkedHashMap<>();
-        metadata.put("fileName", file.getOriginalFilename());
-        metadata.put("contentType", file.getContentType());
-        metadata.put("sizeBytes", file.getSize());
-        return metadata;
     }
 
     private String actionName(Method method) {

@@ -56,7 +56,7 @@ public class EcsJsonLayout extends LayoutBase<ILoggingEvent> {
     }
 
     private Object structuredField(String name, String value) {
-        if (!"request".equals(name) && !"response".equals(name)) {
+        if (!"request".equals(name) && !"response".equals(name) && !"ctx_details".equals(name)) {
             return value;
         }
 

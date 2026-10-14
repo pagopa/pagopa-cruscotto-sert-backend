@@ -31,6 +31,7 @@ class RequestLoggingFilterTest {
         filter.doFilter(request, response, (servletRequest, servletResponse) -> {
             assertThat(MDC.get(RequestLoggingFilter.TRANSACTION_ID_MDC_KEY)).isEqualTo(transactionId);
             assertThat(MDC.get(RequestLoggingFilter.CORRELATION_ID_MDC_KEY)).isEqualTo(correlationId);
+            assertThat(request.getAttribute(RequestLoggingFilter.REQUEST_START_NANOS_ATTRIBUTE)).isInstanceOf(Long.class);
         });
 
         assertThat(response.getHeader(RequestLoggingFilter.CORRELATION_ID_HEADER)).isEqualTo(correlationId);

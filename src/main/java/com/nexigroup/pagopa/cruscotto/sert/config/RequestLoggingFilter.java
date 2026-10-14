@@ -26,6 +26,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     public static final String TRANSACTION_ID_MDC_KEY = "ctx_transaction_id";
     public static final String CORRELATION_ID_MDC_KEY = "correlation_id";
     public static final String TRACE_ID_MDC_KEY = "trace.id";
+    public static final String REQUEST_START_NANOS_ATTRIBUTE = "ctx_request_start_nanos";
 
     private static final Pattern TRACEPARENT_PATTERN = Pattern.compile(
         "^(?!ff)[0-9a-fA-F]{2}-([0-9a-fA-F]{32})-([0-9a-fA-F]{16})-[0-9a-fA-F]{2}$"
@@ -34,6 +35,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
+        request.setAttribute(REQUEST_START_NANOS_ATTRIBUTE, System.nanoTime());
         Map<String, String> previousContext = MDC.getCopyOfContextMap();
 
         String correlationId = parseUuid(request.getHeader(CORRELATION_ID_HEADER)).orElseGet(() -> UUID.randomUUID().toString());
