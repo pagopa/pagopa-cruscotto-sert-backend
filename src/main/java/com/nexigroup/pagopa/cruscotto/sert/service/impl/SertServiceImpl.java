@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -178,14 +179,24 @@ public class SertServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
-        log.info(searchValue +" :chiamata alla query in positionrepository");
-
+        long startedAtNanos = System.nanoTime();
         List<Object[]> groupedRows = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
             pa
         );
-        log.info(searchValue +" :fine chiamata alla query in positionrepository");
+        // Una sola milestone al posto della coppia START/END che c'era qui.
+        //
+        // 1) Il log di avvio non aggiungeva informazione: se la query non torna, lo si deduce
+        //    dall'assenza del log finale. Durata e numero di righe dicono invece quanto costa
+        //    davvero questa ricerca, che e' l'unica del servizio senza LIMIT lato database —
+        //    cioe' esattamente il dato che serve per decidere se va resa asincrona.
+        // 2) Il valore cercato NON viene piu' emesso a INFO. E' testo libero dell'utente, che puo'
+        //    contenere qualunque cosa (un codice fiscale, per dire), e finiva in chiaro nei log di
+        //    produzione due volte per ricerca. Resta nel log.debug di inizio metodo, che in
+        //    produzione non e' attivo.
+        log.info("Extra-info search completed: rows={}, elapsedMs={}",
+            groupedRows.size(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos));
 
         List<PositionPaymentExtraDTO> allRows = new ArrayList<>(groupedRows.stream()
             .map(row -> PositionPaymentExtraDTO.builder()
