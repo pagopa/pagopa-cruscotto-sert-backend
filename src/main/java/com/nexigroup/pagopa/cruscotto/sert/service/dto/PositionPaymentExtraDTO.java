@@ -3,6 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service.dto;
 import java.io.Serializable;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,4 +23,6 @@ public class PositionPaymentExtraDTO extends BasicPositionObjectDTO implements S
     private List<String> match;
     @JsonProperty("pa-emittente-desc")
     private String paEmittenteDsc;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean oldPayment;
 }

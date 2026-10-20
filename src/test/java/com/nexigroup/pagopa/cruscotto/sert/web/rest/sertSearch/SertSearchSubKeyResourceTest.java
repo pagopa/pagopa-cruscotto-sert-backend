@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
+import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.PositionPaymentExtraDTO;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,8 @@ import org.springframework.http.ResponseEntity;
 class SertSearchSubKeyResourceTest {
 
     private final SertService service = mock(SertService.class);
-    private final SertSearchSubKeyResource resource = new SertSearchSubKeyResource(service);
+    private final SertFreezeDataService freezeDataService = mock(SertFreezeDataService.class);
+    private final SertSearchSubKeyResource resource = new SertSearchSubKeyResource(service, freezeDataService);
 
     @Test
     void delegatesSearchToCommonResource() {

@@ -2399,6 +2399,36 @@
             }
           },
           {
+            "name": "search_old_payment",
+            "in": "query",
+            "description": "Include frozen payment records; dateFrom and dateTo are required when true.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Inclusive date_event lower bound (required when search_old_payment=true).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Inclusive date_event upper bound (required when search_old_payment=true).",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",

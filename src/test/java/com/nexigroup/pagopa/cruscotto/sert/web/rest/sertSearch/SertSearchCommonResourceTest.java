@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
+import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.ExtraInfoResponseDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.PositionPaymentDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.PositionPaymentExtraDTO;
@@ -16,11 +17,14 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.TokenInfoDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.TransferPaymentDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowObjectDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowResponseDTO;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -31,7 +35,8 @@ import org.springframework.web.server.ResponseStatusException;
 class SertSearchCommonResourceTest {
 
     private final SertService service = mock(SertService.class);
-    private final SertSearchCommonResource resource = new SertSearchCommonResource(service);
+    private final SertFreezeDataService freezeDataService = mock(SertFreezeDataService.class);
+    private final SertSearchCommonResource resource = new SertSearchCommonResource(service, freezeDataService);
 
     @BeforeEach
     void setUpRequestContext() {
@@ -71,6 +76,38 @@ class SertSearchCommonResourceTest {
         )).isInstanceOf(ResponseStatusException.class)
             .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
                 .isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void mergesCurrentAndHistoricalResultsAndMarksTheirSource() {
+        var pageable = PageRequest.of(0, 2, Sort.by(Sort.Order.desc("paEmittente")));
+        var current = positionExtra("nav-current");
+        current.setPaEmittente("PA-2");
+        var historical = positionExtra("nav-historical");
+        historical.setPaEmittente("PA-1");
+        when(service.searchByNav(eq("nav-current"), eq(null), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(current), PageRequest.of(0, 2), 1));
+        when(freezeDataService.searchOldPayment(
+            eq(null), eq("nav-current"), eq(null), eq(null), eq(null), eq(null),
+            eq(LocalDate.parse("2025-01-01")), eq(LocalDate.parse("2025-12-31")), any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.of(historical), PageRequest.of(0, 2), 1));
+
+        ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
+            null, "nav-current", null, null, null, null, true,
+            LocalDate.parse("2025-01-01"), LocalDate.parse("2025-12-31"), pageable
+        );
+
+        assertThat(response.getBody()).containsExactly(current, historical);
+        assertThat(response.getBody()).extracting(PositionPaymentExtraDTO::getOldPayment).containsExactly(false, true);
+    }
+
+    @Test
+    void requiresDateRangeWhenHistoricalSearchIsEnabled() {
+        assertThatThrownBy(() -> resource.search(
+            null, "nav-1", null, null, null, null, true, null, null, Pageable.ofSize(10)
+        )).isInstanceOf(ResponseStatusException.class)
+            .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test

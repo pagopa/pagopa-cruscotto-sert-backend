@@ -2,18 +2,21 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtT
 
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
+import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDate;
 
 /**
  * REST controller for SERT APIs.
@@ -22,8 +25,8 @@ import java.util.List;
 @RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
 
-    public SertSearchJwtTokenSearchResource(SertService sertService) {
-        super(sertService);
+    public SertSearchJwtTokenSearchResource(SertService sertService, SertFreezeDataService sertFreezeDataService) {
+        super(sertService, sertFreezeDataService);
     }
 
 
@@ -37,9 +40,12 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false) String token,
         @RequestParam(required = false, name = "idCarrello") String idCarrello,
         @RequestParam(required = false) String info,
+        @RequestParam(required = false, name = "search_old_payment", defaultValue = "false") boolean searchOldPayment,
+        @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.search(pa,nav,iuv,token,idCarrello,info,pageable);
+        return super.search(pa,nav,iuv,token,idCarrello,info,searchOldPayment,dateFrom,dateTo,pageable);
     }
 
 

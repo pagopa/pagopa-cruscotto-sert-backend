@@ -28,6 +28,17 @@ spring:
       poolName: Hikari
       maximum-pool-size: 25
       auto-commit: false
+  freeze-datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    schema: ${ENV_FREEZE_DATASOURCE_SCHEMA:sert_freeze_ingestor}
+    url: ${ENV_FREEZE_DATASOURCE_URL:${ENV_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cruscotto}}
+    username: ${ENV_FREEZE_DATASOURCE_USERNAME:${ENV_DATASOURCE_USERNAME:username}}
+    password: ${ENV_FREEZE_DATASOURCE_PASSWORD:${ENV_DATASOURCE_PASSWORD:password}}
+    hikari:
+      poolName: HikariFreeze
+      maximum-pool-size: 25
+      auto-commit: false
+      initialization-fail-timeout: -1
   jpa:
     properties:
       hibernate:
@@ -85,4 +96,3 @@ azure:
   blob:
     connection-string: ${AZURE_BLOB_CONNECTION_STRING}
     container-name: ${AZURE_BLOB_CONTAINER_NAME:massive-search}
-

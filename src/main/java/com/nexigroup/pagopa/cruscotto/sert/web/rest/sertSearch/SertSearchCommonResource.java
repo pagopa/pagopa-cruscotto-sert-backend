@@ -1,6 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
+import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +18,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.PaginationUtil;
 
 import java.util.List;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 
 public class SertSearchCommonResource {
@@ -24,13 +30,15 @@ public class SertSearchCommonResource {
     private final Logger log = LoggerFactory.getLogger(SertSearchCommonResource.class);
 
     private final SertService sertService;
+    private final SertFreezeDataService sertFreezeDataService;
 
     // Valid sort fields for search API
 
 
 
-    public SertSearchCommonResource(SertService sertService) {
+    public SertSearchCommonResource(SertService sertService, SertFreezeDataService sertFreezeDataService) {
         this.sertService = sertService;
+        this.sertFreezeDataService = sertFreezeDataService;
     }
 
     /**
@@ -59,11 +67,41 @@ public class SertSearchCommonResource {
         String info,
         Pageable pageable
     ){
+        return search(pa, nav, iuv, token, idCarrello, info, false, null, null, pageable);
+    }
+
+    public ResponseEntity<List<PositionPaymentExtraDTO>> search(
+        String pa,
+        String nav,
+        String iuv,
+        String token,
+        String idCarrello,
+        String info,
+        boolean searchOldPayment,
+        LocalDate dateFrom,
+        LocalDate dateTo,
+        Pageable pageable
+    ){
         try {
+            if (searchOldPayment && (dateFrom == null || dateTo == null || dateFrom.isAfter(dateTo))) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "dateFrom and dateTo are required and dateFrom must not be after dateTo when search_old_payment is enabled."
+                );
+            }
             // Validate sort fields
             PaymentUtil.validatePageable(pageable, PaymentUtil.SEARCH_SORT_MAPPING);
 
             pageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_SORT_MAPPING, List.of(Sort.Order.desc("paEmittente")));
+            Pageable searchPageable = pageable;
+            if (searchOldPayment) {
+                long requestedEnd = pageable.getOffset() + pageable.getPageSize();
+                if (requestedEnd > Integer.MAX_VALUE) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested page is too large.");
+                }
+                int fetchSize = (int) requestedEnd;
+                searchPageable = PageRequest.of(0, Math.max(fetchSize, 1), pageable.getSort());
+            }
 
             int presentGroups = 0;
 
@@ -84,7 +122,7 @@ public class SertSearchCommonResource {
 
             if (presentGroups == 0){
                 if (pa != null ||  nav != null) {
-                    page = sertService.searchByNav(nav, pa, pageable);
+                    page = sertService.searchByNav(nav, pa, searchPageable);
                 } else  {
                     log.error("Provide PA or NAV for PA+NAV search.");
                     throw new ResponseStatusException(
@@ -94,14 +132,21 @@ public class SertSearchCommonResource {
 
                 }
             } else if (iuv != null) {
-                page = sertService.searchByIuv(pa, nav, iuv, pageable);
+                page = sertService.searchByIuv(pa, nav, iuv, searchPageable);
             } else if (token != null) {
-                page = sertService.searchByToken(pa, nav, token, pageable);
+                page = sertService.searchByToken(pa, nav, token, searchPageable);
             } else if (idCarrello != null) {
-                page = sertService.searchByCart(pa, nav, idCarrello, pageable);
+                page = sertService.searchByCart(pa, nav, idCarrello, searchPageable);
             } else if (info != null) {
-                page = sertService.searchExtra(pa, nav, info, pageable);
+                page = sertService.searchExtra(pa, nav, info, searchPageable);
 
+            }
+
+            if (searchOldPayment && page != null) {
+                Page<PositionPaymentExtraDTO> oldPage = sertFreezeDataService.searchOldPayment(
+                    pa, nav, iuv, token, idCarrello, info, dateFrom, dateTo, searchPageable
+                );
+                page = mergeSearchResults(page, oldPage, pageable);
             }
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
@@ -122,6 +167,48 @@ public class SertSearchCommonResource {
                 "An error occurred while processing your request. Please try again later."
             );
         }
+    }
+
+    private Page<PositionPaymentExtraDTO> mergeSearchResults(
+        Page<PositionPaymentExtraDTO> currentPage,
+        Page<PositionPaymentExtraDTO> oldPage,
+        Pageable pageable
+    ) {
+        List<PositionPaymentExtraDTO> merged = new ArrayList<>(currentPage.getContent());
+        currentPage.getContent().forEach(item -> item.setOldPayment(false));
+        merged.addAll(oldPage.getContent());
+        merged.sort(searchComparator(pageable.getSort()));
+
+        int fromIndex = (int) Math.min(pageable.getOffset(), merged.size());
+        int toIndex = Math.min(fromIndex + pageable.getPageSize(), merged.size());
+        return new PageImpl<>(
+            merged.subList(fromIndex, toIndex),
+            pageable,
+            currentPage.getTotalElements() + oldPage.getTotalElements()
+        );
+    }
+
+    private Comparator<PositionPaymentExtraDTO> searchComparator(Sort sort) {
+        Comparator<PositionPaymentExtraDTO> comparator = (left, right) -> 0;
+        for (Sort.Order order : sort) {
+            Comparator<String> valueComparator = order.isAscending()
+                ? Comparator.nullsLast(String::compareTo)
+                : Comparator.nullsLast((left, right) -> right.compareTo(left));
+            Comparator<String> finalValueComparator = valueComparator;
+            comparator = comparator.thenComparing(
+                row -> searchSortValue(row, order.getProperty()),
+                finalValueComparator
+            );
+        }
+        return comparator;
+    }
+
+    private String searchSortValue(PositionPaymentExtraDTO row, String property) {
+        return switch (property) {
+            case "nav" -> row.getNav();
+            case "paEmittente", "paEmittenteDesc" -> row.getPaEmittente();
+            default -> null;
+        };
     }
 
 
