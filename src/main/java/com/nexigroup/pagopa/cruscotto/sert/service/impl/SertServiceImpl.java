@@ -11,12 +11,15 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
@@ -38,10 +41,73 @@ public class SertServiceImpl implements SertService {
 
     private final Logger log = LoggerFactory.getLogger(SertServiceImpl.class);
 
+    /**
+     * Il dettaglio del token usa una riga sola: l'ORDER BY e' nella query, quindi il taglio a 1
+     * avviene sul server invece che scartando in memoria tutto cio' che segue.
+     */
+    private static final Pageable FIRST_ROW_ONLY = PageRequest.of(0, 1);
+
     private final PositionRepository positionRepository;
 
     public SertServiceImpl(PositionRepository positionRepository) {
         this.positionRepository = positionRepository;
+    }
+
+    /**
+     * Esegue una ricerca per token prima <em>potata</em> sulla partizione indicata dal registry e,
+     * solo se quella non produce nulla, nella forma non potata.
+     *
+     * <p>Il fallback non e' difensivo, e' necessario: il registry puo' non contenere il token
+     * (righe anteriori alla sua introduzione, oppure riga cancellata dalla retention del registry
+     * nell'ingestor) e, per i duplicati storici, punta alla sola occorrenza piu' vecchia. Senza
+     * fallback quei casi passerebbero da "trovato" a "non trovato" — un cambio di comportamento
+     * silenzioso e visibile all'utente.</p>
+     *
+     * <p>Costo nel caso peggiore (risultato vuoto): una seek sulla PK del registry piu' una query
+     * potata a una partizione, entrambe trascurabili rispetto alla scansione non potata che viene
+     * eseguita comunque. Non e' quindi mai materialmente peggiore di oggi, ed e' molto meglio
+     * quando il token viene trovato.</p>
+     *
+     * @param token  token gia' normalizzato
+     * @param query  la query da eseguire, parametrizzata sulla partizione ({@code null} = non potata)
+     * @param empty  come si riconosce un risultato vuoto per il tipo restituito
+     */
+    private <T> T pruneByTokenPartition(String token, Function<LocalDate, T> query, Predicate<T> empty) {
+        LocalDate partitionDate = resolveTokenPartition(token);
+        if (partitionDate != null) {
+            T pruned = query.apply(partitionDate);
+            if (!empty.test(pruned)) {
+                return pruned;
+            }
+            log.debug("Registry hit but no rows in the pruned partition, falling back to the full scan");
+        }
+        return query.apply(null);
+    }
+
+    /**
+     * Legge dal registry la partizione del token, degradando a {@code null} (= nessun pruning) su
+     * qualunque problema.
+     *
+     * <p><strong>Il catch non e' difensivismo generico, copre un rischio concreto</strong>: questo
+     * servizio legge {@code POSITION_TOKEN_REGISTRY} per la prima volta, e la tabella appartiene
+     * allo schema dell'ingestor. Se al ruolo applicativo mancasse la SELECT su quella tabella —
+     * oppure se la tabella non ci fosse in un ambiente non allineato — senza questo guard
+     * <em>quattro</em> endpoint che oggi funzionano comincerebbero a restituire errore. Cosi'
+     * invece tornano semplicemente al comportamento attuale, piu' lento ma corretto.</p>
+     *
+     * <p>Il valore arriva come stringa ISO: vedi {@code PositionRepository#findTokenPartitionDate}
+     * per il motivo. Un valore non parsabile e' impossibile da una colonna {@code DATE}, ma anche
+     * quel caso degrada invece di propagare.</p>
+     */
+    private LocalDate resolveTokenPartition(String token) {
+        try {
+            return positionRepository.findTokenPartitionDate(token).map(LocalDate::parse).orElse(null);
+        } catch (RuntimeException exception) {
+            // WARN e non ERROR: la ricerca non fallisce, perde solo il partition pruning. Ma va
+            // visto, perche' se ricorre tutte le ricerche per token stanno girando non potate.
+            log.warn("Could not read the token registry, the search runs without partition pruning", exception);
+            return null;
+        }
     }
 
 
@@ -93,7 +159,10 @@ public class SertServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Page<Object[]> groupRow = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
+        Page<Object[]> groupRow = pruneByTokenPartition(
+            normalizedToken,
+            dateEvent -> positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, dateEvent, pageable),
+            page -> page == null || page.isEmpty());
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -240,7 +309,12 @@ public class SertServiceImpl implements SertService {
             return null;
         }
 
-        List<Object[]> rows = positionRepository.findTokenDetailRow(token.trim());
+        String normalizedToken = token.trim();
+
+        List<Object[]> rows = pruneByTokenPartition(
+            normalizedToken,
+            dateEvent -> positionRepository.findTokenDetailRow(normalizedToken, dateEvent, FIRST_ROW_ONLY),
+            list -> list == null || list.isEmpty());
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -310,7 +384,12 @@ public class SertServiceImpl implements SertService {
             return null;
         }
 
-        Page<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
+        String normalizedToken = token.trim();
+
+        Page<Object[]> rows = pruneByTokenPartition(
+            normalizedToken,
+            dateEvent -> positionRepository.findTransferDetailRows(nav, paEmittente, normalizedToken, dateEvent, pageable),
+            page -> page == null || page.isEmpty());
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -402,7 +481,12 @@ public class SertServiceImpl implements SertService {
     public Page<ExtraInfoResponseDTO> getExtraInfo(String token, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
-        Page<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim(),pageable);
+        String normalizedToken = token.trim();
+
+        Page<Object[]> rows = pruneByTokenPartition(
+            normalizedToken,
+            dateEvent -> positionRepository.findExtraInfoByToken(normalizedToken, dateEvent, pageable),
+            page -> page == null || page.isEmpty());
         if (rows == null || rows.isEmpty()) {
             return null;
         }
