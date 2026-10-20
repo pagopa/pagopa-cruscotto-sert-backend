@@ -48,6 +48,9 @@ spring:
       poolName: Hikari
       maximum-pool-size: 25
       auto-commit: false
+      # Vedi la nota in application-devpagopa.yml: senza questo tetto una query lunga tiene una
+      # connessione del pool a tempo indeterminato e nessuno puo' cancellarla.
+      connection-init-sql: "SET statement_timeout = '${ENV_DB_STATEMENT_TIMEOUT:60s}'"
   messages:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:

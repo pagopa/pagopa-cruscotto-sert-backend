@@ -28,6 +28,13 @@ spring:
       poolName: Hikari
       maximum-pool-size: 25
       auto-commit: false
+      # Tetto server-side per singolo statement. Prima non esisteva alcun limite: ne'
+      # statement_timeout, ne' javax.persistence.query.timeout, ne' socketTimeout sul driver. Una
+      # query che andava lunga restava viva e teneva occupata una connessione del pool (25 in tutto)
+      # senza che nulla potesse cancellarla. Col SET e' il server a interrompere, con errore pulito
+      # (SQLSTATE 57014) e connessione riutilizzabile.
+      # Il valore e' volutamente largo: va stretto dopo aver misurato i tempi reali in produzione.
+      connection-init-sql: "SET statement_timeout = '${ENV_DB_STATEMENT_TIMEOUT:60s}'"
   jpa:
     properties:
       hibernate:
