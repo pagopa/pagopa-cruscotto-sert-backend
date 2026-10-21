@@ -99,7 +99,7 @@ public class FreezePositionRepository {
             PositionPaymentExtraDTO.PositionPaymentExtraDTOBuilder<?, ?> builder = PositionPaymentExtraDTO.builder()
                 .nav(resultSet.getString(1))
                 .paEmittente(resultSet.getString(2))
-                .oldPayment(true);
+                .fromHistory(true);
             if (extraSearch) {
                 builder.match(PaymentUtil.parseInfoMatch(resultSet.getString(3)));
             }
@@ -114,6 +114,200 @@ public class FreezePositionRepository {
             parameters.toArray()
         );
         return new PageImpl<>(results, pageable, total);
+    }
+
+    public Page<Object[]> findPositionDetailRows(String nav, String paEmittente, Pageable pageable) {
+        String fromAndWhere = " FROM " + schema + "position p " +
+            "LEFT JOIN " + schema + "position_tokens pt ON pt.fk_position = p.id " +
+            "LEFT JOIN " + schema + "anag_psp apsp ON apsp.id = pt.psp " +
+            "LEFT JOIN " + schema + "anag_intermediario_pa aipa ON aipa.id = pt.intermediario_pa " +
+            "LEFT JOIN " + schema + "anag_intermediario_psp aipsp ON aipsp.id = pt.intermediario_psp " +
+            "LEFT JOIN " + schema + "anag_stazione ast ON ast.id = pt.stazione " +
+            "LEFT JOIN " + schema + "anag_canale ac ON ac.id = pt.canale " +
+            "LEFT JOIN " + schema + "anag_pa_emittente ape ON ape.codice = p.pa_emittente " +
+            "WHERE p.nav = ? AND p.pa_emittente = ?";
+        String sql = "SELECT p.nav, ape.description, p.last_event, pt.iuv, pt.creditor_ref_id, " +
+            "encode(pt.token, 'hex'), pt.date_event, pt.payment_date, pt.outcome, pt.amount, pt.fee, " +
+            "apsp.codice, aipa.codice, aipsp.codice, ast.codice, ac.codice, pt.touchpoint, " +
+            "pt.payment_method, pt.id_carrello, apsp.description, aipa.description, aipsp.description" +
+            fromAndWhere + buildOrderBy(pageable,             Map.of(
+                "tokenDateEvent", "pt.date_event",
+                "psp", "apsp.codice",
+                "ptPsp", "aipsp.codice",
+                "amount", "pt.amount",
+                "paymentMethod", "pt.payment_method",
+                "paymentDate", "pt.payment_date",
+                "touchpoint", "pt.touchpoint",
+                "ptPaDesc", "aipa.description",
+                "tokenHex", "pt.token"
+            ), "p.last_event DESC") + " LIMIT ? OFFSET ?";
+        return queryPage(
+            sql,
+            "SELECT COUNT(pt.id)" + fromAndWhere,
+            List.of(nav, paEmittente),
+            pageable
+        );
+    }
+
+    public List<Object[]> findTokenDetailRows(String token) {
+        String sql = "SELECT p.nav, p.pa_emittente, p.last_event, pt.iuv, pt.creditor_ref_id, " +
+            "encode(pt.token, 'hex'), pt.date_event, pt.payment_date, pt.outcome, pt.amount, pt.fee, " +
+            "apsp.codice, aipa.codice, aipsp.codice, ast.codice, ac.codice, pt.touchpoint, " +
+            "pt.payment_method, pt.id_carrello, apsp.description, aipa.description, aipsp.description " +
+            "FROM " + schema + "position_tokens pt " +
+            "JOIN " + schema + "position p ON p.id = pt.fk_position " +
+            "LEFT JOIN " + schema + "anag_psp apsp ON apsp.id = pt.psp " +
+            "LEFT JOIN " + schema + "anag_intermediario_pa aipa ON aipa.id = pt.intermediario_pa " +
+            "LEFT JOIN " + schema + "anag_intermediario_psp aipsp ON aipsp.id = pt.intermediario_psp " +
+            "LEFT JOIN " + schema + "anag_stazione ast ON ast.id = pt.stazione " +
+            "LEFT JOIN " + schema + "anag_canale ac ON ac.id = pt.canale " +
+            "WHERE pt.token = convert_to(?, 'UTF8') " +
+            "ORDER BY pt.payment_date DESC, pt.date_event DESC, pt.id DESC";
+        return queryRows(sql, List.of(token));
+    }
+
+    public long countOkTokensByNavAndPa(String nav, String paEmittente) {
+        Long count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(pt.id) FROM " + schema + "position_tokens pt " +
+                "JOIN " + schema + "position p ON p.id = pt.fk_position " +
+                "WHERE p.nav = ? AND p.pa_emittente = ? AND UPPER(pt.outcome) = 'OK'",
+            Long.class,
+            nav,
+            paEmittente
+        );
+        return count == null ? 0 : count;
+    }
+
+    public Page<Object[]> findTransferDetailRows(
+        String nav,
+        String paEmittente,
+        String token,
+        Pageable pageable
+    ) {
+        String fromAndWhere = " FROM " + schema + "position p " +
+            "JOIN " + schema + "position_tokens pt ON pt.fk_position = p.id " +
+            "JOIN " + schema + "position_transfers ptr ON ptr.fk_token = pt.id " +
+            "LEFT JOIN " + schema + "anag_pa_emittente ape ON ape.codice = p.pa_emittente " +
+            "WHERE p.nav = ? AND p.pa_emittente = ? AND pt.token = convert_to(?, 'UTF8')";
+        String sql = "SELECT p.nav, ape.description, p.last_event, pt.iuv, pt.creditor_ref_id, " +
+            "encode(pt.token, 'hex'), (SELECT COUNT(ptr2.id) FROM " + schema + "position_transfers ptr2 " +
+            "WHERE ptr2.fk_token = pt.id), ptr.id_transfer, ptr.is_bollo, ptr.iban_transfer, " +
+            "ptr.amount_transfer, ptr.pa_transfer, ptr.date_event" + fromAndWhere +
+            buildOrderBy(pageable, Map.of(
+                "idTransfer", "ptr.id_transfer",
+                "isBollo", "ptr.is_bollo",
+                "ibanTransfer", "ptr.iban_transfer",
+                "amountTransfer", "ptr.amount_transfer",
+                "paTransfer", "ptr.pa_transfer"
+            ), "ptr.id_transfer ASC, ptr.pa_transfer DESC") + " LIMIT ? OFFSET ?";
+        return queryPage(
+            sql,
+            "SELECT COUNT(*)" + fromAndWhere,
+            List.of(nav, paEmittente, token),
+            pageable
+        );
+    }
+
+    public Page<Object[]> findPositionWorkflows(String nav, String paEmittente, Pageable pageable) {
+        String query = "SELECT * FROM ( " +
+            "SELECT ew.inserted_timestamp_resp AS insertedtimestamp, ae.nome_evento AS nomeevento, " +
+            "ae.tipo_evento AS tipoevento, ew.outcome_resp AS outcome, ew.event_id_resp AS eventid, " +
+            "afc.codice AS faultcode, encode(pt.token, 'hex') AS token, 'RESP' AS reqresp, ew.id " +
+            "FROM " + schema + "position p " +
+            "LEFT JOIN " + schema + "events_wf ew ON ew.fk_position = p.id " +
+            "LEFT JOIN " + schema + "position_tokens pt ON ew.fk_tokens = pt.id " +
+            "LEFT JOIN " + schema + "anag_evento ae ON ae.id = ew.tipo_evento " +
+            "LEFT JOIN " + schema + "anag_fault_code afc ON afc.id = ew.fault_code " +
+            "WHERE p.nav = ? AND p.pa_emittente = ? " +
+            "UNION ALL " +
+            "SELECT ew.inserted_timestamp_req AS insertedtimestamp, ae.nome_evento AS nomeevento, " +
+            "ae.tipo_evento AS tipoevento, ew.outcome_req AS outcome, ew.event_id_req AS eventid, " +
+            "afc.codice AS faultcode, encode(pt.token, 'hex') AS token, 'REQ' AS reqresp, ew.id " +
+            "FROM " + schema + "position p " +
+            "LEFT JOIN " + schema + "events_wf ew ON ew.fk_position = p.id " +
+            "LEFT JOIN " + schema + "position_tokens pt ON ew.fk_tokens = pt.id " +
+            "LEFT JOIN " + schema + "anag_evento ae ON ae.id = ew.tipo_evento " +
+            "LEFT JOIN " + schema + "anag_fault_code afc ON afc.id = ew.fault_code " +
+            "WHERE p.nav = ? AND p.pa_emittente = ? " +
+            ") workflow_events";
+        String orderBy = buildOrderBy(pageable, Map.of(
+            "insertedtimestamp", "insertedtimestamp",
+            "nomeevento", "nomeevento",
+            "tipoevento", "tipoevento",
+            "outcome", "outcome",
+            "eventid", "eventid",
+            "faultcode", "faultcode",
+            "token", "token",
+            "id", "id",
+            "reqResp", "reqresp"
+        ), "insertedtimestamp DESC");
+        List<Object> params = List.of(nav, paEmittente, nav, paEmittente);
+        return queryPage(
+            query + orderBy + " LIMIT ? OFFSET ?",
+            "SELECT COUNT(*) FROM (" + query + ") workflow_events",
+            params,
+            pageable
+        );
+    }
+
+    public Page<Object[]> findExtraInfoByToken(String token, Pageable pageable) {
+        String fromAndWhere = " FROM " + schema + "position_tokens pt " +
+            "JOIN " + schema + "position p ON p.id = pt.fk_position " +
+            "JOIN " + schema + "extra_info ei ON ei.fk_token = pt.id " +
+            "LEFT JOIN " + schema + "anag_pa_emittente ape ON ape.codice = p.pa_emittente " +
+            "LEFT JOIN " + schema + "anag_evento ae ON ae.id = ei.tipo_evento " +
+            "WHERE pt.token = convert_to(?, 'UTF8')";
+        String sql = "SELECT p.nav, ape.description, encode(pt.token, 'hex'), ei.info_name, " +
+            "ei.info_value, ae.nome_evento" + fromAndWhere +
+            buildOrderBy(pageable, Map.of(
+                "nav", "p.nav",
+                "paEmittente", "ape.description",
+                "token", "pt.token",
+                "infoName", "ei.info_name",
+                "infoValue", "ei.info_value",
+                "tipoEvento", "ae.nome_evento"
+            ), "ei.info_name DESC") + " LIMIT ? OFFSET ?";
+        return queryPage(
+            sql,
+            "SELECT COUNT(*)" + fromAndWhere,
+            List.of(token),
+            pageable
+        );
+    }
+
+    private Page<Object[]> queryPage(String sql, String countSql, List<?> parameters, Pageable pageable) {
+        List<Object> queryParameters = new ArrayList<>(parameters);
+        queryParameters.add(pageable.getPageSize());
+        queryParameters.add(pageable.getOffset());
+        List<Object[]> rows = queryRows(sql, queryParameters);
+        Long total = jdbcTemplate.queryForObject(countSql, Long.class, parameters.toArray());
+        return new PageImpl<>(rows, pageable, total == null ? 0 : total);
+    }
+
+    private List<Object[]> queryRows(String sql, List<?> parameters) {
+        return jdbcTemplate.query(sql, (resultSet, rowNumber) -> {
+            int columnCount = resultSet.getMetaData().getColumnCount();
+            Object[] row = new Object[columnCount];
+            for (int column = 0; column < columnCount; column++) {
+                row[column] = resultSet.getObject(column + 1);
+            }
+            return row;
+        }, parameters.toArray());
+    }
+
+    private String buildOrderBy(Pageable pageable, Map<String, String> sortColumns, String fallback) {
+        List<String> sortExpressions = new ArrayList<>();
+        pageable.getSort().forEach(order -> {
+            String column = sortColumns.get(order.getProperty());
+            if (column == null) {
+                throw new IllegalArgumentException("Unsupported historical detail sort field: " + order.getProperty());
+            }
+            sortExpressions.add(column + (order.isAscending() ? " ASC" : " DESC"));
+        });
+        if (sortExpressions.isEmpty()) {
+            sortExpressions.add(fallback);
+        }
+        return " ORDER BY " + String.join(", ", sortExpressions);
     }
 
     private void appendFilter(StringBuilder query, List<Object> parameters, String column, String value) {

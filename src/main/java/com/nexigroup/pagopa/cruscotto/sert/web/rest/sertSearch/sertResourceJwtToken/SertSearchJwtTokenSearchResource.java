@@ -40,12 +40,13 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false) String token,
         @RequestParam(required = false, name = "idCarrello") String idCarrello,
         @RequestParam(required = false) String info,
-        @RequestParam(required = false, name = "search_old_payment", defaultValue = "false") boolean searchOldPayment,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.search(pa,nav,iuv,token,idCarrello,info,searchOldPayment,dateFrom,dateTo,pageable);
+        return super.search(pa,nav,iuv,token,idCarrello,info, searchFromHistory,searchFromOnline,dateFrom,dateTo,pageable);
     }
 
 
@@ -56,16 +57,20 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
     public ResponseEntity<PositionPaymentDTO> getPosition(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getPosition(nav,paEmittente,pageable);
+        return super.getPosition(nav, paEmittente, searchFromHistory, pageable);
     }
 
     @GetMapping("/token/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_TOKEN_DETAIL + "\")")
-    public ResponseEntity<TokenInfoDTO> getTokenInfo(@PathVariable("token") String token) {
-        return super.getTokenInfo(token);
+    public ResponseEntity<TokenInfoDTO> getTokenInfo(
+        @PathVariable("token") String token,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory
+    ) {
+        return super.getTokenInfo(token, searchFromHistory);
     }
 
     @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
@@ -75,9 +80,10 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
         @PathVariable("token") String token,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getTransfers(nav, paEmittente, token, pageable);
+        return super.getTransfers(nav, paEmittente, token, searchFromHistory, pageable);
     }
 
     @GetMapping("/workflows/{nav}/{pa-emittente}")
@@ -86,17 +92,20 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
     public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getWorkflows(nav,paEmittente,pageable);
+        return super.getWorkflows(nav, paEmittente, searchFromHistory, pageable);
     }
 
     @GetMapping("/extra/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.SERT_EXTRA_DETAIL + "\")")
-    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(@PathVariable("token") String token,
-                                          @Parameter(description = "Pageable", required = true)
-                                          @ParameterObject Pageable pageable) {
-        return super.getExtraInfo(token,pageable);
+    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
+        @PathVariable("token") String token,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
+    ) {
+        return super.getExtraInfo(token, searchFromHistory, pageable);
     }
 }

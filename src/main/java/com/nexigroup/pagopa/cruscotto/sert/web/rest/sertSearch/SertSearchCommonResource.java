@@ -4,7 +4,6 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -77,13 +76,29 @@ public class SertSearchCommonResource {
         String token,
         String idCarrello,
         String info,
-        boolean searchOldPayment,
+        boolean searchFromHistory,
+        LocalDate dateFrom,
+        LocalDate dateTo,
+        Pageable pageable
+    ){
+        return search(pa, nav, iuv, token, idCarrello, info, searchFromHistory, true, dateFrom, dateTo, pageable);
+    }
+
+    public ResponseEntity<List<PositionPaymentExtraDTO>> search(
+        String pa,
+        String nav,
+        String iuv,
+        String token,
+        String idCarrello,
+        String info,
+        boolean searchFromHistory,
+        boolean searchFromOnline,
         LocalDate dateFrom,
         LocalDate dateTo,
         Pageable pageable
     ){
         try {
-            if (searchOldPayment && (dateFrom == null || dateTo == null || dateFrom.isAfter(dateTo))) {
+            if (searchFromHistory && (dateFrom == null || dateTo == null || dateFrom.isAfter(dateTo))) {
                 throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "dateFrom and dateTo are required and dateFrom must not be after dateTo when search_old_payment is enabled."
@@ -94,7 +109,7 @@ public class SertSearchCommonResource {
 
             pageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_SORT_MAPPING, List.of(Sort.Order.desc("paEmittente")));
             Pageable searchPageable = pageable;
-            if (searchOldPayment) {
+            if (searchFromHistory) {
                 long requestedEnd = pageable.getOffset() + pageable.getPageSize();
                 if (requestedEnd > Integer.MAX_VALUE) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requested page is too large.");
@@ -120,32 +135,35 @@ public class SertSearchCommonResource {
 
             Page<PositionPaymentExtraDTO> page = null;
 
-            if (presentGroups == 0){
-                if (pa != null ||  nav != null) {
-                    page = sertService.searchByNav(nav, pa, searchPageable);
-                } else  {
-                    log.error("Provide PA or NAV for PA+NAV search.");
-                    throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Provide PA or NAV for PA+NAV search."
-                    );
-
+            if (searchFromOnline) {
+                if (presentGroups == 0){
+                    if (pa != null ||  nav != null) {
+                        page = sertService.searchByNav(nav, pa, searchPageable);
+                    } else  {
+                        log.error("Provide PA or NAV for PA+NAV search.");
+                        throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Provide PA or NAV for PA+NAV search."
+                        );
+                    }
+                } else if (iuv != null) {
+                    page = sertService.searchByIuv(pa, nav, iuv, searchPageable);
+                } else if (token != null) {
+                    page = sertService.searchByToken(pa, nav, token, searchPageable);
+                } else if (idCarrello != null) {
+                    page = sertService.searchByCart(pa, nav, idCarrello, searchPageable);
+                } else if (info != null) {
+                    page = sertService.searchExtra(pa, nav, info, searchPageable);
                 }
-            } else if (iuv != null) {
-                page = sertService.searchByIuv(pa, nav, iuv, searchPageable);
-            } else if (token != null) {
-                page = sertService.searchByToken(pa, nav, token, searchPageable);
-            } else if (idCarrello != null) {
-                page = sertService.searchByCart(pa, nav, idCarrello, searchPageable);
-            } else if (info != null) {
-                page = sertService.searchExtra(pa, nav, info, searchPageable);
-
             }
 
-            if (searchOldPayment && page != null) {
-                Page<PositionPaymentExtraDTO> oldPage = sertFreezeDataService.searchOldPayment(
+            if (searchFromHistory) {
+                Page<PositionPaymentExtraDTO> oldPage = sertFreezeDataService.searchFromHistory(
                     pa, nav, iuv, token, idCarrello, info, dateFrom, dateTo, searchPageable
                 );
+                if (page == null) {
+                    page = new PageImpl<>(List.of(), searchPageable, 0);
+                }
                 page = mergeSearchResults(page, oldPage, pageable);
             }
 
@@ -175,7 +193,7 @@ public class SertSearchCommonResource {
         Pageable pageable
     ) {
         List<PositionPaymentExtraDTO> merged = new ArrayList<>(currentPage.getContent());
-        currentPage.getContent().forEach(item -> item.setOldPayment(false));
+        currentPage.getContent().forEach(item -> item.setFromHistory(false));
         merged.addAll(oldPage.getContent());
         merged.sort(searchComparator(pageable.getSort()));
 
@@ -217,13 +235,24 @@ public class SertSearchCommonResource {
          String paEmittente,
          Pageable pageable
     ) {
+        return getPosition(nav, paEmittente, false, pageable);
+    }
+
+    public ResponseEntity<PositionPaymentDTO> getPosition(
+        String nav,
+        String paEmittente,
+        boolean searchFromHistory,
+        Pageable pageable
+    ) {
         try {
             PaymentUtil.validatePageable(pageable, PaymentUtil.POSITION_TOKEN_SORT_MAPPING);
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,null,PaymentUtil.POSITION_TOKEN_SORT_MAPPING,
                 List.of(Sort.Order.desc("tokenDateEvent")));
 
-            Page<PositionPaymentDTO> page = sertService.getPosition(nav, paEmittente,remappedPageable);
+            Page<PositionPaymentDTO> page = searchFromHistory
+                ? sertFreezeDataService.getPositionFromHistory(nav, paEmittente, remappedPageable)
+                : sertService.getPosition(nav, paEmittente,remappedPageable);
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -245,8 +274,14 @@ public class SertSearchCommonResource {
     }
 
     public ResponseEntity<TokenInfoDTO> getTokenInfo( String token) {
+        return getTokenInfo(token, false);
+    }
+
+    public ResponseEntity<TokenInfoDTO> getTokenInfo(String token, boolean searchFromHistory) {
         try {
-            TokenInfoDTO tokenInfo = sertService.getTokenInfo(token);
+            TokenInfoDTO tokenInfo = searchFromHistory
+                ? sertFreezeDataService.getTokenInfoFromHistory(token)
+                : sertService.getTokenInfo(token);
             if (tokenInfo == null) {
                 throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -270,6 +305,16 @@ public class SertSearchCommonResource {
         String token,
         Pageable pageable
     ) {
+        return getTransfers(nav, paEmittente, token, false, pageable);
+    }
+
+    public ResponseEntity<TransferPaymentDTO> getTransfers(
+        String nav,
+        String paEmittente,
+        String token,
+        boolean searchFromHistory,
+        Pageable pageable
+    ) {
         try {
             // Validate transfer sort fields (frontend names) and check idTransfer is not passed
             PaymentUtil.validatePageable(pageable, PaymentUtil.TRANSFER_SORT_MAPPING);
@@ -277,7 +322,9 @@ public class SertSearchCommonResource {
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,List.of(Sort.Order.asc("idTransfer")),PaymentUtil.TRANSFER_SORT_MAPPING,
                 List.of(Sort.Order.asc("idTransfer"),Sort.Order.desc("paTransfer")));
-            Page<TransferPaymentDTO> page = sertService.getTransfers(nav, paEmittente, token, remappedPageable);
+            Page<TransferPaymentDTO> page = searchFromHistory
+                ? sertFreezeDataService.getTransfersFromHistory(nav, paEmittente, token, remappedPageable)
+                : sertService.getTransfers(nav, paEmittente, token, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
@@ -305,6 +352,15 @@ public class SertSearchCommonResource {
         String paEmittente,
         Pageable pageable
     ) {
+        return getWorkflows(nav, paEmittente, false, pageable);
+    }
+
+    public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
+        String nav,
+        String paEmittente,
+        boolean searchFromHistory,
+        Pageable pageable
+    ) {
         try {
 
            PaymentUtil.validatePageable(pageable, PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING);
@@ -326,7 +382,9 @@ public class SertSearchCommonResource {
                 PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING,
                 List.of(Sort.Order.desc("insertedtimestamp") ));
 
-            Page<WorkflowResponseDTO> page = sertService.getWorkflows(nav, paEmittente, remappedPageable);
+            Page<WorkflowResponseDTO> page = searchFromHistory
+                ? sertFreezeDataService.getWorkflowsFromHistory(nav, paEmittente, remappedPageable)
+                : sertService.getWorkflows(nav, paEmittente, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
@@ -352,6 +410,13 @@ public class SertSearchCommonResource {
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
         String token,
         Pageable pageable) {
+        return getExtraInfo(token, false, pageable);
+    }
+
+    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
+        String token,
+        boolean searchFromHistory,
+        Pageable pageable) {
 
         try {
             PaymentUtil.validatePageable(pageable, PaymentUtil.EXTRA_INFO_SORT_MAPPING);
@@ -359,7 +424,9 @@ public class SertSearchCommonResource {
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING,
                 List.of(Sort.Order.desc("infoName")));
-            Page<ExtraInfoResponseDTO> page = sertService.getExtraInfo(token, remappedPageable);
+            Page<ExtraInfoResponseDTO> page = searchFromHistory
+                ? sertFreezeDataService.getExtraInfoFromHistory(token, remappedPageable)
+                : sertService.getExtraInfo(token, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(

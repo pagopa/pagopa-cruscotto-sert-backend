@@ -24,5 +24,5 @@ public class PositionPaymentExtraDTO extends BasicPositionObjectDTO implements S
     @JsonProperty("pa-emittente-desc")
     private String paEmittenteDsc;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Boolean oldPayment;
+    private Boolean fromHistory;
 }

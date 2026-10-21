@@ -28,7 +28,7 @@ class SertSearchSubKeyResourceTest {
         when(service.searchByNav(eq("nav-1"), eq("pa-1"), any(Pageable.class))).thenReturn(page);
 
         ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
-            "pa-1", "nav-1", null, null, null, null, Pageable.ofSize(10)
+            "pa-1", "nav-1", null, null, null, null, false, true, null, null, Pageable.ofSize(10)
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

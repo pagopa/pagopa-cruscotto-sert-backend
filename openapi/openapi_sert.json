@@ -2071,6 +2071,16 @@
             }
           },
           {
+            "name": "fromHistory",
+            "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2174,6 +2184,16 @@
             }
           },
           {
+            "name": "fromHistory",
+            "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2255,6 +2275,16 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "fromHistory",
+            "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -2345,6 +2375,16 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "fromOnline",
+            "in": "query",
+            "description": "Search online payment records; defaults to true.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
             }
           },
           {
@@ -2473,6 +2513,16 @@
             }
           },
           {
+            "name": "fromHistory",
+            "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2597,6 +2647,16 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "fromHistory",
+            "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
