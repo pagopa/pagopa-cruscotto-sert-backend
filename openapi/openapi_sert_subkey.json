@@ -1,7 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Cruscotto Sert pagoPA backend service API (Subscription Key)",
+    "title": "Cruscotto Sert pagoPA backend service API - Subscription Key",
+    "description": "API Cruscotto Sert con Subscription Key",
     "version": "2.1.23"
   },
   "servers": [
@@ -342,23 +343,22 @@
             }
           },
           {
-            "name": "fromOnline",
+            "name": "fromHistory",
             "in": "query",
             "description": "Search online payment records; defaults to true.",
             "required": false,
             "schema": {
               "type": "boolean",
-              "default": true
+              "default": false
             }
           },
           {
-            "name": "search_old_payment",
+            "name": "fromOnline",
             "in": "query",
-            "description": "Include frozen payment records; dateFrom and dateTo are required when true.",
             "required": false,
             "schema": {
               "type": "boolean",
-              "default": false
+              "default": true
             }
           },
           {
@@ -884,12 +884,14 @@
               "type": "string"
             }
           },
+          "fromHistory": {
+            "type": "boolean"
+          },
           "pa-emittente": {
             "type": "string"
           },
-          "oldPayment": {
-            "type": "boolean",
-            "description": "True when the record was retrieved from sert_freeze_ingestor."
+          "pa-emittente-desc": {
+            "type": "string"
           }
         }
       },
@@ -898,7 +900,7 @@
         "properties": {
           "tokens": {
             "type": "integer",
-            "format": "int32"
+            "format": "int64"
           },
           "payed": {
             "$ref": "#/components/schemas/PayedDTO"
