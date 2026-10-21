@@ -194,6 +194,7 @@ public class SertSearchCommonResource {
     ) {
         List<PositionPaymentExtraDTO> merged = new ArrayList<>(currentPage.getContent());
         currentPage.getContent().forEach(item -> item.setFromHistory(false));
+        oldPage.getContent().forEach(item -> item.setFromHistory(true));
         merged.addAll(oldPage.getContent());
         merged.sort(searchComparator(pageable.getSort()));
 
