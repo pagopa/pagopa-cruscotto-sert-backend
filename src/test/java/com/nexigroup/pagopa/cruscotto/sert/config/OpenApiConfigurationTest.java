@@ -2,10 +2,13 @@ package com.nexigroup.pagopa.cruscotto.sert.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SertSearchSubKeyResource;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.jupiter.api.Test;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.data.domain.Pageable;
 
 class OpenApiConfigurationTest {
 
@@ -27,7 +30,7 @@ class OpenApiConfigurationTest {
     }
 
     @Test
-    void createsGroupedApiDefinitions() {
+    void createsGroupedApiDefinitions() throws NoSuchMethodException {
         GroupedOpenApi sertApi = configuration.sertApi();
         GroupedOpenApi subKeyApi = configuration.subKeySertApi();
 
@@ -35,6 +38,20 @@ class OpenApiConfigurationTest {
         assertThat(subKeyApi.getGroup()).isEqualTo("subKeySertSearchApi");
         assertThat(subKeyApi.getPackagesToScan())
             .containsExactly("com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey");
+        assertThat(subKeyApi.getPathsToMatch()).containsExactly("/sub/api/**");
+        assertThat(subKeyApi.getOpenApiMethodFilters())
+            .allSatisfy(filter -> {
+                try {
+                    assertThat(filter.isMethodToInclude(SertSearchSubKeyResource.class.getDeclaredMethod(
+                        "getPosition", String.class, String.class, boolean.class, Pageable.class
+                    ))).isTrue();
+                    assertThat(filter.isMethodToInclude(SertSearchCommonResource.class.getMethod(
+                        "getPosition", String.class, String.class, Pageable.class
+                    ))).isFalse();
+                } catch (NoSuchMethodException exception) {
+                    throw new AssertionError(exception);
+                }
+            });
 
         OpenAPI sertOpenApi = new OpenAPI();
         sertApi.getOpenApiCustomizers().forEach(customizer -> customizer.customise(sertOpenApi));

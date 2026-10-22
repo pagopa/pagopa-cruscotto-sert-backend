@@ -20,5 +20,6 @@ class ApplicationPropertiesTest {
         assertThat(properties.getPassword().getFailedLoginAttempts()).isEqualTo(5);
         assertThat(properties.getPassword().getHoursKeyResetPasswordExpired()).isEqualTo(24);
         assertThat(properties.getAuthGroup().getSuperAdmin()).isEqualTo("admins");
+        assertThat(properties.getSearch().getDateRangeDeltaDays()).isEqualTo(3);
     }
 }

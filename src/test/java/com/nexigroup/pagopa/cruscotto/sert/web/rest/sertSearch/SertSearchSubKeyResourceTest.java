@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+
+import com.nexigroup.pagopa.cruscotto.sert.config.ApplicationProperties;
 import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
@@ -20,7 +22,9 @@ class SertSearchSubKeyResourceTest {
 
     private final SertService service = mock(SertService.class);
     private final SertFreezeDataService freezeDataService = mock(SertFreezeDataService.class);
-    private final SertSearchSubKeyResource resource = new SertSearchSubKeyResource(service, freezeDataService);
+    private final SertSearchSubKeyResource resource = new SertSearchSubKeyResource(
+        service, freezeDataService, new ApplicationProperties()
+    );
 
     @Test
     void delegatesSearchToCommonResource() {

@@ -1,6 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtToken;
 
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
+import com.nexigroup.pagopa.cruscotto.sert.config.ApplicationProperties;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
@@ -25,8 +26,12 @@ import java.time.LocalDate;
 @RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
 
-    public SertSearchJwtTokenSearchResource(SertService sertService, SertFreezeDataService sertFreezeDataService) {
-        super(sertService, sertFreezeDataService);
+    public SertSearchJwtTokenSearchResource(
+        SertService sertService,
+        SertFreezeDataService sertFreezeDataService,
+        ApplicationProperties properties
+    ) {
+        super(sertService, sertFreezeDataService, properties.getSearch().getDateRangeDeltaDays());
     }
 
 

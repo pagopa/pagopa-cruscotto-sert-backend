@@ -193,6 +193,9 @@ info:
   # Comma separated list of profiles that will trigger the ribbon to show
   display-ribbon-on-profiles: 'dev'
 
+application:
+  search:
+    date-range-delta-days: 3
 
 azure:
   blob:

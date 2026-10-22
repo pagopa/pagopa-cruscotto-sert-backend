@@ -5,9 +5,11 @@ import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.servers.ServerVariable;
 import io.swagger.v3.oas.models.servers.ServerVariables;
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.filters.OpenApiMethodFilter;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SertSearchSubKeyResource;
 
 import java.util.Arrays;
 
@@ -77,6 +79,8 @@ public class OpenApiConfiguration {
             .packagesToScan(
                 "com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey"
             )
+            .pathsToMatch("/sub/api/**")
+            .addOpenApiMethodFilter(method -> method.getDeclaringClass() == SertSearchSubKeyResource.class)
             .addOpenApiCustomizer(openApi ->
                 openApi.info(new Info()
                     .title("Cruscotto Sert pagoPA backend service API - Subscription Key")

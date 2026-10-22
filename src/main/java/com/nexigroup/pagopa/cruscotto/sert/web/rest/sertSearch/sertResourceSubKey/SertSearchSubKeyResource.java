@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey;
 
+import com.nexigroup.pagopa.cruscotto.sert.config.ApplicationProperties;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
@@ -23,8 +24,12 @@ import java.time.LocalDate;
 @RequestMapping(value = "/sub/api", produces = MediaType.APPLICATION_JSON_VALUE)
 public class SertSearchSubKeyResource extends SertSearchCommonResource {
 
-    public SertSearchSubKeyResource(SertService sertService, SertFreezeDataService sertFreezeDataService) {
-        super(sertService, sertFreezeDataService);
+    public SertSearchSubKeyResource(
+        SertService sertService,
+        SertFreezeDataService sertFreezeDataService,
+        ApplicationProperties properties
+    ) {
+        super(sertService, sertFreezeDataService, properties.getSearch().getDateRangeDeltaDays());
     }
 
 

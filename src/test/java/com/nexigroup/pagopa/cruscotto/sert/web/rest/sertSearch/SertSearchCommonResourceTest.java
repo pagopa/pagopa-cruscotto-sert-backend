@@ -35,9 +35,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 class SertSearchCommonResourceTest {
 
+    private static final LocalDate VALID_DATE_FROM = LocalDate.now().minusMonths(5);
+    private static final LocalDate VALID_DATE_TO = LocalDate.now().minusMonths(1);
+
     private final SertService service = mock(SertService.class);
     private final SertFreezeDataService freezeDataService = mock(SertFreezeDataService.class);
-    private final SertSearchCommonResource resource = new SertSearchCommonResource(service, freezeDataService);
+    private final SertSearchCommonResource resource = new SertSearchCommonResource(service, freezeDataService, 3);
 
     @BeforeEach
     void setUpRequestContext() {
@@ -96,12 +99,12 @@ class SertSearchCommonResourceTest {
         historical.setFromHistory(true);
         when(freezeDataService.searchFromHistory(
             eq(null), eq("nav-historical"), eq(null), eq(null), eq(null), eq(null),
-            eq(LocalDate.parse("2025-01-01")), eq(LocalDate.parse("2025-12-31")), any(Pageable.class)
+            eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         )).thenReturn(new PageImpl<>(List.of(historical), PageRequest.of(0, 10), 1));
 
         ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
             null, "nav-historical", null, null, null, null, true, false,
-            LocalDate.parse("2025-01-01"), LocalDate.parse("2025-12-31"), Pageable.ofSize(10)
+            VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -121,12 +124,12 @@ class SertSearchCommonResourceTest {
             .thenReturn(new PageImpl<>(List.of(current), PageRequest.of(0, 2), 1));
         when(freezeDataService.searchFromHistory(
             eq(null), eq("nav-current"), eq(null), eq(null), eq(null), eq(null),
-            eq(LocalDate.parse("2025-01-01")), eq(LocalDate.parse("2025-12-31")), any(Pageable.class)
+            eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         )).thenReturn(new PageImpl<>(List.of(historical), PageRequest.of(0, 2), 1));
 
         ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
             null, "nav-current", null, null, null, null, true,
-            LocalDate.parse("2025-01-01"), LocalDate.parse("2025-12-31"), pageable
+            VALID_DATE_FROM, VALID_DATE_TO, pageable
         );
 
         assertThat(response.getBody()).containsExactly(current, historical);
@@ -140,6 +143,43 @@ class SertSearchCommonResourceTest {
         )).isInstanceOf(ResponseStatusException.class)
             .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void requiresDateFromToBeBeforeDateTo() {
+        assertBadDateRange(VALID_DATE_FROM, VALID_DATE_FROM);
+        assertBadDateRange(VALID_DATE_TO, VALID_DATE_FROM);
+    }
+
+    @Test
+    void rejectsDateToOlderThanSixMonthsAndConfiguredDelta() {
+        LocalDate tooOldDateTo = LocalDate.now().minusMonths(6).minusDays(4);
+
+        assertBadDateRange(tooOldDateTo.minusDays(1), tooOldDateTo);
+    }
+
+    @Test
+    void acceptsDateToAtTheConfiguredDeltaBoundary() {
+        SertSearchCommonResource resourceWithFiveDayDelta = new SertSearchCommonResource(service, freezeDataService, 5);
+        LocalDate dateTo = LocalDate.now().minusMonths(6).minusDays(5);
+        LocalDate dateFrom = dateTo.minusMonths(5);
+        var historical = positionExtra("nav-historical");
+        when(freezeDataService.searchFromHistory(
+            eq(null), eq("nav-historical"), eq(null), eq(null), eq(null), eq(null),
+            eq(dateFrom), eq(dateTo), any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.of(historical)));
+
+        ResponseEntity<List<PositionPaymentExtraDTO>> response = resourceWithFiveDayDelta.search(
+            null, "nav-historical", null, null, null, null, true, false, dateFrom, dateTo, Pageable.ofSize(10)
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsExactly(historical);
+    }
+
+    @Test
+    void rejectsDateRangesLongerThanSixMonths() {
+        assertBadDateRange(LocalDate.now().minusMonths(6).minusDays(1), LocalDate.now());
     }
 
     @Test
@@ -216,5 +256,13 @@ class SertSearchCommonResourceTest {
         PositionPaymentExtraDTO dto = new PositionPaymentExtraDTO();
         dto.setMatch(List.of(nav));
         return dto;
+    }
+
+    private void assertBadDateRange(LocalDate dateFrom, LocalDate dateTo) {
+        assertThatThrownBy(() -> resource.search(
+            null, "nav-1", null, null, null, null, true, false, dateFrom, dateTo, Pageable.ofSize(10)
+        )).isInstanceOf(ResponseStatusException.class)
+            .satisfies(exception -> assertThat(((ResponseStatusException) exception).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 }

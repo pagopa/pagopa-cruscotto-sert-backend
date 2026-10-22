@@ -20,9 +20,18 @@ public class ApplicationProperties {
 
     private final Password password = new Password();
 
+    private final Search search = new Search();
+
 
 
     private final AuthGroup authGroup = new AuthGroup();
+
+    @Setter
+    @Getter
+    public static class Search {
+
+        private int dateRangeDeltaDays = 3;
+    }
 
     @Setter
     @Getter

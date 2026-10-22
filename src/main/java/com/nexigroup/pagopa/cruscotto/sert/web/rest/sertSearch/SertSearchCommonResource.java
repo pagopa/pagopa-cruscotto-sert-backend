@@ -30,14 +30,20 @@ public class SertSearchCommonResource {
 
     private final SertService sertService;
     private final SertFreezeDataService sertFreezeDataService;
+    private final int dateRangeDeltaDays;
 
     // Valid sort fields for search API
 
 
 
-    public SertSearchCommonResource(SertService sertService, SertFreezeDataService sertFreezeDataService) {
+    public SertSearchCommonResource(
+        SertService sertService,
+        SertFreezeDataService sertFreezeDataService,
+        int dateRangeDeltaDays
+    ) {
         this.sertService = sertService;
         this.sertFreezeDataService = sertFreezeDataService;
+        this.dateRangeDeltaDays = dateRangeDeltaDays;
     }
 
     /**
@@ -98,11 +104,8 @@ public class SertSearchCommonResource {
         Pageable pageable
     ){
         try {
-            if (searchFromHistory && (dateFrom == null || dateTo == null || dateFrom.isAfter(dateTo))) {
-                throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "dateFrom and dateTo are required and dateFrom must not be after dateTo when search_old_payment is enabled."
-                );
+            if (searchFromHistory) {
+                cheackSearchHistory(dateFrom, dateTo);
             }
             // Validate sort fields
             PaymentUtil.validatePageable(pageable, PaymentUtil.SEARCH_SORT_MAPPING);
@@ -183,6 +186,27 @@ public class SertSearchCommonResource {
             throw new ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An error occurred while processing your request. Please try again later."
+            );
+        }
+    }
+
+    private void cheackSearchHistory(LocalDate dateFrom, LocalDate dateTo) {
+        if (dateFrom == null || dateTo == null || !dateFrom.isBefore(dateTo)) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "dateFrom and dateTo are required and dateFrom must be before dateTo when fromHistory is enabled."
+            );
+        }
+        if (dateTo.isAfter(LocalDate.now().minusMonths(6).plusDays(dateRangeDeltaDays))) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "dateTo must  be earlier than six months ago plus the configured date range delta."
+            );
+        }
+        if (dateFrom.plusMonths(6).isBefore(dateTo)) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "The date range between dateFrom and dateTo must not exceed six months."
             );
         }
     }
