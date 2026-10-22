@@ -35,8 +35,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 class SertSearchCommonResourceTest {
 
-    private static final LocalDate VALID_DATE_FROM = LocalDate.now().minusMonths(5);
-    private static final LocalDate VALID_DATE_TO = LocalDate.now().minusMonths(1);
+    private static final LocalDate VALID_DATE_TO = LocalDate.now().minusMonths(6);
+    private static final LocalDate VALID_DATE_FROM = VALID_DATE_TO.minusMonths(5);
 
     private final SertService service = mock(SertService.class);
     private final SertFreezeDataService freezeDataService = mock(SertFreezeDataService.class);
@@ -152,16 +152,16 @@ class SertSearchCommonResourceTest {
     }
 
     @Test
-    void rejectsDateToOlderThanSixMonthsAndConfiguredDelta() {
-        LocalDate tooOldDateTo = LocalDate.now().minusMonths(6).minusDays(4);
+    void rejectsDateToLaterThanSixMonthsAndConfiguredDelta() {
+        LocalDate tooRecentDateTo = LocalDate.now().minusMonths(6).plusDays(4);
 
-        assertBadDateRange(tooOldDateTo.minusDays(1), tooOldDateTo);
+        assertBadDateRange(tooRecentDateTo.minusMonths(1), tooRecentDateTo);
     }
 
     @Test
     void acceptsDateToAtTheConfiguredDeltaBoundary() {
         SertSearchCommonResource resourceWithFiveDayDelta = new SertSearchCommonResource(service, freezeDataService, 5);
-        LocalDate dateTo = LocalDate.now().minusMonths(6).minusDays(5);
+        LocalDate dateTo = LocalDate.now().minusMonths(6).plusDays(5);
         LocalDate dateFrom = dateTo.minusMonths(5);
         var historical = positionExtra("nav-historical");
         when(freezeDataService.searchFromHistory(
@@ -179,7 +179,8 @@ class SertSearchCommonResourceTest {
 
     @Test
     void rejectsDateRangesLongerThanSixMonths() {
-        assertBadDateRange(LocalDate.now().minusMonths(6).minusDays(1), LocalDate.now());
+        LocalDate dateTo = LocalDate.now().minusMonths(6);
+        assertBadDateRange(dateTo.minusMonths(6).minusDays(1), dateTo);
     }
 
     @Test
