@@ -1,7 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.*;
-import com.nexigroup.pagopa.cruscotto.sert.repository.*;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
 import org.springframework.data.domain.Page;

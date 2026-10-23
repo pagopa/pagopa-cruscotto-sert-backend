@@ -3,7 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 import com.nexigroup.pagopa.cruscotto.sert.domain.*;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthFunctionAuthPermission;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthPermission;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthPermissionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthPermissionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.AuthPermissionService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.AuthPermissionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.filter.AuthPermissionFilter;

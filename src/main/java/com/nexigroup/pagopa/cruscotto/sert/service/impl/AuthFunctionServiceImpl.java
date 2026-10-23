@@ -2,8 +2,8 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.*;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthFunctionRepository;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthPermissionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthFunctionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthPermissionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.AuthFunctionService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.AuthFunctionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.AuthPermissionDTO;

@@ -2,9 +2,9 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceJwtT
 
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.config.ApplicationProperties;
-import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
-import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,11 +27,11 @@ import java.time.LocalDate;
 public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
 
     public SertSearchJwtTokenSearchResource(
-        SertService sertService,
-        SertFreezeDataService sertFreezeDataService,
+        SertOnlineServiceImpl sertService,
+        SertHistoryDataServiceImpl sertHistoryDataService,
         ApplicationProperties properties
     ) {
-        super(sertService, sertFreezeDataService, properties.getSearch().getDateRangeDeltaDays());
+        super(sertService, sertHistoryDataService, properties.getSearch().getDateRangeDeltaDays());
     }
 
 

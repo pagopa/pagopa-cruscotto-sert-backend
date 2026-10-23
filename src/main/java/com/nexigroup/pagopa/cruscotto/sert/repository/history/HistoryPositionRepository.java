@@ -1,63 +1,112 @@
-package com.nexigroup.pagopa.cruscotto.sert.repository;
+package com.nexigroup.pagopa.cruscotto.sert.repository.history;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 @Repository
-public interface PositionRepository extends JpaRepository<Position, Integer> {
+public interface HistoryPositionRepository extends JpaRepository<Position, Integer> {
 
-    @Query(value = "SELECT p.nav, p.paEmittente  FROM Position p WHERE (:nav IS  NULL OR p.nav = :nav) AND (:pa IS  NULL OR p.paEmittente = :pa) GROUP BY p.nav, p.paEmittente ")
-    Page<Object[]> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p " +
+        "WHERE (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        "GROUP BY p.nav, p.paEmittente ")
+    Page<Object[]> findByNavOrPa(
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
         "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
         "GROUP BY p.nav, p.paEmittente ",
         countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
-            "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Object[]> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+    Page<Object[]> findByIuvAndOptionalNavAndPa(
+        @Param("param") String param,
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
         "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
         "GROUP BY p.nav, p.paEmittente ",
         countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
-            "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Object[]> findByTokenAndOptionalNavAndPa(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+    Page<Object[]> findByTokenAndOptionalNavAndPa(
+        @Param("token") String token,
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
         "AND pt.idCarrello = :idCart " +
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
         "GROUP BY p.nav, p.paEmittente ",
         countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND pt.idCarrello = :idCart " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
-            "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Object[]> findByCartAndOptionalNavAndPa(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+    Page<Object[]> findByCartAndOptionalNavAndPa(
+        @Param("idCart") String idCart,
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt, ExtraInfo ei " +
         "WHERE pt.fkPosition = p.id " +
@@ -73,16 +122,19 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             WITH filtered AS MATERIALIZED (
                           SELECT
                               ei.fk_token,
-                              ei.info_name
-                          FROM sert_ingestor.extra_info ei
+                              ei.info_name,
+                              ei.date_event AS extra_date_event
+                          FROM extra_info ei
                           WHERE ei.info_value = :searchValue
                       ),
                       token_position AS MATERIALIZED (
                           SELECT
                               pt.fk_position,
-                              f.info_name
+                              f.info_name,
+                              pt.date_event AS token_date_event,
+                              f.extra_date_event
                           FROM filtered f
-                          JOIN sert_ingestor.position_tokens pt
+                          JOIN position_tokens pt
                               ON pt.id = f.fk_token
                       )
                       SELECT
@@ -91,12 +143,18 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                           string_agg(tp.info_name, ',') AS infoMatch,
                           p.pa_emittente AS paEmittente
                       FROM token_position tp
-                      JOIN sert_ingestor.position p
+                      JOIN position p
                           ON p.id = tp.fk_position
-                      LEFT JOIN sert_ingestor.anag_pa_emittente ape
+                      LEFT JOIN anag_pa_emittente ape
                           ON ape.codice = p.pa_emittente
                       WHERE (:nav IS NULL OR p.nav = :nav)
                         AND (:pa IS NULL OR p.pa_emittente = :pa)
+                        AND (
+                            (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL)
+                            OR p.date_event BETWEEN :dateFrom AND :dateTo
+                            OR tp.token_date_event BETWEEN :dateFrom AND :dateTo
+                            OR tp.extra_date_event BETWEEN :dateFrom AND :dateTo
+                        )
                       GROUP BY
                           p.nav,
                           p.pa_emittente,
@@ -109,7 +167,9 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
     List<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(
         @Param("searchValue") String searchValue,
         @Param("nav") String nav,
-        @Param("pa") String pa
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
     );
 
     @Query(value = "SELECT " +

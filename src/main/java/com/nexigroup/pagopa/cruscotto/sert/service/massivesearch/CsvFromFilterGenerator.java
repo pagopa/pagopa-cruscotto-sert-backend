@@ -1,8 +1,8 @@
 // src/main/java/com/nexigroup/pagopa/cruscotto/sert/service/massivesearch/CsvFromFilterGenerator.java
 package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch;
 
-import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
-import com.nexigroup.pagopa.cruscotto.sert.repository.SearchInstanceRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.PositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.SearchInstanceRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvConfiguration;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.PerimeterPaymentStatus;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;

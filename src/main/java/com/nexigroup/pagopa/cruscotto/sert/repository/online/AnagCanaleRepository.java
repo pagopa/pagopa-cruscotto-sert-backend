@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.repository;
+package com.nexigroup.pagopa.cruscotto.sert.repository.online;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.AnagCanale;
 import java.util.Optional;

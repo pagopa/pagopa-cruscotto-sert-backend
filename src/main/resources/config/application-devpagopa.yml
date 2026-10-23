@@ -20,25 +20,25 @@ spring:
     serialization:
       indent-output: true
   datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: ${ENV_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cruscotto}
-    username: ${ENV_DATASOURCE_USERNAME:username}
-    password: ${ENV_DATASOURCE_PASSWORD:password}
-    hikari:
-      poolName: Hikari
-      maximum-pool-size: 25
-      auto-commit: false
-  freeze-datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    schema: ${ENV_FREEZE_DATASOURCE_SCHEMA:sert_freeze_ingestor}
-    url: ${ENV_FREEZE_DATASOURCE_URL:${ENV_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cruscotto}}
-    username: ${ENV_FREEZE_DATASOURCE_USERNAME:${ENV_DATASOURCE_USERNAME:username}}
-    password: ${ENV_FREEZE_DATASOURCE_PASSWORD:${ENV_DATASOURCE_PASSWORD:password}}
-    hikari:
-      poolName: HikariFreeze
-      maximum-pool-size: 25
-      auto-commit: false
-      initialization-fail-timeout: -1
+    online:
+      url: ${ENV_ONLINE_DATASOURCE_URL:${ENV_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cruscotto}}
+      username: ${ENV_ONLINE_DATASOURCE_USERNAME:${ENV_DATASOURCE_USERNAME:username}}
+      password: ${ENV_ONLINE_DATASOURCE_PASSWORD:${ENV_DATASOURCE_PASSWORD:password}}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        pool-name: Hikari
+        maximum-pool-size: 25
+        auto-commit: false
+    history:
+      url: ${ENV_HISTORY_DATASOURCE_URL:${ENV_ONLINE_DATASOURCE_URL:${ENV_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cruscotto}}}
+      username: ${ENV_HISTORY_DATASOURCE_USERNAME:${ENV_ONLINE_DATASOURCE_USERNAME:${ENV_DATASOURCE_USERNAME:username}}}
+      password: ${ENV_HISTORY_DATASOURCE_PASSWORD:${ENV_ONLINE_DATASOURCE_PASSWORD:${ENV_DATASOURCE_PASSWORD:password}}}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        pool-name: HikariFreeze
+        maximum-pool-size: 25
+        auto-commit: false
+        initialization-fail-timeout: -1
   jpa:
     properties:
       hibernate:

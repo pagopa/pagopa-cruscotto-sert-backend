@@ -5,29 +5,30 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.PositionRepository;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-class SertServiceImplTest {
+class SertOnlineServiceImplTest {
 
     private final PositionRepository positionRepository = mock(PositionRepository.class);
-    private final SertServiceImpl service = new SertServiceImpl(positionRepository);
+    private final SertOnlineServiceImpl service = new SertOnlineServiceImpl(positionRepository);
 
     @Test
     void skipsEmptyTokenSearchAndMapsNavSearchRows() {
         var pageable = PageRequest.of(0, 10);
-        assertThat(service.searchByToken("pa", "nav", "   ", pageable)).isEmpty();
+        assertThat(service.searchByToken("pa", "nav", "   ", LocalDate.now(), LocalDate.now(), pageable)).isEmpty();
         org.mockito.Mockito.verifyNoInteractions(positionRepository);
 
         when(positionRepository.findByNavOrPa("nav-1", "pa-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(new Object[] { "nav-1", "pa-1" }), pageable, 1));
 
-        var result = service.searchByNav("nav-1", "pa-1", pageable);
+        var result = service.searchByNav("nav-1", "pa-1", LocalDate.now(), LocalDate.now(), pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(item -> {
             assertThat(item.getNav()).isEqualTo("nav-1");
@@ -43,7 +44,7 @@ class SertServiceImplTest {
             new Object[] { "NAV-A", "Alpha", " a,  b ", "PA-A" }
         ));
 
-        var result = service.searchExtra(null, null, "reason", pageable);
+        var result = service.searchExtra(null, null, "reason", LocalDate.now(), LocalDate.now(), pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).singleElement().satisfies(item -> {
@@ -58,7 +59,7 @@ class SertServiceImplTest {
     @Test
     void returnsEmptyForNullExtraSearchAndMapsTokenInfoPaymentFields() {
         var pageable = PageRequest.of(0, 10);
-        assertThat(service.searchExtra(null, null, null, pageable)).isEmpty();
+        assertThat(service.searchExtra(null, null, null,  LocalDate.now(), LocalDate.now(), pageable)).isEmpty();
 
         Object[] row = new Object[22];
         row[0] = "351234567890123456";

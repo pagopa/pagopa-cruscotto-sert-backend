@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SearchInstanceSubKeyResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;

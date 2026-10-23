@@ -1,55 +1,41 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.asString;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.parseInfoMatch;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.tokenAsHex;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toDouble;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstant;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstantFromDate;
-
-import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
-import com.nexigroup.pagopa.cruscotto.sert.repository.PositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.history.HistoryPositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-/**
- * Service Implementation for SERT APIs with Mock Data.
- */
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.*;
+
 @Service
-public class SertServiceImpl implements SertService {
+public class SertHistoryDataServiceImpl implements SertService {
 
-    private final Logger log = LoggerFactory.getLogger(SertServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(SertOnlineServiceImpl.class);
 
-    private final PositionRepository positionRepository;
 
-    public SertServiceImpl(PositionRepository positionRepository) {
-        this.positionRepository = positionRepository;
+    private final HistoryPositionRepository historyPositionRepository;
+
+    public SertHistoryDataServiceImpl(HistoryPositionRepository historyhistoryPositionRepository) {
+        this.historyPositionRepository = historyhistoryPositionRepository;
     }
 
-
     @Override
-    public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, Pageable pageable) {
+    public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = positionRepository.findByNavOrPa(nav, pa, pageable);
+        Page<Object[]> groupRow = historyPositionRepository.findByNavOrPa(nav, pa, dateFrom ,dateTo, pageable);
         if (groupRow == null || groupRow.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -60,10 +46,10 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv,Pageable pageable) {
+    public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = positionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, pageable);
+        Page<Object[]> groupRow = historyPositionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, dateFrom ,dateTo, pageable);
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -72,10 +58,10 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, Pageable pageable) {
+    public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = positionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa, pageable);
+        Page<Object[]> groupRow = historyPositionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa,  dateFrom ,dateTo,pageable);
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -84,7 +70,7 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentExtraDTO> searchByToken( String pa, String nav,String token, Pageable pageable) {
+    public Page<PositionPaymentExtraDTO> searchByToken( String pa, String nav,String token, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by Token: {}, offset: {}, limit: {}", token, pageable.getOffset(), pageable.getPageSize());
 
         if (token == null || token.trim().isEmpty()) {
@@ -93,7 +79,7 @@ public class SertServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Page<Object[]> groupRow = positionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, pageable);
+        Page<Object[]> groupRow = historyPositionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, dateFrom ,dateTo, pageable);
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -102,21 +88,22 @@ public class SertServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentExtraDTO> searchExtra(String pa, String nav, String searchValue, Pageable pageable) {
+    public Page<PositionPaymentExtraDTO> searchExtra(String pa, String nav, String searchValue, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to search extra: {}, offset: {}, limit: {}", searchValue, pageable.getOffset(), pageable.getPageSize());
 
         if (searchValue == null) {
             return Page.empty(pageable);
         }
 
-        log.info(searchValue +" :chiamata alla query in positionrepository");
+        log.info(searchValue +" :chiamata alla query in historyPositionRepository");
 
-        List<Object[]> groupedRows = positionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+        List<Object[]> groupedRows = historyPositionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
-            pa
+            pa,
+            dateFrom ,dateTo
         );
-        log.info(searchValue +" :fine chiamata alla query in positionrepository");
+        log.info(searchValue +" :fine chiamata alla query in historyPositionRepository");
 
         List<PositionPaymentExtraDTO> allRows = new ArrayList<>(groupedRows.stream()
             .map(row -> PositionPaymentExtraDTO.builder()
@@ -165,7 +152,7 @@ public class SertServiceImpl implements SertService {
     public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        Page<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente, pageable);
+        Page<Object[]> rows = historyPositionRepository.findPositionDetailRows(nav, paEmittente, pageable);
         if (rows == null || rows.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -180,7 +167,7 @@ public class SertServiceImpl implements SertService {
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
-        long okTokenCount = positionRepository.countOkTokensByNavAndPa(nav, paEmittente);
+        long okTokenCount = historyPositionRepository.countOkTokensByNavAndPa(nav, paEmittente);
         boolean multiOutcome = okTokenCount > 1;
 
         PositionPaymentDTO dto = PositionPaymentDTO.builder()
@@ -198,11 +185,11 @@ public class SertServiceImpl implements SertService {
                 payedRow == null
                     ? null
                     : PayedDTO.builder()
-                        .token(tokenAsHex(payedRow[5]))
-                        .paymentBorn(toInstantFromDate(payedRow[6]))
-                        .payedDate(toInstant(payedRow[7]))
-                        .multiOutcome(multiOutcome)
-                        .build()
+                    .token(tokenAsHex(payedRow[5]))
+                    .paymentBorn(toInstantFromDate(payedRow[6]))
+                    .payedDate(toInstant(payedRow[7]))
+                    .multiOutcome(multiOutcome)
+                    .build()
             )
             .actors(ActorsDTO.builder()
                 .psp(asString(preferredRow[11]))
@@ -240,7 +227,7 @@ public class SertServiceImpl implements SertService {
             return null;
         }
 
-        List<Object[]> rows = positionRepository.findTokenDetailRow(token.trim());
+        List<Object[]> rows = historyPositionRepository.findTokenDetailRow(token.trim());
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -253,7 +240,7 @@ public class SertServiceImpl implements SertService {
         String rowPa  = asString(row[1]);
         boolean multiOutcome = false;
         if (rowNav != null && rowPa != null) {
-            long okTokenCount = positionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+            long okTokenCount = historyPositionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
             multiOutcome = okTokenCount > 1;
         }
 
@@ -271,11 +258,11 @@ public class SertServiceImpl implements SertService {
                 !isPayed
                     ? null
                     : PayedDTO.builder()
-                        .token(tokenAsHex(row[5]))
-                        .paymentBorn(toInstantFromDate(row[6]))
-                        .payedDate(toInstant(row[7]))
-                        .multiOutcome(multiOutcome)
-                        .build()
+                    .token(tokenAsHex(row[5]))
+                    .paymentBorn(toInstantFromDate(row[6]))
+                    .payedDate(toInstant(row[7]))
+                    .multiOutcome(multiOutcome)
+                    .build()
             )
             .actors(ActorsDTO.builder()
                 .psp(asString(row[11]))
@@ -310,7 +297,7 @@ public class SertServiceImpl implements SertService {
             return null;
         }
 
-        Page<Object[]> rows = positionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
+        Page<Object[]> rows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }
@@ -352,7 +339,7 @@ public class SertServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
-        Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(nav, paEmittente, pageable);
+        Page<Object[]> workflowEvents = historyPositionRepository.findPositionWorkflows(nav, paEmittente, pageable);
 
         if (workflowEvents == null || workflowEvents.isEmpty()) {
             return null;
@@ -402,7 +389,7 @@ public class SertServiceImpl implements SertService {
     public Page<ExtraInfoResponseDTO> getExtraInfo(String token, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
-        Page<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim(),pageable);
+        Page<Object[]> rows = historyPositionRepository.findExtraInfoByToken(token.trim(),pageable);
         if (rows == null || rows.isEmpty()) {
             return null;
         }

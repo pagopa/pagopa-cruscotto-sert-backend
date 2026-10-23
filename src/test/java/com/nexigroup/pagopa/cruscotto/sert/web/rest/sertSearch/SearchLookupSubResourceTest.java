@@ -1,4 +1,4 @@
-package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey;
+package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 import com.nexigroup.pagopa.cruscotto.sert.service.SearchLookupService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.SearchLookupDTO;
 import java.util.List;
+
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SearchLookupSubResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;

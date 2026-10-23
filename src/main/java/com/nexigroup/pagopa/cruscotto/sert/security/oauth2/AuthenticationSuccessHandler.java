@@ -4,7 +4,7 @@ import com.nexigroup.pagopa.cruscotto.sert.config.Constants;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthGroup;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthUser;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.AuthenticationType;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthGroupRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthGroupRepository;
 import com.nexigroup.pagopa.cruscotto.sert.security.SecurityUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

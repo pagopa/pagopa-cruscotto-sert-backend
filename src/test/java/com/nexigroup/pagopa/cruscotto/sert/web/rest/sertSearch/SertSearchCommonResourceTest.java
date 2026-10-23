@@ -4,13 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
-import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.ExtraInfoResponseDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.PositionPaymentDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.PositionPaymentExtraDTO;
@@ -18,14 +17,14 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.TokenInfoDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.TransferPaymentDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowObjectDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowResponseDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -38,8 +37,8 @@ class SertSearchCommonResourceTest {
     private static final LocalDate VALID_DATE_TO = LocalDate.now().minusMonths(6);
     private static final LocalDate VALID_DATE_FROM = VALID_DATE_TO.minusMonths(5);
 
-    private final SertService service = mock(SertService.class);
-    private final SertFreezeDataService freezeDataService = mock(SertFreezeDataService.class);
+    private final SertOnlineServiceImpl service = mock(SertOnlineServiceImpl.class);
+    private final SertHistoryDataServiceImpl freezeDataService = mock(SertHistoryDataServiceImpl.class);
     private final SertSearchCommonResource resource = new SertSearchCommonResource(service, freezeDataService, 3);
 
     @BeforeEach
@@ -50,7 +49,7 @@ class SertSearchCommonResourceTest {
     @Test
     void searchesByNavAndReturnsPageContent() {
         PageImpl<PositionPaymentExtraDTO> page = new PageImpl<>(List.of(positionExtra("nav-1")));
-        when(service.searchByNav(eq("nav-1"), eq("pa-1"), any(Pageable.class))).thenReturn(page);
+        when(service.searchByNav(eq("nav-1"), eq("pa-1"), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
 
         ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
             "pa-1", "nav-1", null, null, null, null, Pageable.ofSize(10)
@@ -58,7 +57,7 @@ class SertSearchCommonResourceTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsExactly(positionExtra("nav-1"));
-        verify(service).searchByNav(eq("nav-1"), eq("pa-1"), any(Pageable.class));
+        verify(service).searchByNav(eq("nav-1"), eq("pa-1"), isNull(), isNull(), any(Pageable.class));
     }
 
     @Test
@@ -73,7 +72,7 @@ class SertSearchCommonResourceTest {
     @Test
     void returnsNotFoundWhenSearchHasNoResults() {
         PageImpl<PositionPaymentExtraDTO> page = new PageImpl<>(List.of());
-        when(service.searchByNav(eq("nav-1"), eq("pa-1"), any(Pageable.class))).thenReturn(page);
+        when(service.searchByNav(eq("nav-1"), eq("pa-1"), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
 
         assertThatThrownBy(() -> resource.search(
             "pa-1", "nav-1", null, null, null, null, Pageable.ofSize(10)
@@ -93,48 +92,7 @@ class SertSearchCommonResourceTest {
         verifyNoInteractions(service);
     }
 
-    @Test
-    void returnsHistoricalResultsWithoutOnlineSearchWhenFromOnlineIsFalse() {
-        var historical = positionExtra("nav-historical");
-        historical.setFromHistory(true);
-        when(freezeDataService.searchFromHistory(
-            eq(null), eq("nav-historical"), eq(null), eq(null), eq(null), eq(null),
-            eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
-        )).thenReturn(new PageImpl<>(List.of(historical), PageRequest.of(0, 10), 1));
 
-        ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
-            null, "nav-historical", null, null, null, null, true, false,
-            VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
-        );
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsExactly(historical);
-        assertThat(historical.getFromHistory()).isTrue();
-        verifyNoInteractions(service);
-    }
-
-    @Test
-    void mergesCurrentAndHistoricalResultsAndMarksTheirSource() {
-        var pageable = PageRequest.of(0, 2, Sort.by(Sort.Order.desc("paEmittente")));
-        var current = positionExtra("nav-current");
-        current.setPaEmittente("PA-2");
-        var historical = positionExtra("nav-historical");
-        historical.setPaEmittente("PA-1");
-        when(service.searchByNav(eq("nav-current"), eq(null), any(Pageable.class)))
-            .thenReturn(new PageImpl<>(List.of(current), PageRequest.of(0, 2), 1));
-        when(freezeDataService.searchFromHistory(
-            eq(null), eq("nav-current"), eq(null), eq(null), eq(null), eq(null),
-            eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
-        )).thenReturn(new PageImpl<>(List.of(historical), PageRequest.of(0, 2), 1));
-
-        ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
-            null, "nav-current", null, null, null, null, true,
-            VALID_DATE_FROM, VALID_DATE_TO, pageable
-        );
-
-        assertThat(response.getBody()).containsExactly(current, historical);
-        assertThat(response.getBody()).extracting(PositionPaymentExtraDTO::getFromHistory).containsExactly(false, true);
-    }
 
     @Test
     void requiresDateRangeWhenHistoricalSearchIsEnabled() {
@@ -158,24 +116,6 @@ class SertSearchCommonResourceTest {
         assertBadDateRange(tooRecentDateTo.minusMonths(1), tooRecentDateTo);
     }
 
-    @Test
-    void acceptsDateToAtTheConfiguredDeltaBoundary() {
-        SertSearchCommonResource resourceWithFiveDayDelta = new SertSearchCommonResource(service, freezeDataService, 5);
-        LocalDate dateTo = LocalDate.now().minusMonths(6).plusDays(5);
-        LocalDate dateFrom = dateTo.minusMonths(5);
-        var historical = positionExtra("nav-historical");
-        when(freezeDataService.searchFromHistory(
-            eq(null), eq("nav-historical"), eq(null), eq(null), eq(null), eq(null),
-            eq(dateFrom), eq(dateTo), any(Pageable.class)
-        )).thenReturn(new PageImpl<>(List.of(historical)));
-
-        ResponseEntity<List<PositionPaymentExtraDTO>> response = resourceWithFiveDayDelta.search(
-            null, "nav-historical", null, null, null, null, true, false, dateFrom, dateTo, Pageable.ofSize(10)
-        );
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsExactly(historical);
-    }
 
     @Test
     void rejectsDateRangesLongerThanSixMonths() {
@@ -232,14 +172,14 @@ class SertSearchCommonResourceTest {
         TransferPaymentDTO transfer = TransferPaymentDTO.builder().build();
         WorkflowObjectDTO workflow = WorkflowObjectDTO.builder().build();
         ExtraInfoResponseDTO extraInfo = ExtraInfoResponseDTO.builder().build();
-        when(freezeDataService.getPositionFromHistory(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
+        when(freezeDataService.getPosition(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(position)));
-        when(freezeDataService.getTokenInfoFromHistory("token-1")).thenReturn(tokenInfo);
-        when(freezeDataService.getTransfersFromHistory(eq("nav-1"), eq("pa-1"), eq("token-1"), any(Pageable.class)))
+        when(freezeDataService.getTokenInfo("token-1")).thenReturn(tokenInfo);
+        when(freezeDataService.getTransfers(eq("nav-1"), eq("pa-1"), eq("token-1"), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(transfer)));
-        when(freezeDataService.getWorkflowsFromHistory(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
+        when(freezeDataService.getWorkflows(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(WorkflowResponseDTO.builder().eventsPosition(List.of(workflow)).build())));
-        when(freezeDataService.getExtraInfoFromHistory(eq("token-1"), any(Pageable.class)))
+        when(freezeDataService.getExtraInfo(eq("token-1"), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
         assertThat(resource.getPosition("nav-1", "pa-1", true, Pageable.ofSize(10)).getBody()).isSameAs(position);

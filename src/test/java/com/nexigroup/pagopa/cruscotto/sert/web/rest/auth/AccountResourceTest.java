@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import com.nexigroup.pagopa.cruscotto.sert.config.ApplicationProperties;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthUser;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.AuthenticationType;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthUserRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthUserRepository;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.security.SecurityUtils;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.AuthUserAccountDTO;

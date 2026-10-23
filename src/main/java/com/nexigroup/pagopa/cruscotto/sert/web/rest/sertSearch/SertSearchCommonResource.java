@@ -1,8 +1,9 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
-import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,8 @@ public class SertSearchCommonResource {
 
     private final Logger log = LoggerFactory.getLogger(SertSearchCommonResource.class);
 
-    private final SertService sertService;
-    private final SertFreezeDataService sertFreezeDataService;
+    private final SertService sertOnlineService;
+    private final SertService sertHistoryDataService;
     private final int dateRangeDeltaDays;
 
     // Valid sort fields for search API
@@ -37,12 +38,12 @@ public class SertSearchCommonResource {
 
 
     public SertSearchCommonResource(
-        SertService sertService,
-        SertFreezeDataService sertFreezeDataService,
+        SertOnlineServiceImpl sertOnlineService,
+        SertHistoryDataServiceImpl sertHistoryDataService,
         int dateRangeDeltaDays
     ) {
-        this.sertService = sertService;
-        this.sertFreezeDataService = sertFreezeDataService;
+        this.sertOnlineService = sertOnlineService;
+        this.sertHistoryDataService = sertHistoryDataService;
         this.dateRangeDeltaDays = dateRangeDeltaDays;
     }
 
@@ -139,31 +140,11 @@ public class SertSearchCommonResource {
             Page<PositionPaymentExtraDTO> page = null;
 
             if (searchFromOnline) {
-                if (presentGroups == 0){
-                    if (pa != null ||  nav != null) {
-                        page = sertService.searchByNav(nav, pa, searchPageable);
-                    } else  {
-                        log.error("Provide PA or NAV for PA+NAV search.");
-                        throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Provide PA or NAV for PA+NAV search."
-                        );
-                    }
-                } else if (iuv != null) {
-                    page = sertService.searchByIuv(pa, nav, iuv, searchPageable);
-                } else if (token != null) {
-                    page = sertService.searchByToken(pa, nav, token, searchPageable);
-                } else if (idCarrello != null) {
-                    page = sertService.searchByCart(pa, nav, idCarrello, searchPageable);
-                } else if (info != null) {
-                    page = sertService.searchExtra(pa, nav, info, searchPageable);
-                }
+                page = searchPositionPayment(pa, nav, iuv, token, idCarrello, info, presentGroups, page, searchPageable,sertOnlineService, null,null);
             }
 
             if (searchFromHistory) {
-                Page<PositionPaymentExtraDTO> oldPage = sertFreezeDataService.searchFromHistory(
-                    pa, nav, iuv, token, idCarrello, info, dateFrom, dateTo, searchPageable
-                );
+                Page<PositionPaymentExtraDTO> oldPage = searchPositionPayment(pa, nav, iuv, token, idCarrello, info, presentGroups, page, searchPageable,sertHistoryDataService, dateFrom, dateTo);
                 if (page == null) {
                     page = new PageImpl<>(List.of(), searchPageable, 0);
                 }
@@ -188,6 +169,32 @@ public class SertSearchCommonResource {
                 "An error occurred while processing your request. Please try again later."
             );
         }
+    }
+
+    private Page<PositionPaymentExtraDTO> searchPositionPayment(String pa, String nav, String iuv, String token, String idCarrello, String info, int presentGroups, Page<PositionPaymentExtraDTO> page, Pageable searchPageable,
+                                                                SertService sertService,
+                                                                LocalDate dateFrom,
+                                                                LocalDate dateTo) {
+        if (presentGroups == 0){
+            if (pa != null ||  nav != null) {
+                page = sertService.searchByNav(nav, pa,  dateFrom, dateTo,searchPageable);
+            } else  {
+                log.error("Provide PA or NAV for PA+NAV search.");
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Provide PA or NAV for PA+NAV search."
+                );
+            }
+        } else if (iuv != null) {
+            page = sertService.searchByIuv(pa, nav, iuv,  dateFrom, dateTo,searchPageable);
+        } else if (token != null) {
+            page = sertService.searchByToken(pa, nav, token,  dateFrom, dateTo,searchPageable);
+        } else if (idCarrello != null) {
+            page = sertService.searchByCart(pa, nav, idCarrello,  dateFrom, dateTo,searchPageable);
+        } else if (info != null) {
+            page = sertService.searchExtra(pa, nav, info,  dateFrom, dateTo,searchPageable);
+        }
+        return page;
     }
 
     private void cheackSearchHistory(LocalDate dateFrom, LocalDate dateTo) {
@@ -276,8 +283,8 @@ public class SertSearchCommonResource {
                 List.of(Sort.Order.desc("tokenDateEvent")));
 
             Page<PositionPaymentDTO> page = searchFromHistory
-                ? sertFreezeDataService.getPositionFromHistory(nav, paEmittente, remappedPageable)
-                : sertService.getPosition(nav, paEmittente,remappedPageable);
+                ? sertHistoryDataService.getPosition(nav, paEmittente, remappedPageable)
+                : sertOnlineService.getPosition(nav, paEmittente,remappedPageable);
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -305,8 +312,8 @@ public class SertSearchCommonResource {
     public ResponseEntity<TokenInfoDTO> getTokenInfo(String token, boolean searchFromHistory) {
         try {
             TokenInfoDTO tokenInfo = searchFromHistory
-                ? sertFreezeDataService.getTokenInfoFromHistory(token)
-                : sertService.getTokenInfo(token);
+                ? sertHistoryDataService.getTokenInfo(token)
+                : sertOnlineService.getTokenInfo(token);
             if (tokenInfo == null) {
                 throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -348,8 +355,8 @@ public class SertSearchCommonResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,List.of(Sort.Order.asc("idTransfer")),PaymentUtil.TRANSFER_SORT_MAPPING,
                 List.of(Sort.Order.asc("idTransfer"),Sort.Order.desc("paTransfer")));
             Page<TransferPaymentDTO> page = searchFromHistory
-                ? sertFreezeDataService.getTransfersFromHistory(nav, paEmittente, token, remappedPageable)
-                : sertService.getTransfers(nav, paEmittente, token, remappedPageable);
+                ? sertHistoryDataService.getTransfers(nav, paEmittente, token, remappedPageable)
+                : sertOnlineService.getTransfers(nav, paEmittente, token, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
@@ -408,8 +415,8 @@ public class SertSearchCommonResource {
                 List.of(Sort.Order.desc("insertedtimestamp") ));
 
             Page<WorkflowResponseDTO> page = searchFromHistory
-                ? sertFreezeDataService.getWorkflowsFromHistory(nav, paEmittente, remappedPageable)
-                : sertService.getWorkflows(nav, paEmittente, remappedPageable);
+                ? sertHistoryDataService.getWorkflows(nav, paEmittente, remappedPageable)
+                : sertOnlineService.getWorkflows(nav, paEmittente, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
@@ -450,8 +457,8 @@ public class SertSearchCommonResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING,
                 List.of(Sort.Order.desc("infoName")));
             Page<ExtraInfoResponseDTO> page = searchFromHistory
-                ? sertFreezeDataService.getExtraInfoFromHistory(token, remappedPageable)
-                : sertService.getExtraInfo(token, remappedPageable);
+                ? sertHistoryDataService.getExtraInfo(token, remappedPageable)
+                : sertOnlineService.getExtraInfo(token, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(

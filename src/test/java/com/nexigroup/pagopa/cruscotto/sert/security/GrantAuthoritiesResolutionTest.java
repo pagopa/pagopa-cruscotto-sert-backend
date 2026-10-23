@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthGroup;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthPermission;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthGroupRepository;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthPermissionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthGroupRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthPermissionRepository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

@@ -3,7 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service.util;
 import org.springframework.stereotype.Service;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthUser;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthUserRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthUserRepository;
 import com.nexigroup.pagopa.cruscotto.sert.security.SecurityUtils;
 
 

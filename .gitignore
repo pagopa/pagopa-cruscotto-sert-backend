@@ -185,3 +185,7 @@ test-data/
 .vscode
 /doc/*
 /src/main/resources/config/application-devpapa.yml
+/.gitleaks.toml
+/.pre-commit-config.yaml
+/src/main/resources/config/liquibase/changelog/20260918_add_position_tokens_filter_indexes.xml
+/src/main/resources/config/liquibase/changelog/20260921_add_extra_info_search_index.xml

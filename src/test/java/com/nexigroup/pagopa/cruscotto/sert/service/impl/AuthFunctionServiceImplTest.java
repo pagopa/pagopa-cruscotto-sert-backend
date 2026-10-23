@@ -8,8 +8,8 @@ import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthFunction;
 import com.nexigroup.pagopa.cruscotto.sert.domain.QAuthFunction;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthFunctionRepository;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthPermissionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthFunctionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthPermissionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.AuthFunctionDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.filter.AuthFunctionFilter;
 import com.nexigroup.pagopa.cruscotto.sert.service.mapper.AuthFunctionMapper;

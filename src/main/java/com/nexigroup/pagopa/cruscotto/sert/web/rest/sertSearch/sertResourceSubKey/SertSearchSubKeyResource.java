@@ -1,9 +1,9 @@
 package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey;
 
 import com.nexigroup.pagopa.cruscotto.sert.config.ApplicationProperties;
-import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
-import com.nexigroup.pagopa.cruscotto.sert.service.SertFreezeDataService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
+import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,11 +25,11 @@ import java.time.LocalDate;
 public class SertSearchSubKeyResource extends SertSearchCommonResource {
 
     public SertSearchSubKeyResource(
-        SertService sertService,
-        SertFreezeDataService sertFreezeDataService,
+        SertOnlineServiceImpl sertService,
+        SertHistoryDataServiceImpl sertHistoryDataService,
         ApplicationProperties properties
     ) {
-        super(sertService, sertFreezeDataService, properties.getSearch().getDateRangeDeltaDays());
+        super(sertService, sertHistoryDataService, properties.getSearch().getDateRangeDeltaDays());
     }
 
 

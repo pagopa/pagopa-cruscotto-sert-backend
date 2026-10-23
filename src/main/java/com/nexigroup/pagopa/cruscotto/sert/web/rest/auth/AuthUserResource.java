@@ -24,7 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.nexigroup.pagopa.cruscotto.sert.config.Constants;
 import com.nexigroup.pagopa.cruscotto.sert.domain.AuthUser;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.AuthenticationType;
-import com.nexigroup.pagopa.cruscotto.sert.repository.AuthUserRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.AuthUserRepository;
 import com.nexigroup.pagopa.cruscotto.sert.security.AuthoritiesConstants;
 import com.nexigroup.pagopa.cruscotto.sert.security.SecurityUtils;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.AuthUserService;
