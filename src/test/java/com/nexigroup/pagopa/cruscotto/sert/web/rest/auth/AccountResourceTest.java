@@ -116,7 +116,7 @@ class AccountResourceTest {
     @Test
     void rejectsExpiredPasswordResetKey() {
         AuthUser user = user("reset-user");
-        user.setResetDate(Instant.now().minusSeconds(3600));
+        user.setResetDate(Instant.now().minusSeconds(7200));
         when(authUserRepository.findOneByResetKey("key")).thenReturn(java.util.Optional.of(user));
         ApplicationProperties.Password passwordProperties = new ApplicationProperties.Password();
         when(properties.getPassword()).thenReturn(passwordProperties);

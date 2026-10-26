@@ -2,7 +2,7 @@ package com.nexigroup.pagopa.cruscotto.sert.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.SertSearchCommonResource;
+import java.time.LocalDate;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SertSearchSubKeyResource;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.jupiter.api.Test;
@@ -43,11 +43,14 @@ class OpenApiConfigurationTest {
             .allSatisfy(filter -> {
                 try {
                     assertThat(filter.isMethodToInclude(SertSearchSubKeyResource.class.getDeclaredMethod(
-                        "getPosition", String.class, String.class, boolean.class, Pageable.class
+                        "getPosition",
+                        String.class,
+                        String.class,
+                        boolean.class,
+                        LocalDate.class,
+                        LocalDate.class,
+                        Pageable.class
                     ))).isTrue();
-                    assertThat(filter.isMethodToInclude(SertSearchCommonResource.class.getMethod(
-                        "getPosition", String.class, String.class, Pageable.class
-                    ))).isFalse();
                 } catch (NoSuchMethodException exception) {
                     throw new AssertionError(exception);
                 }

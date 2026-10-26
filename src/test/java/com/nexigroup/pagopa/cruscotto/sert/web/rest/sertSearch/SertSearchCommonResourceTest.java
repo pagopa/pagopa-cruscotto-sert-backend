@@ -130,7 +130,7 @@ class SertSearchCommonResourceTest {
         when(service.getPosition(eq("nav-1"), eq("pa-1"), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(position)));
         when(service.getTokenInfo(eq("token-1"))).thenReturn(tokenInfo);
 
-        ResponseEntity<PositionPaymentDTO> positionResponse = resource.getPosition("nav-1", "pa-1", Pageable.ofSize(10));
+        ResponseEntity<PositionPaymentDTO> positionResponse = resource.getPosition("nav-1", "pa-1", false, Pageable.ofSize(10));
         ResponseEntity<TokenInfoDTO> tokenResponse = resource.getTokenInfo("token-1");
 
         assertThat(positionResponse.getStatusCode()).isEqualTo(HttpStatus.OK);

@@ -58,6 +58,8 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         return super.getPosition(nav, paEmittente, searchFromHistory, pageable);
@@ -67,7 +69,9 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
     @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<TokenInfoDTO> getTokenInfo(
         @PathVariable("token") String token,
-        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
     ) {
         return super.getTokenInfo(token, searchFromHistory);
     }
@@ -79,6 +83,8 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
         @PathVariable("pa-emittente") String paEmittente,
         @PathVariable("token") String token,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         return super.getTransfers(nav, paEmittente, token, searchFromHistory, pageable);
@@ -90,6 +96,8 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         return super.getWorkflows(nav, paEmittente, searchFromHistory, pageable);
@@ -100,6 +108,8 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
         @PathVariable("token") String token,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+        @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
         return super.getExtraInfo(token, searchFromHistory, pageable);

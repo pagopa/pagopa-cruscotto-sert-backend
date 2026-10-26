@@ -262,13 +262,6 @@ public class SertSearchCommonResource {
     }
 
 
-    public ResponseEntity<PositionPaymentDTO> getPosition(
-         String nav,
-         String paEmittente,
-         Pageable pageable
-    ) {
-        return getPosition(nav, paEmittente, false, pageable);
-    }
 
     public ResponseEntity<PositionPaymentDTO> getPosition(
         String nav,
