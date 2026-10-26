@@ -168,6 +168,7 @@
           {
             "name": "fromHistory",
             "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -279,6 +280,7 @@
           {
             "name": "fromHistory",
             "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -396,6 +398,7 @@
           {
             "name": "fromHistory",
             "in": "query",
+            "description": "Search online payment records; defaults to true.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -414,6 +417,7 @@
           {
             "name": "dateFrom",
             "in": "query",
+            "description": "Inclusive date_event lower bound (required when search_old_payment=true).",
             "required": false,
             "schema": {
               "type": "string",
@@ -423,6 +427,7 @@
           {
             "name": "dateTo",
             "in": "query",
+            "description": "Inclusive date_event upper bound (required when search_old_payment=true).",
             "required": false,
             "schema": {
               "type": "string",
@@ -527,6 +532,7 @@
           {
             "name": "fromHistory",
             "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -638,6 +644,7 @@
           {
             "name": "fromHistory",
             "in": "query",
+            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
