@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API - Subscription Key",
     "description": "API Cruscotto Sert con Subscription Key",
-    "version": "1.0.0"
+    "version": "2.1.23-4-recupero_db_svecchiato"
   },
   "servers": [
     {

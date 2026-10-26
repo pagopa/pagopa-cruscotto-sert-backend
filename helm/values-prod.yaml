@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-cruscotto-sert-backend
-    tag: "2.1.23-3-recupero_db_svecchiato"
+    tag: "2.1.23-4-recupero_db_svecchiato"
     pullPolicy: Always
   # https://github.com/Azure/azure-functions-host/blob/uat/src/WebJobs.Script.WebHost/Controllers/HostController.cs
   livenessProbe:
