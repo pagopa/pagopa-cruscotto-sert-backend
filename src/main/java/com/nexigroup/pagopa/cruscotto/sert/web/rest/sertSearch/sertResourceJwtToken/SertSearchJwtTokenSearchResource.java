@@ -67,7 +67,7 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getPosition(nav, paEmittente, searchFromHistory, pageable);
+        return super.getPosition(nav, paEmittente, searchFromHistory,dateFrom,dateTo, pageable);
     }
 
     @GetMapping("/token/{token}")
@@ -79,7 +79,7 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
     ) {
-        return super.getTokenInfo(token, searchFromHistory);
+        return super.getTokenInfo(token, searchFromHistory,dateFrom,dateTo);
     }
 
     @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
@@ -94,7 +94,7 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getTransfers(nav, paEmittente, token, searchFromHistory, pageable);
+        return super.getTransfers(nav, paEmittente, token, searchFromHistory,dateFrom,dateTo, pageable);
     }
 
     @GetMapping("/workflows/{nav}/{pa-emittente}")
@@ -108,7 +108,7 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getWorkflows(nav, paEmittente, searchFromHistory, pageable);
+        return super.getWorkflows(nav, paEmittente, searchFromHistory,dateFrom,dateTo, pageable);
     }
 
     @GetMapping("/extra/{token}")
@@ -121,6 +121,6 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getExtraInfo(token, searchFromHistory, pageable);
+        return super.getExtraInfo(token, searchFromHistory,dateFrom,dateTo, pageable);
     }
 }

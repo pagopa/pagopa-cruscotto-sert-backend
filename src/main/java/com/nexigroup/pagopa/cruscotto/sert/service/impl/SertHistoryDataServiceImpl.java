@@ -1,7 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
 import com.nexigroup.pagopa.cruscotto.sert.repository.history.HistoryPositionRepository;
-import com.nexigroup.pagopa.cruscotto.sert.repository.online.SertOnlineRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.OnlinePositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
@@ -28,12 +28,12 @@ public class SertHistoryDataServiceImpl implements SertService {
 
     private final HistoryPositionRepository historyPositionRepository;
 
-    private final SertOnlineRepository sertOnlineRepository;
+    private final OnlinePositionRepository onlinePositionRepository;
 
 
-    public SertHistoryDataServiceImpl(HistoryPositionRepository historyhistoryPositionRepository, SertOnlineRepository sertOnlineRepository) {
+    public SertHistoryDataServiceImpl(HistoryPositionRepository historyhistoryPositionRepository, OnlinePositionRepository OnlinePositionRepository) {
         this.historyPositionRepository = historyhistoryPositionRepository;
-        this.sertOnlineRepository = sertOnlineRepository;
+        this.onlinePositionRepository = OnlinePositionRepository;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        List<Object[]> onlineRows = sertOnlineRepository.findByIuvAndOptionalNavAndPa(
+        List<Object[]> onlineRows = onlinePositionRepository.findByIuvAndOptionalNavAndPaId(
             iuv,
             nav,
             pa,
@@ -91,7 +91,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        List<Object[]> onlineRows = sertOnlineRepository.findByCartAndOptionalNavAndPa(
+        List<Object[]> onlineRows = onlinePositionRepository.findByCartAndOptionalNavAndPaId(
             idCart,
             nav,
             pa,
@@ -133,7 +133,7 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        List<Object[]> onlineRows = sertOnlineRepository.findByTokenAndOptionalNavAndPa(
+        List<Object[]> onlineRows = onlinePositionRepository.findByTokenAndOptionalNavAndPaId(
             normalizedToken,
             nav,
             pa,
@@ -173,7 +173,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
-        List<Object[]> onlineRows = sertOnlineRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+        List<Object[]> onlineRows = onlinePositionRepository.findGroupedByExtraValueAndOptionalNavAndPaId(
             searchValue,
             nav,
             pa
@@ -246,6 +246,8 @@ public class SertHistoryDataServiceImpl implements SertService {
     @Override
     public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
+
+        //onlinePositionRepository.findByNavOrPa()
 
         Page<Object[]> rows = historyPositionRepository.findPositionDetailRows(nav, paEmittente, pageable);
         if (rows == null || rows.isEmpty()) {

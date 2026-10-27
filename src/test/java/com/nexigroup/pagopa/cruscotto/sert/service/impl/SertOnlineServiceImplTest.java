@@ -5,7 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.nexigroup.pagopa.cruscotto.sert.repository.online.PositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.OnlinePositionRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -16,16 +16,16 @@ import org.springframework.data.domain.Sort;
 
 class SertOnlineServiceImplTest {
 
-    private final PositionRepository positionRepository = mock(PositionRepository.class);
-    private final SertOnlineServiceImpl service = new SertOnlineServiceImpl(positionRepository);
+    private final OnlinePositionRepository onlinePositionRepository = mock(OnlinePositionRepository.class);
+    private final SertOnlineServiceImpl service = new SertOnlineServiceImpl(onlinePositionRepository);
 
     @Test
     void skipsEmptyTokenSearchAndMapsNavSearchRows() {
         var pageable = PageRequest.of(0, 10);
         assertThat(service.searchByToken("pa", "nav", "   ", LocalDate.now(), LocalDate.now(), pageable)).isEmpty();
-        org.mockito.Mockito.verifyNoInteractions(positionRepository);
+        org.mockito.Mockito.verifyNoInteractions(onlinePositionRepository);
 
-        when(positionRepository.findByNavOrPa("nav-1", "pa-1", pageable))
+        when(onlinePositionRepository.findByNavOrPa("nav-1", "pa-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(new Object[] { "nav-1", "pa-1" }), pageable, 1));
 
         var result = service.searchByNav("nav-1", "pa-1", LocalDate.now(), LocalDate.now(), pageable);
@@ -39,7 +39,7 @@ class SertOnlineServiceImplTest {
     @Test
     void searchesExtraInfoSortsAndPagesMappedRows() {
         var pageable = PageRequest.of(0, 1, Sort.by("nav"));
-        when(positionRepository.findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null)).thenReturn(List.<Object[]>of(
+        when(onlinePositionRepository.findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null)).thenReturn(List.<Object[]>of(
             new Object[] { "NAV-B", "PA-B" },
             new Object[] { "NAV-A", "PA-A" }
         ));
@@ -53,7 +53,7 @@ class SertOnlineServiceImplTest {
             assertThat(item.getPaEmittenteDsc()).isNull();
             assertThat(item.getMatch()).isNull();
         });
-        verify(positionRepository).findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null);
+        verify(onlinePositionRepository).findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null);
     }
 
     @Test
@@ -81,9 +81,9 @@ class SertOnlineServiceImplTest {
         row[18] = "PSP description";
         row[19] = "PT-PA description";
         row[20] = "PT-PSP description";
-        when(positionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
+        when(onlinePositionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
-        when(positionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
+        when(onlinePositionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
 
         var result = service.getPosition("NAV-1", "PA-1", pageable);
 
@@ -125,8 +125,8 @@ class SertOnlineServiceImplTest {
         row[9] = new java.math.BigDecimal("12.50");
         row[10] = 1.5;
         row[18] = "cart-1";
-        when(positionRepository.findTokenDetailRow("61626364")).thenReturn(List.<Object[]>of(row));
-        when(positionRepository.countOkTokensByNavAndPa("351234567890123456", "PA-1")).thenReturn(2L);
+        when(onlinePositionRepository.findTokenDetailRow("61626364")).thenReturn(List.<Object[]>of(row));
+        when(onlinePositionRepository.countOkTokensByNavAndPa("351234567890123456", "PA-1")).thenReturn(2L);
 
         var token = service.getTokenInfo(" 61626364 ");
 
@@ -157,7 +157,7 @@ class SertOnlineServiceImplTest {
         row[9] = "IBAN-1";
         row[10] = new java.math.BigDecimal("25.00");
         row[11] = "FISCAL-1";
-        when(positionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
+        when(onlinePositionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
 
         var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", pageable);
@@ -189,7 +189,7 @@ class SertOnlineServiceImplTest {
         event[6] = "61626364";
         event[7] = "REQ";
         event[8] = "id-1";
-        when(positionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
+        when(onlinePositionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(event), pageable, 1));
         var workflows = service.getWorkflows("NAV-1", "PA-1", pageable);
         assertThat(workflows.getContent()).singleElement().satisfies(response -> {
@@ -207,7 +207,7 @@ class SertOnlineServiceImplTest {
         visible[4] = "value";
         visible[5] = "event";
         Object[] nameless = new Object[] { "NAV-2", "PA-2", "61626364", null, "ignored", "event" };
-        when(positionRepository.findExtraInfoByToken("token", pageable))
+        when(onlinePositionRepository.findExtraInfoByToken("token", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(visible, nameless), pageable, 2));
 
         var extraInfo = service.getExtraInfo("token", pageable);

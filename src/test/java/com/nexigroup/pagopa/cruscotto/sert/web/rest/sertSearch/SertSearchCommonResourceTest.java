@@ -189,8 +189,8 @@ class SertSearchCommonResourceTest {
         when(service.getPosition(eq("nav-1"), eq("pa-1"), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(position)));
         when(service.getTokenInfo(eq("token-1"))).thenReturn(tokenInfo);
 
-        ResponseEntity<PositionPaymentDTO> positionResponse = resource.getPosition("nav-1", "pa-1", false, Pageable.ofSize(10));
-        ResponseEntity<TokenInfoDTO> tokenResponse = resource.getTokenInfo("token-1");
+        ResponseEntity<PositionPaymentDTO> positionResponse = resource.getPosition("nav-1", "pa-1", false, dateFrom, dateTo, Pageable.ofSize(10));
+        ResponseEntity<TokenInfoDTO> tokenResponse = resource.getTokenInfo("token-1", searchFromHistory, dateFrom, dateTo);
 
         assertThat(positionResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(positionResponse.getBody()).isSameAs(position);
@@ -211,12 +211,12 @@ class SertSearchCommonResourceTest {
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
         ResponseEntity<TransferPaymentDTO> transferResponse = resource.getTransfers(
-            "nav-1", "pa-1", "token-1", Pageable.ofSize(10)
+            "nav-1", "pa-1", "token-1", searchFromHistory, dateFrom, dateTo, Pageable.ofSize(10)
         );
         ResponseEntity<List<WorkflowObjectDTO>> workflowResponse = resource.getWorkflows(
-            "nav-1", "pa-1", Pageable.ofSize(10)
+            "nav-1", "pa-1", searchFromHistory, dateFrom, dateTo, Pageable.ofSize(10)
         );
-        ResponseEntity<ExtraInfoResponseDTO> extraResponse = resource.getExtraInfo("token-1", Pageable.ofSize(10));
+        ResponseEntity<ExtraInfoResponseDTO> extraResponse = resource.getExtraInfo("token-1", searchFromHistory, dateFrom, dateTo, Pageable.ofSize(10));
 
         assertThat(transferResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(transferResponse.getBody()).isSameAs(transfer);
@@ -241,9 +241,9 @@ class SertSearchCommonResourceTest {
         when(freezeDataService.getExtraInfo(eq("token-1"), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
-        assertThat(resource.getPosition("nav-1", "pa-1", true, Pageable.ofSize(10)).getBody()).isSameAs(position);
+        assertThat(resource.getPosition("nav-1", "pa-1", true, dateFrom, dateTo, Pageable.ofSize(10)).getBody()).isSameAs(position);
         assertThat(resource.getTokenInfo("token-1", true).getBody()).isSameAs(tokenInfo);
-        assertThat(resource.getTransfers("nav-1", "pa-1", "token-1", true, Pageable.ofSize(10)).getBody())
+        assertThat(resource.getTransfers("nav-1", "pa-1", "token-1", true, dateFrom, dateTo, Pageable.ofSize(10)).getBody())
             .isSameAs(transfer);
         assertThat(resource.getWorkflows("nav-1", "pa-1", true, Pageable.ofSize(10)).getBody())
             .containsExactly(workflow);

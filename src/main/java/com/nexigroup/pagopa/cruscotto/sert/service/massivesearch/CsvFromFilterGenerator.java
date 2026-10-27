@@ -1,34 +1,20 @@
 // src/main/java/com/nexigroup/pagopa/cruscotto/sert/service/massivesearch/CsvFromFilterGenerator.java
 package com.nexigroup.pagopa.cruscotto.sert.service.massivesearch;
 
-import com.nexigroup.pagopa.cruscotto.sert.repository.online.PositionRepository;
-import com.nexigroup.pagopa.cruscotto.sert.repository.online.SearchInstanceRepository;
-import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvConfiguration;
-import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.PerimeterPaymentStatus;
-import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.OnlinePositionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
-import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.sql.Date;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class CsvFromFilterGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(CsvFromFilterGenerator.class);
 
-    private final PositionRepository positionRepository;
+    private final OnlinePositionRepository onlinePositionRepository;
 
-    public CsvFromFilterGenerator(PositionRepository positionRepository) {
-        this.positionRepository = positionRepository;
+    public CsvFromFilterGenerator(OnlinePositionRepository onlinePositionRepository) {
+        this.onlinePositionRepository = onlinePositionRepository;
     }
 
     //public byte[] generateCsv(SearchBulkFilterDTO filter) {

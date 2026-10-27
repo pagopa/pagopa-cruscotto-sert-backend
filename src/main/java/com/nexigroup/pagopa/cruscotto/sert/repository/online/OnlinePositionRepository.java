@@ -1,8 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.repository.online;
 
 import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,42 +9,68 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
-public interface SertOnlineRepository extends JpaRepository<Position, Integer> {
+public interface OnlinePositionRepository extends JpaRepository<Position, Integer> {
 
+    @Query(value = "SELECT p.nav, p.paEmittente  FROM Position p WHERE (:nav IS  NULL OR p.nav = :nav) AND (:pa IS  NULL OR p.paEmittente = :pa) GROUP BY p.nav, p.paEmittente ")
+    Page<Object[]> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
         "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-        "GROUP BY p.id, pt.id ")
-    List<Object[]> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Object[]> findByIuvAndOptionalNavAndPa(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
         "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
         "AND (:nav IS NULL OR p.nav = :nav) " +
-        "GROUP BY p.id, pt.id ")
-    List<Object[]> findByTokenAndOptionalNavAndPa(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Object[]> findByTokenAndOptionalNavAndPa(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
         "AND pt.idCarrello = :idCart " +
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-        "GROUP BY p.id, pt.id ")
-    List<Object[]> findByCartAndOptionalNavAndPa(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND pt.idCarrello = :idCart " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Object[]> findByCartAndOptionalNavAndPa(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
-
-
+    @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt, ExtraInfo ei " +
+        "WHERE pt.fkPosition = p.id " +
+        "AND ei.fkToken = pt.id " +
+        "AND ei.infoName = :infoName " +
+        "AND ei.infoValue = :infoValue " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(
         value = """
             SELECT DISTINCT
-                p.id AS positionId,
-                pt.id AS positionTokenId
+                p.nav AS nav,
+                p.pa_emittente AS paEmittente
             FROM sert_ingestor.extra_info ei
             JOIN sert_ingestor.position_tokens pt
                 ON pt.id = ei.fk_token
@@ -55,6 +79,7 @@ public interface SertOnlineRepository extends JpaRepository<Position, Integer> {
             WHERE ei.info_value = :searchValue
               AND (:nav IS NULL OR p.nav = :nav)
               AND (:pa IS NULL OR p.pa_emittente = :pa)
+            ORDER BY p.pa_emittente DESC
         """,
         nativeQuery = true
     )
@@ -73,7 +98,6 @@ public interface SertOnlineRepository extends JpaRepository<Position, Integer> {
         "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
         "pt.dateEvent AS tokenDateEvent, " +
         "pt.paymentDate AS paymentDate, " +
-        "pt.outcome AS outcome, " +
         "pt.amount AS amount, " +
         "pt.fee AS fee, " +
         "apsp.codice AS psp, " +
@@ -276,4 +300,55 @@ public interface SertOnlineRepository extends JpaRepository<Position, Integer> {
         @Param("stations") List<Integer> stations,
         Pageable pageable
     );
+
+    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+        "WHERE pt.fkPosition = p.id " +
+        "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.id, pt.id ")
+    List<Object[]> findByIuvAndOptionalNavAndPaId(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+
+    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+        "WHERE pt.fkPosition = p.id " +
+        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.id, pt.id ")
+    List<Object[]> findByTokenAndOptionalNavAndPaId(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+
+    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+        "WHERE pt.fkPosition = p.id " +
+        "AND pt.idCarrello = :idCart " +
+        "AND (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "GROUP BY p.id, pt.id ")
+    List<Object[]> findByCartAndOptionalNavAndPaId(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+
+
+
+
+    @Query(
+        value = """
+            SELECT DISTINCT
+                p.id AS positionId,
+                pt.id AS positionTokenId
+            FROM sert_ingestor.extra_info ei
+            JOIN sert_ingestor.position_tokens pt
+                ON pt.id = ei.fk_token
+            JOIN sert_ingestor.position p
+                ON p.id = pt.fk_position
+            WHERE ei.info_value = :searchValue
+              AND (:nav IS NULL OR p.nav = :nav)
+              AND (:pa IS NULL OR p.pa_emittente = :pa)
+        """,
+        nativeQuery = true
+    )
+    List<Object[]> findGroupedByExtraValueAndOptionalNavAndPaId(
+        @Param("searchValue") String searchValue,
+        @Param("nav") String nav,
+        @Param("pa") String pa
+    );
+
+
 }

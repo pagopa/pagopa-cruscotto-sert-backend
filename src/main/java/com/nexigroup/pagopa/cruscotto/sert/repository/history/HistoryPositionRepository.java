@@ -16,6 +16,17 @@ import java.util.List;
 @Repository
 public interface HistoryPositionRepository extends JpaRepository<Position, Integer> {
 
+    @Query(value = "SELECT p.id, pt.id " +
+        " FROM Position p, PositionTokens pt " +
+        " WHERE pt.fkPosition = p.id " +
+        " AND (:nav IS NULL OR p.nav = :nav) " +
+        " AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        " AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        " OR p.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        " GROUP BY p.id, pt.id ")
+    List<Object[]> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa);
+
+
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p " +
         "WHERE (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +

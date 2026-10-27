@@ -292,7 +292,7 @@ public class SertSearchCommonResource {
         String nav,
         String paEmittente,
         boolean searchFromHistory,
-        Pageable pageable
+        LocalDate dateFrom, LocalDate dateTo, Pageable pageable
     ) {
         try {
             PaymentUtil.validatePageable(pageable, PaymentUtil.POSITION_TOKEN_SORT_MAPPING);
@@ -323,11 +323,8 @@ public class SertSearchCommonResource {
         }
     }
 
-    public ResponseEntity<TokenInfoDTO> getTokenInfo( String token) {
-        return getTokenInfo(token, false);
-    }
 
-    public ResponseEntity<TokenInfoDTO> getTokenInfo(String token, boolean searchFromHistory) {
+    public ResponseEntity<TokenInfoDTO> getTokenInfo(String token, boolean searchFromHistory, LocalDate dateFrom, LocalDate dateTo) {
         try {
             TokenInfoDTO tokenInfo = searchFromHistory
                 ? sertHistoryDataService.getTokenInfo(token)
@@ -349,20 +346,14 @@ public class SertSearchCommonResource {
         }
     }
 
-    public ResponseEntity<TransferPaymentDTO> getTransfers(
-        String nav,
-        String paEmittente,
-        String token,
-        Pageable pageable
-    ) {
-        return getTransfers(nav, paEmittente, token, false, pageable);
-    }
+
 
     public ResponseEntity<TransferPaymentDTO> getTransfers(
         String nav,
         String paEmittente,
         String token,
         boolean searchFromHistory,
+        LocalDate dateFrom, LocalDate dateTo,
         Pageable pageable
     ) {
         try {
@@ -400,7 +391,7 @@ public class SertSearchCommonResource {
     public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         String nav,
         String paEmittente,
-        Pageable pageable
+        boolean searchFromHistory, LocalDate dateFrom, LocalDate dateTo, Pageable pageable
     ) {
         return getWorkflows(nav, paEmittente, false, pageable);
     }
@@ -457,15 +448,12 @@ public class SertSearchCommonResource {
                 "An error occurred while processing your request. Please try again later.");
         }
     }
-    public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
-        String token,
-        Pageable pageable) {
-        return getExtraInfo(token, false, pageable);
-    }
 
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
         String token,
         boolean searchFromHistory,
+        LocalDate dateFrom,
+        LocalDate dateTo,
         Pageable pageable) {
 
         try {
