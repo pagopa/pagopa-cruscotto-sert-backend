@@ -21,6 +21,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class PositionPaymentExtraDTO extends BasicPositionObjectDTO implements Serializable {
     private List<String> match;
+
     @JsonProperty("pa-emittente-desc")
     private String paEmittenteDsc;
     @JsonInclude(JsonInclude.Include.NON_NULL)

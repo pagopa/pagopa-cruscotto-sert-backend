@@ -21,6 +21,8 @@ import java.util.List;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
@@ -224,9 +226,24 @@ public class SertSearchCommonResource {
         Pageable pageable
     ) {
         List<PositionPaymentExtraDTO> merged = new ArrayList<>(currentPage.getContent());
-        currentPage.getContent().forEach(item -> item.setFromHistory(false));
-        oldPage.getContent().forEach(item -> item.setFromHistory(true));
-        merged.addAll(oldPage.getContent());
+        Map<SearchResultKey, PositionPaymentExtraDTO> currentByPosition = new LinkedHashMap<>();
+        currentPage.getContent().forEach(item -> {
+            if (item.getFromHistory() == null) {
+                item.setFromHistory(false);
+            }
+            currentByPosition.put(new SearchResultKey(item.getNav(), item.getPaEmittente()), item);
+        });
+        oldPage.getContent().forEach(item -> {
+            item.setFromHistory(true);
+            SearchResultKey key = new SearchResultKey(item.getNav(), item.getPaEmittente());
+            PositionPaymentExtraDTO existing = currentByPosition.get(key);
+            if (existing == null) {
+                merged.add(item);
+            } else {
+                mergeHistoryFlag(existing, item);
+            }
+        });
+
         merged.sort(searchComparator(pageable.getSort()));
 
         int fromIndex = (int) Math.min(pageable.getOffset(), merged.size());
@@ -235,6 +252,14 @@ public class SertSearchCommonResource {
             merged.subList(fromIndex, toIndex),
             pageable,
             currentPage.getTotalElements() + oldPage.getTotalElements()
+        );
+    }
+
+    private record SearchResultKey(String nav, String paEmittente) {}
+
+    private void mergeHistoryFlag(PositionPaymentExtraDTO existing, PositionPaymentExtraDTO candidate) {
+        existing.setFromHistory(
+            Boolean.TRUE.equals(existing.getFromHistory()) || Boolean.TRUE.equals(candidate.getFromHistory())
         );
     }
 

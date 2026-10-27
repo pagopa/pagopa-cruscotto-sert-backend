@@ -1,6 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
 import com.nexigroup.pagopa.cruscotto.sert.repository.history.HistoryPositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.SertOnlineRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
@@ -27,8 +28,12 @@ public class SertHistoryDataServiceImpl implements SertService {
 
     private final HistoryPositionRepository historyPositionRepository;
 
-    public SertHistoryDataServiceImpl(HistoryPositionRepository historyhistoryPositionRepository) {
+    private final SertOnlineRepository sertOnlineRepository;
+
+
+    public SertHistoryDataServiceImpl(HistoryPositionRepository historyhistoryPositionRepository, SertOnlineRepository sertOnlineRepository) {
         this.historyPositionRepository = historyhistoryPositionRepository;
+        this.sertOnlineRepository = sertOnlineRepository;
     }
 
     @Override
@@ -42,6 +47,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(true)
             .build());
     }
 
@@ -49,11 +55,35 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = historyPositionRepository.findByIuvAndOptionalNavAndPa(iuv, nav, pa, dateFrom ,dateTo, pageable);
+        List<Object[]> onlineRows = sertOnlineRepository.findByIuvAndOptionalNavAndPa(
+            iuv,
+            nav,
+            pa,
+            Pageable.unpaged()
+        );
+        List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+        List<Integer> onlinePositionIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[0]).intValue())
+            .toList();
+        List<Integer> onlinePositionTokenIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[1]).intValue())
+            .toList();
+
+        Page<Object[]> groupRow = historyPositionRepository.findByIuvAndOptionalNavAndPa(
+            iuv,
+            nav,
+            pa,
+            dateFrom,
+            dateTo,
+            onlinePositionIds,
+            onlinePositionTokenIds,
+            pageable
+        );
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(true)
             .build());
     }
 
@@ -61,11 +91,35 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = historyPositionRepository.findByCartAndOptionalNavAndPa(idCart, nav, pa,  dateFrom ,dateTo,pageable);
+        List<Object[]> onlineRows = sertOnlineRepository.findByCartAndOptionalNavAndPa(
+            idCart,
+            nav,
+            pa,
+            Pageable.unpaged()
+        );
+        List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+        List<Integer> onlinePositionIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[0]).intValue())
+            .toList();
+        List<Integer> onlinePositionTokenIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[1]).intValue())
+            .toList();
+
+        Page<Object[]> groupRow = historyPositionRepository.findByCartAndOptionalNavAndPa(
+            idCart,
+            nav,
+            pa,
+            dateFrom,
+            dateTo,
+            onlinePositionIds,
+            onlinePositionTokenIds,
+            pageable
+        );
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(true)
             .build());
     }
 
@@ -79,11 +133,35 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        Page<Object[]> groupRow = historyPositionRepository.findByTokenAndOptionalNavAndPa(normalizedToken, nav, pa, dateFrom ,dateTo, pageable);
+        List<Object[]> onlineRows = sertOnlineRepository.findByTokenAndOptionalNavAndPa(
+            normalizedToken,
+            nav,
+            pa,
+            Pageable.unpaged()
+        );
+        List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+        List<Integer> onlinePositionIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[0]).intValue())
+            .toList();
+        List<Integer> onlinePositionTokenIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[1]).intValue())
+            .toList();
+
+        Page<Object[]> groupRow = historyPositionRepository.findByTokenAndOptionalNavAndPa(
+            normalizedToken,
+            nav,
+            pa,
+            dateFrom,
+            dateTo,
+            onlinePositionIds,
+            onlinePositionTokenIds,
+            pageable
+        );
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(true)
             .build());
     }
 
@@ -95,22 +173,39 @@ public class SertHistoryDataServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
+        List<Object[]> onlineRows = sertOnlineRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+            searchValue,
+            nav,
+            pa
+        );
+        List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+        String onlinePositionIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[0]).intValue())
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        String onlinePositionTokenIds = safeOnlineRows.stream()
+            .map(row -> ((Number) row[1]).intValue())
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+
         log.info(searchValue +" :chiamata alla query in historyPositionRepository");
 
         List<Object[]> groupedRows = historyPositionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
             searchValue,
             nav,
             pa,
-            dateFrom ,dateTo
+            dateFrom,
+            dateTo,
+            onlinePositionIds,
+            onlinePositionTokenIds
         );
         log.info(searchValue +" :fine chiamata alla query in historyPositionRepository");
 
         List<PositionPaymentExtraDTO> allRows = new ArrayList<>(groupedRows.stream()
             .map(row -> PositionPaymentExtraDTO.builder()
                 .nav((String) row[0])
-                .paEmittenteDsc((String) row[1])
-                .match(parseInfoMatch(row[2]))
-                .paEmittente((String) row[3])
+                .paEmittente((String) row[1])
+                .fromHistory(true)
                 .build())
             .toList());
 

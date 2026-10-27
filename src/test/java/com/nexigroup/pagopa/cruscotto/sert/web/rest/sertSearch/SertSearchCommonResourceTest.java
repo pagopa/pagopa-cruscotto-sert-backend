@@ -124,6 +124,65 @@ class SertSearchCommonResourceTest {
     }
 
     @Test
+    void mergesOnlineAndHistoryRowsByNavAndPaAndSetsHistoryFlag() {
+        PositionPaymentExtraDTO onlineRow = PositionPaymentExtraDTO.builder()
+            .nav("nav-1")
+            .paEmittente("pa-1")
+            .build();
+        PositionPaymentExtraDTO onlineOnlyRow = PositionPaymentExtraDTO.builder()
+            .nav("nav-3")
+            .paEmittente("pa-3")
+            .build();
+        PositionPaymentExtraDTO matchingHistoryRow = PositionPaymentExtraDTO.builder()
+            .nav("nav-1")
+            .paEmittente("pa-1")
+            .build();
+        PositionPaymentExtraDTO historyOnlyRow = PositionPaymentExtraDTO.builder()
+            .nav("nav-2")
+            .paEmittente("pa-2")
+            .build();
+        when(service.searchByIuv(eq(null), eq(null), eq("iuv-1"), isNull(), isNull(), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(onlineRow, onlineOnlyRow)));
+        when(freezeDataService.searchByIuv(
+            eq(null),
+            eq(null),
+            eq("iuv-1"),
+            eq(VALID_DATE_FROM),
+            eq(VALID_DATE_TO),
+            any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.of(matchingHistoryRow, historyOnlyRow)));
+
+        ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
+            null,
+            null,
+            "iuv-1",
+            null,
+            null,
+            null,
+            true,
+            true,
+            VALID_DATE_FROM,
+            VALID_DATE_TO,
+            Pageable.ofSize(10)
+        );
+
+        assertThat(response.getBody()).hasSize(3);
+        assertThat(response.getBody())
+            .filteredOn(row -> row.getNav().equals("nav-1"))
+            .singleElement()
+            .satisfies(row -> assertThat(row.getFromHistory()).isTrue());
+        assertThat(response.getBody())
+            .filteredOn(row -> row.getNav().equals("nav-2"))
+            .singleElement()
+            .satisfies(row -> assertThat(row.getFromHistory()).isTrue());
+        assertThat(response.getBody())
+            .filteredOn(row -> row.getNav().equals("nav-3"))
+            .singleElement()
+            .satisfies(row -> assertThat(row.getFromHistory()).isFalse());
+    }
+
+
+    @Test
     void returnsPositionAndTokenDetails() {
         PositionPaymentDTO position = PositionPaymentDTO.builder().build();
         TokenInfoDTO tokenInfo = TokenInfoDTO.builder().build();

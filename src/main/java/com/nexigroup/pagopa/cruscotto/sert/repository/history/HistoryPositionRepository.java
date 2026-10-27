@@ -30,137 +30,139 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         Pageable pageable
     );
 
-    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
-        "WHERE pt.fkPosition = p.id " +
-        "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
-        "AND (:nav IS NULL OR p.nav = :nav) " +
-        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-        "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
-        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-        "GROUP BY p.nav, p.paEmittente ",
-        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+    @Query(
+        value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
-            "AND (pt.iuv = :param OR pt.creditorRefId = :param) " +
+            "AND ((pt.iuv = :param OR pt.creditorRefId = :param) " +
+            "OR p.id IN :onlinePositionIds " +
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-            "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+            "GROUP BY p.nav, p.paEmittente",
+        countQuery = "SELECT COUNT(DISTINCT CONCAT(" +
+            "CONCAT(CASE WHEN p.nav IS NULL THEN 'N;' ELSE CONCAT(CONCAT('V', CAST(LENGTH(p.nav) AS string)), CONCAT(':', p.nav)) END), " +
+            "CASE WHEN p.paEmittente IS NULL THEN 'N;' ELSE CONCAT(CONCAT('V', CAST(LENGTH(p.paEmittente) AS string)), CONCAT(':', p.paEmittente)) END)) " +
+            "FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND ((pt.iuv = :param OR pt.creditorRefId = :param) " +
+            "OR p.id IN :onlinePositionIds " +
+            "OR pt.id IN :onlinePositionTokenIds) " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)"
+    )
     Page<Object[]> findByIuvAndOptionalNavAndPa(
         @Param("param") String param,
         @Param("nav") String nav,
         @Param("pa") String pa,
         @Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
+        @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds,
         Pageable pageable
     );
 
-    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
-        "WHERE pt.fkPosition = p.id " +
-        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-        "AND (:nav IS NULL OR p.nav = :nav) " +
-        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-        "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
-        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-        "GROUP BY p.nav, p.paEmittente ",
-        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+    @Query(
+        value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
-            "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "AND (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "OR p.id IN :onlinePositionIds " +
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-            "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+            "GROUP BY p.nav, p.paEmittente",
+        countQuery = "SELECT COUNT(DISTINCT CONCAT(CONCAT(COALESCE(p.nav, ''), '|'), COALESCE(p.paEmittente, ''))) " +
+            "FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "OR p.id IN :onlinePositionIds " +
+            "OR pt.id IN :onlinePositionTokenIds) " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)"
+    )
     Page<Object[]> findByTokenAndOptionalNavAndPa(
         @Param("token") String token,
         @Param("nav") String nav,
         @Param("pa") String pa,
         @Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
+        @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds,
         Pageable pageable
     );
 
-    @Query(value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
-        "WHERE pt.fkPosition = p.id " +
-        "AND pt.idCarrello = :idCart " +
-        "AND (:nav IS NULL OR p.nav = :nav) " +
-        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-        "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
-        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-        "GROUP BY p.nav, p.paEmittente ",
-        countQuery = "SELECT COUNT(DISTINCT p.id) FROM Position p, PositionTokens pt " +
+    @Query(
+        value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
-            "AND pt.idCarrello = :idCart " +
+            "AND (pt.idCarrello = :idCart " +
+            "OR p.id IN :onlinePositionIds " +
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
-            "AND ((CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+            "GROUP BY p.nav, p.paEmittente",
+        countQuery = "SELECT COUNT(DISTINCT CONCAT(" +
+            "CONCAT(CASE WHEN p.nav IS NULL THEN 'N;' ELSE CONCAT(CONCAT('V', CAST(LENGTH(p.nav) AS string)), CONCAT(':', p.nav)) END), " +
+            "CASE WHEN p.paEmittente IS NULL THEN 'N;' ELSE CONCAT(CONCAT('V', CAST(LENGTH(p.paEmittente) AS string)), CONCAT(':', p.paEmittente)) END)) " +
+            "FROM Position p, PositionTokens pt " +
+            "WHERE pt.fkPosition = p.id " +
+            "AND (pt.idCarrello = :idCart " +
+            "OR p.id IN :onlinePositionIds " +
+            "OR pt.id IN :onlinePositionTokenIds) " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)"
+    )
     Page<Object[]> findByCartAndOptionalNavAndPa(
         @Param("idCart") String idCart,
         @Param("nav") String nav,
         @Param("pa") String pa,
         @Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
+        @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds,
         Pageable pageable
     );
 
-    @Query(value = "SELECT DISTINCT p FROM Position p, PositionTokens pt, ExtraInfo ei " +
-        "WHERE pt.fkPosition = p.id " +
-        "AND ei.fkToken = pt.id " +
-        "AND ei.infoName = :infoName " +
-        "AND ei.infoValue = :infoValue " +
-        "AND (:nav IS NULL OR p.nav = :nav) " +
-        "AND (:pa IS NULL OR p.paEmittente = :pa)")
-    Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
-
     @Query(
         value = """
-            WITH filtered AS MATERIALIZED (
-                          SELECT
-                              ei.fk_token,
-                              ei.info_name,
-                              ei.date_event AS extra_date_event
-                          FROM extra_info ei
-                          WHERE ei.info_value = :searchValue
-                      ),
-                      token_position AS MATERIALIZED (
-                          SELECT
-                              pt.fk_position,
-                              f.info_name,
-                              pt.date_event AS token_date_event,
-                              f.extra_date_event
-                          FROM filtered f
-                          JOIN position_tokens pt
-                              ON pt.id = f.fk_token
-                      )
-                      SELECT
-                          p.nav AS nav,
-                          ape.description AS paEmittenteDesc,
-                          string_agg(tp.info_name, ',') AS infoMatch,
-                          p.pa_emittente AS paEmittente
-                      FROM token_position tp
-                      JOIN position p
-                          ON p.id = tp.fk_position
-                      LEFT JOIN anag_pa_emittente ape
-                          ON ape.codice = p.pa_emittente
-                      WHERE (:nav IS NULL OR p.nav = :nav)
-                        AND (:pa IS NULL OR p.pa_emittente = :pa)
-                        AND (
-                            (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL)
-                            OR p.date_event BETWEEN :dateFrom AND :dateTo
-                            OR tp.token_date_event BETWEEN :dateFrom AND :dateTo
-                            OR tp.extra_date_event BETWEEN :dateFrom AND :dateTo
-                        )
-                      GROUP BY
-                          p.nav,
-                          p.pa_emittente,
-                          ape.description,
-                          p.pa_emittente
-                      ORDER BY ape.description DESC;
+            SELECT DISTINCT
+                p.nav AS nav,
+                p.pa_emittente AS paEmittente
+            FROM sert_history.position p
+            JOIN sert_history.position_tokens pt
+                ON pt.fk_position = p.id
+            LEFT JOIN sert_history.extra_info ei
+                ON ei.fk_token = pt.id
+            WHERE (
+                  ei.info_value = :searchValue
+                  OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[]))
+                  OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))
+              )
+              AND (:nav IS NULL OR p.nav = :nav)
+              AND (:pa IS NULL OR p.pa_emittente = :pa)
+              AND (
+                  (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL)
+                  OR p.date_event BETWEEN :dateFrom AND :dateTo
+                  OR pt.date_event BETWEEN :dateFrom AND :dateTo
+                  OR ei.date_event BETWEEN :dateFrom AND :dateTo
+              )
+            ORDER BY p.pa_emittente DESC
         """,
         nativeQuery = true
     )
@@ -169,7 +171,9 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         @Param("nav") String nav,
         @Param("pa") String pa,
         @Param("dateFrom") LocalDate dateFrom,
-        @Param("dateTo") LocalDate dateTo
+        @Param("dateTo") LocalDate dateTo,
+        @Param("onlinePositionIds") String onlinePositionIds,
+        @Param("onlinePositionTokenIds") String onlinePositionTokenIds
     );
 
     @Query(value = "SELECT " +

@@ -56,6 +56,7 @@ public class SertOnlineServiceImpl implements SertService {
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(false)
             .build());
     }
 
@@ -68,6 +69,7 @@ public class SertOnlineServiceImpl implements SertService {
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(false)
             .build());
     }
 
@@ -80,6 +82,7 @@ public class SertOnlineServiceImpl implements SertService {
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(false)
             .build());
     }
 
@@ -98,6 +101,7 @@ public class SertOnlineServiceImpl implements SertService {
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
             .paEmittente(asString(row[1]))
+            .fromHistory(false)
             .build());
     }
 
@@ -121,9 +125,8 @@ public class SertOnlineServiceImpl implements SertService {
         List<PositionPaymentExtraDTO> allRows = new ArrayList<>(groupedRows.stream()
             .map(row -> PositionPaymentExtraDTO.builder()
                 .nav((String) row[0])
-                .paEmittenteDsc((String) row[1])
-                .match(parseInfoMatch(row[2]))
-                .paEmittente((String) row[3])
+                .paEmittente((String) row[1])
+                .fromHistory(false)
                 .build())
             .toList());
 
@@ -205,23 +208,23 @@ public class SertOnlineServiceImpl implements SertService {
                         .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(preferredRow[11]))
-                .pspDescription(asString(preferredRow[19]))
-                .ptPa(asString(preferredRow[12]))
-                .ptPaDescription(asString(preferredRow[20]))
-                .ptPsp(asString(preferredRow[13]))
-                .ptPspDescription(asString(preferredRow[21]))
-                .station(asString(preferredRow[14]))
-                .channel(asString(preferredRow[15]))
+                .psp(asString(preferredRow[10]))
+                .pspDescription(asString(preferredRow[18]))
+                .ptPa(asString(preferredRow[11]))
+                .ptPaDescription(asString(preferredRow[19]))
+                .ptPsp(asString(preferredRow[12]))
+                .ptPspDescription(asString(preferredRow[20]))
+                .station(asString(preferredRow[13]))
+                .channel(asString(preferredRow[14]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(preferredRow[9]))
-                .fee(toDouble(preferredRow[10]))
+                .amount(toDouble(preferredRow[8]))
+                .fee(toDouble(preferredRow[9]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(preferredRow[16]))
-                .paymentMethod(asString(preferredRow[17]))
-                .isCart(rows.stream().anyMatch(r -> r[18] != null))  // true se almeno un token ha idCarrello != null
+                .touchpoint(asString(preferredRow[15]))
+                .paymentMethod(asString(preferredRow[16]))
+                .isCart(rows.stream().anyMatch(r -> r[17] != null))  // true se almeno un token ha idCarrello != null
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))

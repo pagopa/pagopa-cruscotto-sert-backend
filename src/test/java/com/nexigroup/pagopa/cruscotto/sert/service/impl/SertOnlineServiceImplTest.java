@@ -40,8 +40,8 @@ class SertOnlineServiceImplTest {
     void searchesExtraInfoSortsAndPagesMappedRows() {
         var pageable = PageRequest.of(0, 1, Sort.by("nav"));
         when(positionRepository.findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null)).thenReturn(List.<Object[]>of(
-            new Object[] { "NAV-B", "Beta", "b, c", "PA-B" },
-            new Object[] { "NAV-A", "Alpha", " a,  b ", "PA-A" }
+            new Object[] { "NAV-B", "PA-B" },
+            new Object[] { "NAV-A", "PA-A" }
         ));
 
         var result = service.searchExtra(null, null, "reason", LocalDate.now(), LocalDate.now(), pageable);
@@ -49,11 +49,62 @@ class SertOnlineServiceImplTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).singleElement().satisfies(item -> {
             assertThat(item.getNav()).isEqualTo("NAV-A");
-            assertThat(item.getPaEmittenteDsc()).isEqualTo("Alpha");
             assertThat(item.getPaEmittente()).isEqualTo("PA-A");
-            assertThat(item.getMatch()).containsExactly("a", "b");
+            assertThat(item.getPaEmittenteDsc()).isNull();
+            assertThat(item.getMatch()).isNull();
         });
         verify(positionRepository).findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null);
+    }
+
+    @Test
+    void mapsPositionDetailsAfterRemovingUnusedOutcomeColumn() {
+        var pageable = PageRequest.of(0, 10);
+        Object[] row = new Object[21];
+        row[0] = "NAV-1";
+        row[1] = "PA description";
+        row[2] = Instant.parse("2026-01-01T00:00:00Z");
+        row[3] = "IUV-1";
+        row[4] = "CRID-1";
+        row[5] = "61626364";
+        row[6] = java.sql.Date.valueOf("2026-01-02");
+        row[7] = Instant.parse("2026-01-03T00:00:00Z");
+        row[8] = new java.math.BigDecimal("12.50");
+        row[9] = new java.math.BigDecimal("1.50");
+        row[10] = "PSP";
+        row[11] = "PT-PA";
+        row[12] = "PT-PSP";
+        row[13] = "STATION";
+        row[14] = "CHANNEL";
+        row[15] = "TOUCHPOINT";
+        row[16] = "CARD";
+        row[17] = "CART-1";
+        row[18] = "PSP description";
+        row[19] = "PT-PA description";
+        row[20] = "PT-PSP description";
+        when(positionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
+            .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
+        when(positionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
+
+        var result = service.getPosition("NAV-1", "PA-1", pageable);
+
+        assertThat(result.getContent()).singleElement().satisfies(position -> {
+            assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
+            assertThat(position.getPositionInfo().getPaEmittente()).isEqualTo("PA description");
+            assertThat(position.getPositionInfo().getIuv()).isEqualTo("IUV-1");
+            assertThat(position.getAmount().getAmount()).isEqualTo(12.5);
+            assertThat(position.getAmount().getFee()).isEqualTo(1.5);
+            assertThat(position.getActors().getPsp()).isEqualTo("PSP");
+            assertThat(position.getActors().getPtPa()).isEqualTo("PT-PA");
+            assertThat(position.getActors().getPtPsp()).isEqualTo("PT-PSP");
+            assertThat(position.getActors().getStation()).isEqualTo("STATION");
+            assertThat(position.getActors().getChannel()).isEqualTo("CHANNEL");
+            assertThat(position.getActors().getPspDescription()).isEqualTo("PSP description");
+            assertThat(position.getActors().getPtPaDescription()).isEqualTo("PT-PA description");
+            assertThat(position.getActors().getPtPspDescription()).isEqualTo("PT-PSP description");
+            assertThat(position.getPaymentInfo().getTouchpoint()).isEqualTo("TOUCHPOINT");
+            assertThat(position.getPaymentInfo().getPaymentMethod()).isEqualTo("CARD");
+            assertThat(position.getPaymentInfo().getIsCart()).isTrue();
+        });
     }
 
     @Test

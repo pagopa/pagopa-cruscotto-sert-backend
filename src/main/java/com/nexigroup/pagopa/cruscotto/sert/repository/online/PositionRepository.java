@@ -70,39 +70,18 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
 
     @Query(
         value = """
-            WITH filtered AS MATERIALIZED (
-                          SELECT
-                              ei.fk_token,
-                              ei.info_name
-                          FROM sert_ingestor.extra_info ei
-                          WHERE ei.info_value = :searchValue
-                      ),
-                      token_position AS MATERIALIZED (
-                          SELECT
-                              pt.fk_position,
-                              f.info_name
-                          FROM filtered f
-                          JOIN sert_ingestor.position_tokens pt
-                              ON pt.id = f.fk_token
-                      )
-                      SELECT
-                          p.nav AS nav,
-                          ape.description AS paEmittenteDesc,
-                          string_agg(tp.info_name, ',') AS infoMatch,
-                          p.pa_emittente AS paEmittente
-                      FROM token_position tp
-                      JOIN sert_ingestor.position p
-                          ON p.id = tp.fk_position
-                      LEFT JOIN sert_ingestor.anag_pa_emittente ape
-                          ON ape.codice = p.pa_emittente
-                      WHERE (:nav IS NULL OR p.nav = :nav)
-                        AND (:pa IS NULL OR p.pa_emittente = :pa)
-                      GROUP BY
-                          p.nav,
-                          p.pa_emittente,
-                          ape.description,
-                          p.pa_emittente
-                      ORDER BY ape.description DESC;
+            SELECT DISTINCT
+                p.nav AS nav,
+                p.pa_emittente AS paEmittente
+            FROM sert_ingestor.extra_info ei
+            JOIN sert_ingestor.position_tokens pt
+                ON pt.id = ei.fk_token
+            JOIN sert_ingestor.position p
+                ON p.id = pt.fk_position
+            WHERE ei.info_value = :searchValue
+              AND (:nav IS NULL OR p.nav = :nav)
+              AND (:pa IS NULL OR p.pa_emittente = :pa)
+            ORDER BY p.pa_emittente DESC
         """,
         nativeQuery = true
     )
@@ -121,7 +100,6 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
         "pt.dateEvent AS tokenDateEvent, " +
         "pt.paymentDate AS paymentDate, " +
-        "pt.outcome AS outcome, " +
         "pt.amount AS amount, " +
         "pt.fee AS fee, " +
         "apsp.codice AS psp, " +
