@@ -305,7 +305,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, Pageable pageable) {
+    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get transfers for: {}, {}, {}, {}, {}", nav, paEmittente, token,pageable.getOffset(), pageable.getPageSize() );
 
         if (nav == null || paEmittente == null || token == null || token.trim().isEmpty()) {

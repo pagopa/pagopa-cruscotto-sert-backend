@@ -160,7 +160,7 @@ class SertOnlineServiceImplTest {
         when(onlinePositionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
 
-        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", pageable);
+        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", dateFrom, dateTo, pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(transferPage -> {
             assertThat(transferPage.getToken()).isEqualTo("abcd");
@@ -173,7 +173,7 @@ class SertOnlineServiceImplTest {
                 assertThat(transfer.getAmount()).isEqualTo(25.0);
             });
         });
-        assertThat(service.getTransfers(null, "PA-1", "token", pageable)).isNull();
+        assertThat(service.getTransfers(null, "PA-1", "token", dateFrom, dateTo, pageable)).isNull();
     }
 
     @Test

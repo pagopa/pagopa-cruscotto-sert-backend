@@ -364,8 +364,8 @@ public class SertSearchCommonResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,List.of(Sort.Order.asc("idTransfer")),PaymentUtil.TRANSFER_SORT_MAPPING,
                 List.of(Sort.Order.asc("idTransfer"),Sort.Order.desc("paTransfer")));
             Page<TransferPaymentDTO> page = searchFromHistory
-                ? sertHistoryDataService.getTransfers(nav, paEmittente, token, remappedPageable)
-                : sertOnlineService.getTransfers(nav, paEmittente, token, remappedPageable);
+                ? sertHistoryDataService.getTransfers(nav, paEmittente, token,dateFrom,dateTo, remappedPageable)
+                : sertOnlineService.getTransfers(nav, paEmittente, token, dateFrom, dateTo, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
