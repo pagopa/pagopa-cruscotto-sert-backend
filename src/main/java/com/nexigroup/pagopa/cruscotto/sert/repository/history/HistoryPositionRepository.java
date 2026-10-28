@@ -264,11 +264,18 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
     List<Object[]> findTokenDetailRow(@Param("token") String token);
 
-    @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, p.lastEvent AS lastEvent, " +
-        "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
+    @Query(value = "SELECT p.nav AS nav, " +
+        "ape.description AS paEmittente, " +
+        "p.lastEvent AS lastEvent, " +
+        "pt.iuv AS iuv, " +
+        "pt.creditorRefId AS creditorReferenceId, " +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
         "(SELECT COUNT(ptr2.id) FROM PositionTransfers ptr2 WHERE ptr2.fkToken = pt.id) AS transfersCount, " +
-        "ptr.idTransfer AS idTransfer, ptr.isBollo AS isBollo, " +
-        "ptr.ibanTransfer AS ibanTransfer, ptr.amountTransfer AS amountTransfer, ptr.paTransfer AS paTransfer, " +
+        "ptr.idTransfer AS idTransfer, " +
+        "ptr.isBollo AS isBollo, " +
+        "ptr.ibanTransfer AS ibanTransfer, " +
+        "ptr.amountTransfer AS amountTransfer, " +
+        "ptr.paTransfer AS paTransfer, " +
         "ptr.dateEvent AS transferDateEvent " +
         "FROM Position p " +
         "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
