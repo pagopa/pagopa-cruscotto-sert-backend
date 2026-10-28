@@ -21,9 +21,25 @@ public interface SearchInstanceRepository extends JpaRepository<SearchInstance, 
     boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
 
     @Query(value = """
-        SELECT *
+        SELECT
+            instance.id,
+            instance.name,
+            instance.input_type,
+            instance.status,
+            instance.created_at,
+            instance.updated_at,
+            instance.selected_reports,
+            NULLIF(TRIM(CONCAT_WS(' ', creator.nm_last_name, creator.nm_first_name)), '') AS created_by_name,
+            NULLIF(TRIM(CONCAT_WS(' ', updater.nm_last_name, updater.nm_first_name)), '') AS updated_by_name
         FROM sert_ingestor.search_instance instance
+        LEFT JOIN sert_ingestor.auth_user creator ON creator.co_id = instance.created_by
+        LEFT JOIN sert_ingestor.auth_user updater ON updater.co_id = instance.updated_by
         WHERE
+            (
+                CAST(:instanceId AS UUID) IS NULL
+                OR instance.id = CAST(:instanceId AS UUID)
+            )
+            AND
             (
                 CAST(:name AS TEXT) IS NULL
                 OR LOWER(instance.name) LIKE LOWER(CONCAT('%', CAST(:name AS TEXT), '%'))
@@ -47,7 +63,14 @@ public interface SearchInstanceRepository extends JpaRepository<SearchInstance, 
         countQuery = """
         SELECT COUNT(*)
         FROM sert_ingestor.search_instance instance
+        LEFT JOIN sert_ingestor.auth_user creator ON creator.co_id = instance.created_by
+        LEFT JOIN sert_ingestor.auth_user updater ON updater.co_id = instance.updated_by
         WHERE
+            (
+                CAST(:instanceId AS UUID) IS NULL
+                OR instance.id = CAST(:instanceId AS UUID)
+            )
+            AND
             (
                 CAST(:name AS TEXT) IS NULL
                 OR LOWER(instance.name) LIKE LOWER(CONCAT('%', CAST(:name AS TEXT), '%'))
@@ -69,7 +92,8 @@ public interface SearchInstanceRepository extends JpaRepository<SearchInstance, 
             )
         """,
         nativeQuery = true)
-    Page<SearchInstance> findBySearchAndCreatedAtBetween(
+    Page<Object[]> findBySearchAndCreatedAtBetween(
+        @Param("instanceId") UUID instanceId,
         @Param("name") String name,
         @Param("status") String status,
         @Param("createdFrom") Instant createdFrom,
@@ -77,4 +101,3 @@ public interface SearchInstanceRepository extends JpaRepository<SearchInstance, 
         Pageable pageable
     );
 }
-

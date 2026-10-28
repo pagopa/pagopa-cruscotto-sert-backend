@@ -49,4 +49,12 @@ public class SearchInstance {
 
     @Column(name = "SELECTED_REPORTS", length = 64)
     private String selectedReports;
+
+    @Column(name = "CREATED_BY", nullable = false)
+    private Long createdBy;
+
+    @Column(name = "UPDATED_BY")
+    private Long updatedBy;
+
+
 }
