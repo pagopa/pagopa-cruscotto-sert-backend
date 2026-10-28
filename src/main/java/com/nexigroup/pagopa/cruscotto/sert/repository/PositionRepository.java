@@ -161,7 +161,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "pt.iuv AS iuv, " +
         "pt.creditorRefId AS creditorReferenceId, " +
         "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-        "pt.dateEvent AS tokenDateEvent, " +
+        "pt.insertedTimestamp AS tokenDateEvent, " +
         "pt.paymentDate AS paymentDate, " +
         "pt.outcome AS outcome, " +
         "pt.amount AS amount, " +
