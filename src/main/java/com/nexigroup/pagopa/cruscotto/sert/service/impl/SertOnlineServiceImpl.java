@@ -196,12 +196,13 @@ public class SertOnlineServiceImpl implements SertService {
                 .build())
             .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
+            .tokenBorn(toInstantFromDate(payedRow[6]))
             .payed(
                 payedRow == null
                     ? null
                     : PayedDTO.builder()
                         .token(tokenAsHex(payedRow[5]))
-                        .paymentBorn(toInstantFromDate(payedRow[6]))
+
                         .payedDate(toInstant(payedRow[7]))
                         .multiOutcome(multiOutcome)
                         .build()
@@ -224,6 +225,7 @@ public class SertOnlineServiceImpl implements SertService {
                 .touchpoint(asString(preferredRow[15]))
                 .paymentMethod(asString(preferredRow[16]))
                 .isCart(rows.stream().anyMatch(r -> r[17] != null))  // true se almeno un token ha idCarrello != null
+                .idCarrello((rows.getTotalElements()==1 && firstRow[16]!=null) ? asString(firstRow[16]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))
@@ -269,12 +271,13 @@ public class SertOnlineServiceImpl implements SertService {
                 .isCached(false)
                 .build())
             .isPayedToken(isPayed)
+            .tokenBorn(toInstantFromDate(row[6]))
             .payed(
                 !isPayed
                     ? null
                     : PayedDTO.builder()
                         .token(tokenAsHex(row[5]))
-                        .paymentBorn(toInstantFromDate(row[6]))
+
                         .payedDate(toInstant(row[7]))
                         .multiOutcome(multiOutcome)
                         .build()
@@ -297,6 +300,7 @@ public class SertOnlineServiceImpl implements SertService {
                 .touchpoint(asString(row[16]))
                 .paymentMethod(asString(row[17]))
                 .isCart(row[18] != null)  // true se idCarrello != null
+                .idCarrello(row[18] != null ? asString(row[18]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(rowNav != null && rowNav.startsWith("351"))

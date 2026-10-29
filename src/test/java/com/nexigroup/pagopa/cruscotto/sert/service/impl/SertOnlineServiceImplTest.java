@@ -16,6 +16,9 @@ import org.springframework.data.domain.Sort;
 
 class SertOnlineServiceImplTest {
 
+    private static final LocalDate DATE_FROM = LocalDate.of(2026, 1, 1);
+    private static final LocalDate DATE_TO = LocalDate.of(2026, 1, 31);
+
     private final OnlinePositionRepository onlinePositionRepository = mock(OnlinePositionRepository.class);
     private final SertOnlineServiceImpl service = new SertOnlineServiceImpl(onlinePositionRepository);
 
@@ -160,7 +163,7 @@ class SertOnlineServiceImplTest {
         when(onlinePositionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
 
-        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", dateFrom, dateTo, pageable);
+        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", DATE_FROM, DATE_TO, pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(transferPage -> {
             assertThat(transferPage.getToken()).isEqualTo("abcd");
@@ -173,7 +176,7 @@ class SertOnlineServiceImplTest {
                 assertThat(transfer.getAmount()).isEqualTo(25.0);
             });
         });
-        assertThat(service.getTransfers(null, "PA-1", "token", dateFrom, dateTo, pageable)).isNull();
+        assertThat(service.getTransfers(null, "PA-1", "token", DATE_FROM, DATE_TO, pageable)).isNull();
     }
 
     @Test

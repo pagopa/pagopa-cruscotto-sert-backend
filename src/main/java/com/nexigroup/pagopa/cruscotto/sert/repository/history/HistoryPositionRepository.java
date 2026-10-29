@@ -16,23 +16,20 @@ import java.util.List;
 @Repository
 public interface HistoryPositionRepository extends JpaRepository<Position, Integer> {
 
-    @Query(value = "SELECT p.id, pt.id " +
-        " FROM Position p, PositionTokens pt " +
-        " WHERE pt.fkPosition = p.id " +
-        " AND (:nav IS NULL OR p.nav = :nav) " +
-        " AND (:pa IS NULL OR p.paEmittente = :pa) " +
-        " AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-        " OR p.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-        " GROUP BY p.id, pt.id ")
-    List<Object[]> findByNavOrPa(@Param("nav") String nav, @Param("pa") String pa);
-
-
     @Query(value = "SELECT p.nav, p.paEmittente FROM Position p " +
         "WHERE (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
         "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
         "OR p.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-        "GROUP BY p.nav, p.paEmittente ")
+        "GROUP BY p.nav, p.paEmittente ",
+        countQuery = "SELECT COUNT(DISTINCT CONCAT(" +
+            "CONCAT(CASE WHEN p.nav IS NULL THEN 'N;' ELSE CONCAT(CONCAT('V', CAST(LENGTH(p.nav) AS string)), CONCAT(':', p.nav)) END), " +
+            "CASE WHEN p.paEmittente IS NULL THEN 'N;' ELSE CONCAT(CONCAT('V', CAST(LENGTH(p.paEmittente) AS string)), CONCAT(':', p.paEmittente)) END)) " +
+            "FROM Position p " +
+            "WHERE (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo)")
     Page<Object[]> findByNavOrPa(
         @Param("nav") String nav,
         @Param("pa") String pa,
@@ -194,7 +191,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "pt.iuv AS iuv, " +
         "pt.creditorRefId AS creditorReferenceId, " +
         "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-        "pt.dateEvent AS tokenDateEvent, " +
+        "pt.insertedTimestamp AS tokenDateEvent, " +
         "pt.paymentDate AS paymentDate, " +
         "pt.outcome AS outcome, " +
         "pt.amount AS amount, " +
@@ -236,7 +233,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "pt.iuv AS iuv, " +
         "pt.creditorRefId AS creditorReferenceId, " +
         "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-        "pt.dateEvent AS tokenDateEvent, " +
+        "pt.insertedTimestamp AS tokenDateEvent, " +
         "pt.paymentDate AS paymentDate, " +
         "pt.outcome AS outcome, " +
         "pt.amount AS amount, " +
