@@ -18,8 +18,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PayedDTO implements Serializable {
     private String token;
 
-    @JsonProperty("payment-born")
-    private Instant paymentBorn;
 
     @JsonProperty("payed-date")
     private Instant payedDate;

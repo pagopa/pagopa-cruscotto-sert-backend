@@ -1,6 +1,8 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.dto;
 
 import java.io.Serializable;
+import java.time.Instant;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +26,9 @@ public class TokenInfoDTO implements Serializable {
     private PayedDTO payed;
     private ActorsDTO actors;
     private AmountDTO amount;
+
+    @JsonProperty("token-born")
+    private Instant tokenBorn;
 
     @JsonProperty("payment-info")
     private PaymentInfoDTO paymentInfo;

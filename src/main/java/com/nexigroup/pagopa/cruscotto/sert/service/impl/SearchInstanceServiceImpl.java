@@ -2,12 +2,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchFilter;
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchExecution;
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchExecutionStep;
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchResult;
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
-import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
+import com.nexigroup.pagopa.cruscotto.sert.domain.*;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.CustomerGeneratedFile;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.PerimeterSearchType;
 import com.nexigroup.pagopa.cruscotto.sert.domain.enumeration.SearchInstanceStatus;
@@ -31,14 +26,13 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.WrapperFileResultDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGenerator;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvStateValidation;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplate;
-import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvValidationResult;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.filter.SearchBulkFilterDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
+import com.nexigroup.pagopa.cruscotto.sert.service.util.UserUtils;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.errors.BadRequestAlertException;
-import io.undertow.util.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -59,14 +53,14 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.SEARCH_INSTANCE_SORT_MAPPINGS;
 
 /**
  * Service implementation for Search Instance lifecycle. Methods are implemented minimally to support
@@ -103,6 +97,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     private final MassiveSearchCsvValidator csvValidator;
     private final ObjectMapper objectMapper ;
 
+    private final UserUtils userUtils;
+
     public SearchInstanceServiceImpl(
         SearchInstanceRepository instanceRepository,
         SearchExecutionRepository executionRepository,
@@ -113,7 +109,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         CsvFromFilterGenerator csvFromFilterGenerator,
         SearchFilterRepository searchFilterRepository, MassiveSearchCsvValidator csvValidator,
         ObjectMapper objectMapper,
-        SearchLookupService searchLookupService
+        SearchLookupService searchLookupService, UserUtils userUtils
     ) {
         this.instanceRepository = instanceRepository;
         this.executionRepository = executionRepository;
@@ -126,6 +122,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         this.searchLookupService = searchLookupService;
         this.csvValidator = csvValidator;
         this.objectMapper= objectMapper;
+        this.userUtils = userUtils;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
@@ -139,6 +136,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .selectedReports(dto.getSelectedReports())
             .status(dto.getStatus() != null ? dto.getStatus().name() : "DRAFT")
             .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : Instant.now())
+            .createdBy(userUtils.getLoggedUser().getId())
             .updatedAt(Instant.now())
             .build();
 
@@ -181,24 +179,25 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             Pageable mappedPageable = PaymentUtil.remapSorting(pageable, null, PaymentUtil.SEARCH_INSTANCE_SORT_MAPPINGS, List.of(Sort.Order.desc("created_at")));
 
 
-            Page<SearchInstance> all = instanceRepository.findBySearchAndCreatedAtBetween(
+            Page<Object[]> all = instanceRepository.findBySearchAndCreatedAtBetween(
+                null,
                 normalizedName,
                 normalizedStatus,
                 createdFromInstant,
                 createdToInstant,
                 mappedPageable
             );
-            List<UUID> instanceIds = all.getContent().stream().map(SearchInstance::getId).collect(Collectors.toList());
+            List<UUID> instanceIds = all.getContent().stream().map(row -> (UUID) row[0]).collect(Collectors.toList());
             Set<UUID> instanceIdsWithCsv = instanceIds.isEmpty()
                 ? Set.of()
                 : Set.copyOf(perimeterFileRepository.findInstanceIdsWithContent(instanceIds));
-            List<SearchInstanceDTO> collect = all.getContent().stream().map(entity -> {
-                SearchInstanceDTO dto = toDto(entity, false);
-                dto.setPresentCsv(instanceIdsWithCsv.contains(entity.getId()));
+            List<SearchInstanceDTO> collect = all.getContent().stream().map(row -> {
+                SearchInstanceDTO dto = toSearchInstanceDto(row, null);
+                dto.setPresentCsv(instanceIdsWithCsv.contains(dto.getId()));
                 return dto;
             }).collect(Collectors.toList());
             return new PageCustomImpl<SearchInstanceDTO>(collect,
-                mappedPageable, all==null || all.isEmpty()? 0L: all.getTotalElements());
+                mappedPageable, all.getTotalElements());
 
         } catch (ResponseStatusException e) {
             throw e;
@@ -283,11 +282,23 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     @Transactional(readOnly = true)
     public Optional<SearchInstanceDTO> findOne(UUID id) {
         log.info("find by uuid :  {}" ,id );
-        return instanceRepository.findById(id).map(entity -> {
-            SearchInstanceDTO dto = toDto(entity);
-            dto.setPresentCsv(!perimeterFileRepository.findInstanceIdsWithContent(List.of(id)).isEmpty());
-            return dto;
-        });
+        Page<Object[]> results = instanceRepository.findBySearchAndCreatedAtBetween(
+            id,
+            null,
+            null,
+            null,
+            null,
+            PageRequest.of(0, 1)
+        );
+        return results
+            .getContent()
+            .stream()
+            .findFirst()
+            .map(row -> {
+                SearchInstanceDTO dto = toSearchInstanceDto(row, loadPerimeterFilter(id));
+                dto.setPresentCsv(!perimeterFileRepository.findInstanceIdsWithContent(List.of(id)).isEmpty());
+                return dto;
+            });
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false)
@@ -303,6 +314,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             entity.setStatus(dto.getStatus().name());
         }
         entity.setUpdatedAt(Instant.now());
+        entity.setUpdatedBy(userUtils.getLoggedUser().getId());
         instanceRepository.save(entity);
 
         // If a perimeter filter is provided in the DTO, (re)generate a CSV and persist/overwrite content
@@ -355,6 +367,8 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
     public SearchInstanceDTO duplicate(UUID id) {
         SearchInstance entity = instanceRepository.findById(id)
             .orElseThrow(() -> new BadRequestAlertException("SearchInstance not found", ENTITY_NAME, "idnotfound"));
+
+        AuthUser loggedUser = userUtils.getLoggedUser();
         SearchInstance copy = SearchInstance.builder()
             .id(UUID.randomUUID())
             .name(entity.getName() + " (copy)")
@@ -362,6 +376,7 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .selectedReports(entity.getSelectedReports())
             .status(SearchInstanceStatus.DRAFT.name())
             .createdAt(Instant.now())
+            .createdBy(loggedUser.getId())
             .updatedAt(Instant.now())
             .build();
         instanceRepository.save(copy);
@@ -543,16 +558,16 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         return zipFilePath + "/" + zipFileName;
     }
 
-    private SearchInstanceDTO toDto(SearchInstance entity) {
-        return toDto(entity, true);
-    }
 
-    private SearchInstanceDTO toDto(SearchInstance entity, boolean includePerimeterFilter) {
-        return toDto(entity, includePerimeterFilter ? loadPerimeterFilter(entity) : null);
-    }
+
+
 
     private SearchInstancePerimeterFilterDTO loadPerimeterFilter(SearchInstance entity) {
-        SearchFilter searchFilter = searchFilterRepository.findById(entity.getId()).orElse(null);
+        return loadPerimeterFilter(entity.getId());
+    }
+
+    private SearchInstancePerimeterFilterDTO loadPerimeterFilter(UUID instanceId) {
+        SearchFilter searchFilter = searchFilterRepository.findById(instanceId).orElse(null);
         if (searchFilter == null) {
             return null;
         }
@@ -564,7 +579,17 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
         }
     }
 
-    private SearchInstanceDTO toDto(SearchInstance entity, SearchInstancePerimeterFilterDTO perimeterFilter) {
+    private SearchInstanceDTO toDto(SearchInstance entity) {
+
+        String creator =null;
+        if (entity.getCreatedBy()!=null){
+            creator = getAuthUser(entity.getCreatedBy(), creator);
+        }
+        String modificator =null;
+        if (entity.getUpdatedBy()!=null){
+            modificator = getAuthUser(entity.getUpdatedBy(), modificator);
+        }
+
         return SearchInstanceDTO.builder()
             .id(entity.getId())
             .name(entity.getName())
@@ -573,10 +598,51 @@ public class SearchInstanceServiceImpl implements SearchInstanceService {
             .status(SearchInstanceStatus.fromString(entity.getStatus()))
             .createdAt(entity.getCreatedAt())
             .updatedAt(entity.getUpdatedAt())
-            .perimeterFilter(perimeterFilter)
+            .createdBy(creator)
+            .updatedBy(modificator)
+            .perimeterFilter(loadPerimeterFilter(entity))
             .build();
 
 
+    }
+
+    private String getAuthUser(Long entity, String modificator) {
+        AuthUser userByID = userUtils.getUserByID(entity);
+        if (userByID != null) {
+            modificator = userByID.getLastName() + " " + userByID.getFirstName();
+        }
+        return modificator;
+    }
+
+    private SearchInstanceDTO toSearchInstanceDto(Object[] row, SearchInstancePerimeterFilterDTO perimeterFilter) {
+        return SearchInstanceDTO.builder()
+            .id(row[0] instanceof UUID id ? id : UUID.fromString(row[0].toString()))
+            .name((String) row[1])
+            .inputType(PerimeterSearchType.fromString((String) row[2]))
+            .status(SearchInstanceStatus.fromString((String) row[3]))
+            .createdAt(toInstant(row[4]))
+            .updatedAt(toInstant(row[5]))
+            .selectedReports((String) row[6])
+            .createdBy((String) row[7])
+            .updatedBy((String) row[8])
+            .perimeterFilter(perimeterFilter)
+            .build();
+    }
+
+    private Instant toInstant(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Instant instant) {
+            return instant;
+        }
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toInstant();
+        }
+        if (value instanceof OffsetDateTime offsetDateTime) {
+            return offsetDateTime.toInstant();
+        }
+        throw new IllegalStateException("Unsupported timestamp type in SearchInstance result: " + value.getClass().getName());
     }
 
     private SearchInstancePerimeterFilterDTO toViewFilterDTO(SearchBulkFilterDTO filter) {
