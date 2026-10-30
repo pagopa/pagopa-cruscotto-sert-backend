@@ -253,17 +253,17 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> safeHistoryRows = historyPositionRows == null || historyPositionRows.getContent() == null
             ? List.of()
             : historyPositionRows.getContent();
-        String onlinePositionIds = safeHistoryRows.stream()
+        String offlinePositionIds = safeHistoryRows.stream()
             .map(row -> ((Number) row[0]).intValue())
             .map(String::valueOf)
             .collect(Collectors.joining(","));
-        String onlinePositionTokenIds = safeHistoryRows.stream()
+        String offlinePositionTokenIds = safeHistoryRows.stream()
             .map(row -> ((Number) row[1]).intValue())
             .map(String::valueOf)
             .collect(Collectors.joining(","));
 
         Page<Object[]> onlinePositionPage = onlinePositionRepository.findPositionDetailRows(
-            nav, paEmittente, onlinePositionIds, onlinePositionTokenIds, Pageable.unpaged()
+            nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
         );
         List<Object[]> safeOnlineRows = onlinePositionPage == null || onlinePositionPage.getContent() == null
             ? List.of()
@@ -284,8 +284,9 @@ public class SertHistoryDataServiceImpl implements SertService {
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
-        // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
-        long okTokenCount = historyPositionRepository.countOkTokensByNavAndPa(nav, paEmittente);
+        long okTokenCount = rows.stream()
+            .filter(row -> "OK".equalsIgnoreCase(asString(row[10])))
+            .count();
         boolean multiOutcome = okTokenCount > 1;
 
         PositionPaymentDTO dto = PositionPaymentDTO.builder()
@@ -338,32 +339,10 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     private List<Object[]> mergePositionRows(List<Object[]> historyRows, List<Object[]> onlineRows) {
-        Map<String, Object[]> rowsByToken = new LinkedHashMap<>();
-        historyRows.forEach(row -> rowsByToken.put(positionRowKey(row), row.clone()));
-        onlineRows.forEach(onlineRow -> {
-            String key = positionRowKey(onlineRow);
-            Object[] existingRow = rowsByToken.get(key);
-            if (existingRow == null) {
-                rowsByToken.put(key, onlineRow.clone());
-                return;
-            }
-            for (int i = 0; i < existingRow.length; i++) {
-                if (onlineRow[i] != null) {
-                    existingRow[i] = onlineRow[i];
-                }
-            }
-        });
-        return new ArrayList<>(rowsByToken.values());
-    }
-
-    private String positionRowKey(Object[] row) {
-        if (row[1] != null) {
-            return "token:" + row[1];
-        }
-        if (row[7] != null) {
-            return "tokenHex:" + row[7];
-        }
-        return "position:" + row[0];
+        List<Object[]> rows = new ArrayList<>(historyRows.size() + onlineRows.size());
+        rows.addAll(historyRows);
+        rows.addAll(onlineRows);
+        return rows;
     }
 
     private void sortPositionRows(List<Object[]> rows, Pageable pageable) {

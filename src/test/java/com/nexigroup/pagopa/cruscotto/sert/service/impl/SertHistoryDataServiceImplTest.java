@@ -39,8 +39,6 @@ class SertHistoryDataServiceImplTest {
         var dateTo = LocalDate.of(2026, 1, 31);
         when(historyRepository.findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
-        when(historyRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
-
         var result = service.getPosition("NAV-1", "PA-1", dateFrom, dateTo, pageable);
 
         assertThat(result.getContent()).hasSize(1);
@@ -57,12 +55,17 @@ class SertHistoryDataServiceImplTest {
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("tokenDateEvent")));
         Object[] historyFirst = positionRow(1, 10, "NAV-1", "6161", Instant.parse("2026-01-01T00:00:00Z"));
         Object[] historySecond = positionRow(1, 11, "NAV-1", "6262", Instant.parse("2026-01-02T00:00:00Z"));
+        historyFirst[10] = "OK";
+        historySecond[10] = "KO";
         Object[] partialOnline = new Object[24];
         partialOnline[0] = 1;
         partialOnline[1] = 10;
         partialOnline[7] = "6161";
         partialOnline[8] = Instant.parse("2026-01-03T00:00:00Z");
+        partialOnline[10] = "KO";
         Object[] onlineOnly = positionRow(2, 12, "NAV-1", "6363", Instant.parse("2026-01-04T00:00:00Z"));
+        onlineOnly[9] = Instant.parse("2026-01-05T00:00:00Z");
+        onlineOnly[10] = "ok";
 
         when(historyRepository.findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.of(historyFirst, historySecond)));
@@ -75,6 +78,7 @@ class SertHistoryDataServiceImplTest {
             assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
             assertThat(position.getPositionInfo().getPaEmittente()).isEqualTo("PA-1");
             assertThat(position.getAllTokens()).containsExactly("cc", "aa", "bb");
+            assertThat(position.getPayed().getMultiOutcome()).isTrue();
         });
     }
 
