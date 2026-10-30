@@ -30,7 +30,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo)")
-    Page<Object[]> findByNavOrPa(
+    Page<Object[]> searchByNav(
         @Param("nav") String nav,
         @Param("pa") String pa,
         @Param("dateFrom") LocalDate dateFrom,
@@ -42,8 +42,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND ((pt.iuv = :param OR pt.creditorRefId = :param) " +
-            "OR p.id IN :onlinePositionIds " +
-            "OR pt.id IN :onlinePositionTokenIds) " +
+            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
+            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -56,15 +56,15 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND ((pt.iuv = :param OR pt.creditorRefId = :param) " +
-            "OR p.id IN :onlinePositionIds " +
-            "OR pt.id IN :onlinePositionTokenIds) " +
+            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
+            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
             "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)"
     )
-    Page<Object[]> findByIuvAndOptionalNavAndPa(
+    Page<Object[]> searchByIuv(
         @Param("param") String param,
         @Param("nav") String nav,
         @Param("pa") String pa,
@@ -79,8 +79,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-            "OR p.id IN :onlinePositionIds " +
-            "OR pt.id IN :onlinePositionTokenIds) " +
+            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
+            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -91,15 +91,15 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-            "OR p.id IN :onlinePositionIds " +
-            "OR pt.id IN :onlinePositionTokenIds) " +
+            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
+            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
             "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)"
     )
-    Page<Object[]> findByTokenAndOptionalNavAndPa(
+    Page<Object[]> searchByToken(
         @Param("token") String token,
         @Param("nav") String nav,
         @Param("pa") String pa,
@@ -114,8 +114,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.idCarrello = :idCart " +
-            "OR p.id IN :onlinePositionIds " +
-            "OR pt.id IN :onlinePositionTokenIds) " +
+            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
+            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -128,15 +128,15 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.idCarrello = :idCart " +
-            "OR p.id IN :onlinePositionIds " +
-            "OR pt.id IN :onlinePositionTokenIds) " +
+            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
+            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
             "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
             "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)"
     )
-    Page<Object[]> findByCartAndOptionalNavAndPa(
+    Page<Object[]> searchByCart(
         @Param("idCart") String idCart,
         @Param("nav") String nav,
         @Param("pa") String pa,
@@ -174,7 +174,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         """,
         nativeQuery = true
     )
-    List<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(
+    List<Object[]> searchExtra(
         @Param("searchValue") String searchValue,
         @Param("nav") String nav,
         @Param("pa") String pa,
@@ -185,6 +185,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
     );
 
     @Query(value = "SELECT " +
+        "p.id AS positionId, " +
+        "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
         "ape.description AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
@@ -217,14 +219,26 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE p.nav = :nav " +
         "AND p.paEmittente = :paEmittente " +
+        "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
         "ORDER BY  p.lastEvent DESC ",
         countQuery =
             "SELECT COUNT(pt.id) " +
                 "FROM Position p " +
                 "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
                 "WHERE p.nav = :nav " +
-                "AND p.paEmittente = :paEmittente ")
-    Page<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
+                "AND p.paEmittente = :paEmittente " +
+                "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+                "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+                "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)")
+    Page<Object[]> findPositionDetailRows(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT " +
         "p.nav AS nav, " +

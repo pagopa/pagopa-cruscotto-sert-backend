@@ -15,9 +15,9 @@ public interface SertService {
     Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart,LocalDate dateFrom ,LocalDate dateTo,Pageable pageable);
     Page<PositionPaymentExtraDTO> searchByToken( String pa, String nav,String token,LocalDate dateFrom ,LocalDate dateTo,Pageable pageable);
     Page<PositionPaymentExtraDTO> searchExtra(String pa, String nav, String searchValue,LocalDate dateFrom ,LocalDate dateTo,Pageable pageable);
-    Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, Pageable pageable);
-    TokenInfoDTO getTokenInfo(String token);
+    Page<PositionPaymentDTO> getPosition(String nav, String paEmittente,LocalDate dateFrom ,LocalDate dateTo, Pageable pageable);
+    TokenInfoDTO getTokenInfo(String token,LocalDate dateFrom ,LocalDate dateTo);
     Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable);
-    Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable);
-    Page<ExtraInfoResponseDTO> getExtraInfo(String token, Pageable pageable);
+    Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente,LocalDate dateFrom ,LocalDate dateTo, Pageable pageable);
+    Page<ExtraInfoResponseDTO> getExtraInfo(String token,LocalDate dateFrom ,LocalDate dateTo, Pageable pageable);
 }

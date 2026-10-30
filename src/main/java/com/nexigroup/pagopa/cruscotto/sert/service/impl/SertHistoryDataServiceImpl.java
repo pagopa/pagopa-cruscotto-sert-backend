@@ -40,7 +40,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = historyPositionRepository.findByNavOrPa(nav, pa, dateFrom ,dateTo, pageable);
+        Page<Object[]> groupRow = historyPositionRepository.searchByNav(nav, pa, dateFrom ,dateTo, pageable);
         if (groupRow == null || groupRow.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -55,7 +55,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        List<Object[]> onlineRows = onlinePositionRepository.findByIuvAndOptionalNavAndPaId(
+        List<Object[]> onlineRows = onlinePositionRepository.searchByIuv(
             iuv,
             nav,
             pa,
@@ -69,7 +69,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> ((Number) row[1]).intValue())
             .toList();
 
-        Page<Object[]> groupRow = historyPositionRepository.findByIuvAndOptionalNavAndPa(
+        Page<Object[]> groupRow = historyPositionRepository.searchByIuv(
             iuv,
             nav,
             pa,
@@ -91,7 +91,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        List<Object[]> onlineRows = onlinePositionRepository.findByCartAndOptionalNavAndPaId(
+        List<Object[]> onlineRows = onlinePositionRepository.searchByCart(
             idCart,
             nav,
             pa,
@@ -105,7 +105,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> ((Number) row[1]).intValue())
             .toList();
 
-        Page<Object[]> groupRow = historyPositionRepository.findByCartAndOptionalNavAndPa(
+        Page<Object[]> groupRow = historyPositionRepository.searchByCart(
             idCart,
             nav,
             pa,
@@ -133,7 +133,7 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        List<Object[]> onlineRows = onlinePositionRepository.findByTokenAndOptionalNavAndPaId(
+        List<Object[]> onlineRows = onlinePositionRepository.searchByToken(
             normalizedToken,
             nav,
             pa,
@@ -147,7 +147,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> ((Number) row[1]).intValue())
             .toList();
 
-        Page<Object[]> groupRow = historyPositionRepository.findByTokenAndOptionalNavAndPa(
+        Page<Object[]> groupRow = historyPositionRepository.searchByToken(
             normalizedToken,
             nav,
             pa,
@@ -173,7 +173,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
-        List<Object[]> onlineRows = onlinePositionRepository.findGroupedByExtraValueAndOptionalNavAndPaId(
+        List<Object[]> onlineRows = onlinePositionRepository.searchExtra(
             searchValue,
             nav,
             pa
@@ -190,7 +190,7 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         log.info(searchValue +" :chiamata alla query in historyPositionRepository");
 
-        List<Object[]> groupedRows = historyPositionRepository.findGroupedByExtraValueAndOptionalNavAndPa(
+        List<Object[]> groupedRows = historyPositionRepository.searchExtra(
             searchValue,
             nav,
             pa,
@@ -244,22 +244,43 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, Pageable pageable) {
+    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        //onlinePositionRepository.findByNavOrPa()
+        Page<Object[]> historyPositionRows = historyPositionRepository.findPositionDetailRows(
+            nav, paEmittente, dateFrom, dateTo, Pageable.unpaged()
+        );
+        List<Object[]> safeHistoryRows = historyPositionRows == null || historyPositionRows.getContent() == null
+            ? List.of()
+            : historyPositionRows.getContent();
+        String onlinePositionIds = safeHistoryRows.stream()
+            .map(row -> ((Number) row[0]).intValue())
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        String onlinePositionTokenIds = safeHistoryRows.stream()
+            .map(row -> ((Number) row[1]).intValue())
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
 
-        Page<Object[]> rows = historyPositionRepository.findPositionDetailRows(nav, paEmittente, pageable);
-        if (rows == null || rows.isEmpty()) {
+        Page<Object[]> onlinePositionPage = onlinePositionRepository.findPositionDetailRows(
+            nav, paEmittente, onlinePositionIds, onlinePositionTokenIds, Pageable.unpaged()
+        );
+        List<Object[]> safeOnlineRows = onlinePositionPage == null || onlinePositionPage.getContent() == null
+            ? List.of()
+            : onlinePositionPage.getContent();
+
+        List<Object[]> rows = mergePositionRows(safeHistoryRows, safeOnlineRows);
+        if (rows.isEmpty()) {
             return Page.empty(pageable);
         }
+        sortPositionRows(rows, pageable);
 
-        Object[] firstRow = rows.getContent().get(0);
-        Object[] preferredRow = rows.stream().filter(row -> row[5] != null).findFirst().orElse(firstRow);
-        Object[] payedRow = rows.stream().filter(row -> row[7] != null && row[5] != null).findFirst().orElse(null);
+        Object[] firstRow = rows.stream().filter(row -> row[2] != null).findFirst().orElse(rows.get(0));
+        Object[] preferredRow = rows.stream().filter(row -> row[7] != null).findFirst().orElse(firstRow);
+        Object[] payedRow = rows.stream().filter(row -> row[9] != null && row[7] != null).findFirst().orElse(null);
 
         List<String> allTokens = rows.stream()
-            .map(row -> tokenAsHex(row[5]))
+            .map(row -> tokenAsHex(row[7]))
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
@@ -269,56 +290,137 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         PositionPaymentDTO dto = PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(firstRow[0]))
-                .paEmittente(asString(firstRow[1]))
-                .iuv(asString(preferredRow[3]))
-                .creditorReferenceId(asString(preferredRow[4]))
-                .lastEvent(toInstant(firstRow[2]))
+                .nav(asString(firstRow[2]))
+                .paEmittente(asString(firstRow[3]))
+                .iuv(asString(preferredRow[5]))
+                .creditorReferenceId(asString(preferredRow[6]))
+                .lastEvent(toInstant(firstRow[4]))
                 .isCached(false)
                 .build())
-            .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
+            .tokens((long) allTokens.size())
             .allTokens(allTokens)
-            .tokenBorn(toInstantFromDate(payedRow[6]))
+            .tokenBorn(payedRow == null ? null : toInstantFromDate(payedRow[8]))
             .payed(
                 payedRow == null
                     ? null
                     : PayedDTO.builder()
-                    .token(tokenAsHex(payedRow[5]))
-                    .payedDate(toInstant(payedRow[7]))
+                    .token(tokenAsHex(payedRow[7]))
+                    .payedDate(toInstant(payedRow[9]))
                     .multiOutcome(multiOutcome)
                     .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(preferredRow[11]))
-                .pspDescription(asString(preferredRow[19]))
-                .ptPa(asString(preferredRow[12]))
-                .ptPaDescription(asString(preferredRow[20]))
-                .ptPsp(asString(preferredRow[13]))
-                .ptPspDescription(asString(preferredRow[21]))
-                .station(asString(preferredRow[14]))
-                .channel(asString(preferredRow[15]))
+                .psp(asString(preferredRow[13]))
+                .pspDescription(asString(preferredRow[21]))
+                .ptPa(asString(preferredRow[14]))
+                .ptPaDescription(asString(preferredRow[22]))
+                .ptPsp(asString(preferredRow[15]))
+                .ptPspDescription(asString(preferredRow[23]))
+                .station(asString(preferredRow[16]))
+                .channel(asString(preferredRow[17]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(preferredRow[9]))
-                .fee(toDouble(preferredRow[10]))
+                .amount(toDouble(preferredRow[11]))
+                .fee(toDouble(preferredRow[12]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(preferredRow[16]))
-                .paymentMethod(asString(preferredRow[17]))
-                .isCart(rows.stream().anyMatch(r -> r[18] != null))  // true se almeno un token ha idCarrello != null
-                .idCarrello((rows.getTotalElements()==1 && firstRow[16]!=null) ? asString(firstRow[16]):null)
+                .touchpoint(asString(preferredRow[18]))
+                .paymentMethod(asString(preferredRow[19]))
+                .isCart(rows.stream().anyMatch(r -> r[20] != null))  // true se almeno un token ha idCarrello != null
+                .idCarrello((rows.size() == 1 && firstRow[20] != null) ? asString(firstRow[20]) : null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))
                 .build())
             .build();
 
-        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements());
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, allTokens.size());
+    }
+
+    private List<Object[]> mergePositionRows(List<Object[]> historyRows, List<Object[]> onlineRows) {
+        Map<String, Object[]> rowsByToken = new LinkedHashMap<>();
+        historyRows.forEach(row -> rowsByToken.put(positionRowKey(row), row.clone()));
+        onlineRows.forEach(onlineRow -> {
+            String key = positionRowKey(onlineRow);
+            Object[] existingRow = rowsByToken.get(key);
+            if (existingRow == null) {
+                rowsByToken.put(key, onlineRow.clone());
+                return;
+            }
+            for (int i = 0; i < existingRow.length; i++) {
+                if (onlineRow[i] != null) {
+                    existingRow[i] = onlineRow[i];
+                }
+            }
+        });
+        return new ArrayList<>(rowsByToken.values());
+    }
+
+    private String positionRowKey(Object[] row) {
+        if (row[1] != null) {
+            return "token:" + row[1];
+        }
+        if (row[7] != null) {
+            return "tokenHex:" + row[7];
+        }
+        return "position:" + row[0];
+    }
+
+    private void sortPositionRows(List<Object[]> rows, Pageable pageable) {
+        List<Sort.Order> orders = pageable.getSort().isSorted()
+            ? pageable.getSort().toList()
+            : List.of(Sort.Order.desc("tokenDateEvent"));
+        rows.sort((left, right) -> {
+            for (Sort.Order order : orders) {
+                Object leftValue = positionSortValue(left, order.getProperty());
+                Object rightValue = positionSortValue(right, order.getProperty());
+                int comparison;
+                if (leftValue == null || rightValue == null) {
+                    comparison = leftValue == rightValue ? 0 : (leftValue == null ? 1 : -1);
+                } else {
+                    comparison = comparePositionSortValues(leftValue, rightValue);
+                    if (!order.isAscending()) {
+                        comparison = -comparison;
+                    }
+                }
+                if (comparison != 0) {
+                    return comparison;
+                }
+            }
+            long leftId = left[1] instanceof Number id ? id.longValue() : Long.MIN_VALUE;
+            long rightId = right[1] instanceof Number id ? id.longValue() : Long.MIN_VALUE;
+            return Long.compare(rightId, leftId);
+        });
+    }
+
+    private Object positionSortValue(Object[] row, String property) {
+        return switch (property) {
+            case "tokenDateEvent" -> toInstantFromDate(row[8]);
+            case "paymentDate" -> toInstant(row[9]);
+            case "psp" -> asString(row[13]);
+            case "ptPsp" -> asString(row[15]);
+            case "amount" -> row[11] instanceof Number number ? number.doubleValue() : null;
+            case "paymentMethod" -> asString(row[19]);
+            case "touchpoint" -> asString(row[18]);
+            case "ptPaDesc" -> asString(row[22]);
+            case "tokenHex" -> asString(row[7]);
+            default -> null;
+        };
+    }
+
+    private int comparePositionSortValues(Object left, Object right) {
+        if (left instanceof java.time.Instant leftInstant && right instanceof java.time.Instant rightInstant) {
+            return leftInstant.compareTo(rightInstant);
+        }
+        if (left instanceof Number leftNumber && right instanceof Number rightNumber) {
+            return Double.compare(leftNumber.doubleValue(), rightNumber.doubleValue());
+        }
+        return left.toString().compareTo(right.toString());
     }
 
 
     @Override
-    public TokenInfoDTO getTokenInfo(String token) {
+    public TokenInfoDTO getTokenInfo(String token, LocalDate dateFrom, LocalDate dateTo) {
         log.debug("Request to get token info: {}", token);
 
         if (token == null || token.trim().isEmpty()) {
@@ -435,7 +537,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
+    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
         Page<Object[]> workflowEvents = historyPositionRepository.findPositionWorkflows(nav, paEmittente, pageable);
@@ -485,7 +587,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, Pageable pageable) {
+    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
         Page<Object[]> rows = historyPositionRepository.findExtraInfoByToken(token.trim(),pageable);

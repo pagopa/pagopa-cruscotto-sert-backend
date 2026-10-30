@@ -90,6 +90,8 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
     );
 
     @Query(value = "SELECT " +
+        "p.id AS positionId, " +
+        "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
         "ape.description AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
@@ -98,6 +100,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
         "pt.dateEvent AS tokenDateEvent, " +
         "pt.paymentDate AS paymentDate, " +
+        "pt.outcome AS outcome, " +
         "pt.amount AS amount, " +
         "pt.fee AS fee, " +
         "apsp.codice AS psp, " +
@@ -119,16 +122,28 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE p.nav = :nav " +
-        "AND p.paEmittente = :paEmittente " +
+        "WHERE ((p.nav = :nav AND p.paEmittente = :paEmittente) " +
+        "OR (:onlinePositionIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionIds), ','), " +
+        "CONCAT(CONCAT(',', CAST(p.id AS string)), ',')) > 0) " +
+        "OR (:onlinePositionTokenIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionTokenIds), ','), " +
+        "CONCAT(CONCAT(',', CAST(pt.id AS string)), ',')) > 0)) " +
         "ORDER BY  p.lastEvent DESC ",
         countQuery =
             "SELECT COUNT(pt.id) " +
                 "FROM Position p " +
                 "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-                "WHERE p.nav = :nav " +
-                "AND p.paEmittente = :paEmittente ")
-    Page<Object[]> findPositionDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, Pageable pageable);
+                "WHERE ((p.nav = :nav AND p.paEmittente = :paEmittente) " +
+                "OR (:onlinePositionIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionIds), ','), " +
+                "CONCAT(CONCAT(',', CAST(p.id AS string)), ',')) > 0) " +
+                "OR (:onlinePositionTokenIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionTokenIds), ','), " +
+                "CONCAT(CONCAT(',', CAST(pt.id AS string)), ',')) > 0))")
+    Page<Object[]> findPositionDetailRows(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente,
+        @Param("onlinePositionIds") String onlinePositionIds,
+        @Param("onlinePositionTokenIds") String onlinePositionTokenIds,
+        Pageable pageable
+    );
 
     @Query(value = "SELECT " +
         "p.nav AS nav, " +
@@ -307,7 +322,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
         "GROUP BY p.id, pt.id ")
-    List<Object[]> findByIuvAndOptionalNavAndPaId(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+    List<Object[]> searchByIuv(@Param("param") String param, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
@@ -315,7 +330,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
         "GROUP BY p.id, pt.id ")
-    List<Object[]> findByTokenAndOptionalNavAndPaId(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+    List<Object[]> searchByToken(@Param("token") String token, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
         "WHERE pt.fkPosition = p.id " +
@@ -323,7 +338,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "AND (:nav IS NULL OR p.nav = :nav) " +
         "AND (:pa IS NULL OR p.paEmittente = :pa) " +
         "GROUP BY p.id, pt.id ")
-    List<Object[]> findByCartAndOptionalNavAndPaId(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
+    List<Object[]> searchByCart(@Param("idCart") String idCart, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
 
 
@@ -344,7 +359,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         """,
         nativeQuery = true
     )
-    List<Object[]> findGroupedByExtraValueAndOptionalNavAndPaId(
+    List<Object[]> searchExtra(
         @Param("searchValue") String searchValue,
         @Param("nav") String nav,
         @Param("pa") String pa

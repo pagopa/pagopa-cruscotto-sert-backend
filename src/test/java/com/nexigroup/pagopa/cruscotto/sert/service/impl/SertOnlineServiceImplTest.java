@@ -62,33 +62,36 @@ class SertOnlineServiceImplTest {
     @Test
     void mapsPositionDetailsAfterRemovingUnusedOutcomeColumn() {
         var pageable = PageRequest.of(0, 10);
-        Object[] row = new Object[21];
-        row[0] = "NAV-1";
-        row[1] = "PA description";
-        row[2] = Instant.parse("2026-01-01T00:00:00Z");
-        row[3] = "IUV-1";
-        row[4] = "CRID-1";
-        row[5] = "61626364";
-        row[6] = java.sql.Date.valueOf("2026-01-02");
-        row[7] = Instant.parse("2026-01-03T00:00:00Z");
-        row[8] = new java.math.BigDecimal("12.50");
-        row[9] = new java.math.BigDecimal("1.50");
-        row[10] = "PSP";
-        row[11] = "PT-PA";
-        row[12] = "PT-PSP";
-        row[13] = "STATION";
-        row[14] = "CHANNEL";
-        row[15] = "TOUCHPOINT";
-        row[16] = "CARD";
-        row[17] = "CART-1";
-        row[18] = "PSP description";
-        row[19] = "PT-PA description";
-        row[20] = "PT-PSP description";
-        when(onlinePositionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
+        Object[] row = new Object[24];
+        row[0] = 1;
+        row[1] = 2;
+        row[2] = "NAV-1";
+        row[3] = "PA description";
+        row[4] = Instant.parse("2026-01-01T00:00:00Z");
+        row[5] = "IUV-1";
+        row[6] = "CRID-1";
+        row[7] = "61626364";
+        row[8] = java.sql.Date.valueOf("2026-01-02");
+        row[9] = Instant.parse("2026-01-03T00:00:00Z");
+        row[10] = "OK";
+        row[11] = new java.math.BigDecimal("12.50");
+        row[12] = new java.math.BigDecimal("1.50");
+        row[13] = "PSP";
+        row[14] = "PT-PA";
+        row[15] = "PT-PSP";
+        row[16] = "STATION";
+        row[17] = "CHANNEL";
+        row[18] = "TOUCHPOINT";
+        row[19] = "CARD";
+        row[20] = "CART-1";
+        row[21] = "PSP description";
+        row[22] = "PT-PA description";
+        row[23] = "PT-PSP description";
+        when(onlinePositionRepository.findPositionDetailRows("NAV-1", "PA-1", null, null, pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
         when(onlinePositionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
 
-        var result = service.getPosition("NAV-1", "PA-1", pageable);
+        var result = service.getPosition("NAV-1", "PA-1", LocalDate.now(), LocalDate.now(), pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(position -> {
             assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
@@ -131,7 +134,7 @@ class SertOnlineServiceImplTest {
         when(onlinePositionRepository.findTokenDetailRow("61626364")).thenReturn(List.<Object[]>of(row));
         when(onlinePositionRepository.countOkTokensByNavAndPa("351234567890123456", "PA-1")).thenReturn(2L);
 
-        var token = service.getTokenInfo(" 61626364 ");
+        var token = service.getTokenInfo(" 61626364 ", DATE_FROM, DATE_TO);
 
         assertThat(token.getIsPayedToken()).isTrue();
         assertThat(token.getPositionInfo().getNav()).isEqualTo("351234567890123456");
@@ -141,7 +144,7 @@ class SertOnlineServiceImplTest {
         assertThat(token.getAmount().getAmount()).isEqualTo(12.5);
         assertThat(token.getPaymentInfo().getIsCart()).isTrue();
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
-        assertThat(service.getTokenInfo(" ")).isNull();
+        assertThat(service.getTokenInfo(" ", DATE_FROM, DATE_TO)).isNull();
     }
 
     @Test
@@ -194,7 +197,7 @@ class SertOnlineServiceImplTest {
         event[8] = "id-1";
         when(onlinePositionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(event), pageable, 1));
-        var workflows = service.getWorkflows("NAV-1", "PA-1", pageable);
+        var workflows = service.getWorkflows("NAV-1", "PA-1", DATE_FROM, DATE_TO, pageable);
         assertThat(workflows.getContent()).singleElement().satisfies(response -> {
             assertThat(response.getEventsPosition()).singleElement().satisfies(item -> {
                 assertThat(item.getSottotipoevento()).isEqualTo("REQ");
@@ -213,7 +216,7 @@ class SertOnlineServiceImplTest {
         when(onlinePositionRepository.findExtraInfoByToken("token", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(visible, nameless), pageable, 2));
 
-        var extraInfo = service.getExtraInfo("token", pageable);
+        var extraInfo = service.getExtraInfo("token", DATE_FROM, DATE_TO, pageable);
         assertThat(extraInfo.getContent()).singleElement().satisfies(response -> {
             assertThat(response.getCount()).isEqualTo(2L);
             assertThat(response.getResults()).singleElement().satisfies(item -> {

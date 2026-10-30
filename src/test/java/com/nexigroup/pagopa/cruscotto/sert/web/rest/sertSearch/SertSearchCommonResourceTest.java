@@ -186,8 +186,10 @@ class SertSearchCommonResourceTest {
     void returnsPositionAndTokenDetails() {
         PositionPaymentDTO position = PositionPaymentDTO.builder().build();
         TokenInfoDTO tokenInfo = TokenInfoDTO.builder().build();
-        when(service.getPosition(eq("nav-1"), eq("pa-1"), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(position)));
-        when(service.getTokenInfo(eq("token-1"))).thenReturn(tokenInfo);
+        when(service.getPosition(
+            eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.of(position)));
+        when(service.getTokenInfo(eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO))).thenReturn(tokenInfo);
 
         ResponseEntity<PositionPaymentDTO> positionResponse = resource.getPosition(
             "nav-1", "pa-1", false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
@@ -209,9 +211,9 @@ class SertSearchCommonResourceTest {
             eq("nav-1"), eq("pa-1"), eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(transfer)));
-        when(service.getWorkflows(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
+        when(service.getWorkflows(eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(WorkflowResponseDTO.builder().eventsPosition(List.of(workflow)).build())));
-        when(service.getExtraInfo(eq("token-1"), any(Pageable.class)))
+        when(service.getExtraInfo(eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
         ResponseEntity<TransferPaymentDTO> transferResponse = resource.getTransfers(
@@ -237,16 +239,22 @@ class SertSearchCommonResourceTest {
         TransferPaymentDTO transfer = TransferPaymentDTO.builder().build();
         WorkflowObjectDTO workflow = WorkflowObjectDTO.builder().build();
         ExtraInfoResponseDTO extraInfo = ExtraInfoResponseDTO.builder().build();
-        when(freezeDataService.getPosition(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
+        when(freezeDataService.getPosition(
+            eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
             .thenReturn(new PageImpl<>(List.of(position)));
-        when(freezeDataService.getTokenInfo("token-1")).thenReturn(tokenInfo);
+        when(freezeDataService.getTokenInfo("token-1", VALID_DATE_FROM, VALID_DATE_TO)).thenReturn(tokenInfo);
         when(freezeDataService.getTransfers(
             eq("nav-1"), eq("pa-1"), eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(transfer)));
-        when(freezeDataService.getWorkflows(eq("nav-1"), eq("pa-1"), any(Pageable.class)))
+        when(freezeDataService.getWorkflows(
+            eq("nav-1"), eq("pa-1"), isNull(), isNull(), any(Pageable.class)
+        ))
             .thenReturn(new PageImpl<>(List.of(WorkflowResponseDTO.builder().eventsPosition(List.of(workflow)).build())));
-        when(freezeDataService.getExtraInfo(eq("token-1"), any(Pageable.class)))
+        when(freezeDataService.getExtraInfo(
+            eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
         assertThat(resource.getPosition(

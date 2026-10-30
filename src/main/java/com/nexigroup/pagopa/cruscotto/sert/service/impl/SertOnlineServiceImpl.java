@@ -164,20 +164,20 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, Pageable pageable) {
+    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        Page<Object[]> rows = onlinePositionRepository.findPositionDetailRows(nav, paEmittente, pageable);
+        Page<Object[]> rows = onlinePositionRepository.findPositionDetailRows(nav, paEmittente, null, null, pageable);
         if (rows == null || rows.isEmpty()) {
             return Page.empty(pageable);
         }
 
         Object[] firstRow = rows.getContent().get(0);
-        Object[] preferredRow = rows.stream().filter(row -> row[5] != null).findFirst().orElse(firstRow);
-        Object[] payedRow = rows.stream().filter(row -> row[7] != null && row[5] != null).findFirst().orElse(null);
+        Object[] preferredRow = rows.stream().filter(row -> row[7] != null).findFirst().orElse(firstRow);
+        Object[] payedRow = rows.stream().filter(row -> row[9] != null && row[7] != null).findFirst().orElse(null);
 
         List<String> allTokens = rows.stream()
-            .map(row -> tokenAsHex(row[5]))
+            .map(row -> tokenAsHex(row[7]))
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
@@ -187,45 +187,44 @@ public class SertOnlineServiceImpl implements SertService {
 
         PositionPaymentDTO dto = PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(firstRow[0]))
-                .paEmittente(asString(firstRow[1]))
-                .iuv(asString(preferredRow[3]))
-                .creditorReferenceId(asString(preferredRow[4]))
-                .lastEvent(toInstant(firstRow[2]))
+                .nav(asString(firstRow[2]))
+                .paEmittente(asString(firstRow[3]))
+                .iuv(asString(preferredRow[5]))
+                .creditorReferenceId(asString(preferredRow[6]))
+                .lastEvent(toInstant(firstRow[4]))
                 .isCached(false)
                 .build())
             .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
-            .tokenBorn(toInstantFromDate(payedRow[6]))
+            .tokenBorn(payedRow == null ? null : toInstantFromDate(payedRow[8]))
             .payed(
                 payedRow == null
                     ? null
                     : PayedDTO.builder()
-                        .token(tokenAsHex(payedRow[5]))
-
-                        .payedDate(toInstant(payedRow[7]))
+                        .token(tokenAsHex(payedRow[7]))
+                        .payedDate(toInstant(payedRow[9]))
                         .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(preferredRow[10]))
-                .pspDescription(asString(preferredRow[18]))
-                .ptPa(asString(preferredRow[11]))
-                .ptPaDescription(asString(preferredRow[19]))
-                .ptPsp(asString(preferredRow[12]))
-                .ptPspDescription(asString(preferredRow[20]))
-                .station(asString(preferredRow[13]))
-                .channel(asString(preferredRow[14]))
+                .psp(asString(preferredRow[13]))
+                .pspDescription(asString(preferredRow[21]))
+                .ptPa(asString(preferredRow[14]))
+                .ptPaDescription(asString(preferredRow[22]))
+                .ptPsp(asString(preferredRow[15]))
+                .ptPspDescription(asString(preferredRow[23]))
+                .station(asString(preferredRow[16]))
+                .channel(asString(preferredRow[17]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(preferredRow[8]))
-                .fee(toDouble(preferredRow[9]))
+                .amount(toDouble(preferredRow[11]))
+                .fee(toDouble(preferredRow[12]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(preferredRow[15]))
-                .paymentMethod(asString(preferredRow[16]))
-                .isCart(rows.stream().anyMatch(r -> r[17] != null))  // true se almeno un token ha idCarrello != null
-                .idCarrello((rows.getTotalElements()==1 && firstRow[16]!=null) ? asString(firstRow[16]):null)
+                .touchpoint(asString(preferredRow[18]))
+                .paymentMethod(asString(preferredRow[19]))
+                .isCart(rows.stream().anyMatch(r -> r[20] != null))  // true se almeno un token ha idCarrello != null
+                .idCarrello((rows.getTotalElements()==1 && firstRow[20]!=null) ? asString(firstRow[20]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))
@@ -237,7 +236,7 @@ public class SertOnlineServiceImpl implements SertService {
 
 
     @Override
-    public TokenInfoDTO getTokenInfo(String token) {
+    public TokenInfoDTO getTokenInfo(String token, LocalDate dateFrom, LocalDate dateTo) {
         log.debug("Request to get token info: {}", token);
 
         if (token == null || token.trim().isEmpty()) {
@@ -355,7 +354,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, Pageable pageable) {
+    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
         Page<Object[]> workflowEvents = onlinePositionRepository.findPositionWorkflows(nav, paEmittente, pageable);
@@ -405,7 +404,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, Pageable pageable) {
+    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
         Page<Object[]> rows = onlinePositionRepository.findExtraInfoByToken(token.trim(),pageable);
