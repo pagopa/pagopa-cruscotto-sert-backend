@@ -192,7 +192,7 @@ public class SertServiceImpl implements SertService {
                 .build())
             .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
-            .tokenBorn(toInstantFromDate(payedRow[6])) // ex paymentBorn
+            .tokenBorn((payedRow!=null &&payedRow[6] !=null)? toInstantFromDate(payedRow[6]): null) // ex paymentBorn
             .payed(
                 payedRow == null
                     ? null
@@ -267,7 +267,8 @@ public class SertServiceImpl implements SertService {
                 .isCached(false)
                 .build())
             .isPayedToken(isPayed)
-            .tokenBorn(toInstantFromDate(row[6]))  // ex paymentBorn
+
+            .tokenBorn(( row!=null && row[6] !=null) ? toInstantFromDate(row[6]):null)  // ex paymentBorn
             .payed(
                 !isPayed
                     ? null
