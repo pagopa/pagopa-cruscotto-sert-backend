@@ -243,7 +243,7 @@ public class SertOnlineServiceImpl implements SertService {
             return null;
         }
 
-        List<Object[]> rows = onlinePositionRepository.findTokenDetailRow(token.trim(), List.of(), List.of());
+        List<Object[]> rows = onlinePositionRepository.findTokenDetailRow(token.trim());
         if (rows == null || rows.isEmpty()) {
             return null;
         }

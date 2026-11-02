@@ -133,7 +133,7 @@ class SertOnlineServiceImplTest {
         row[11] = new java.math.BigDecimal("12.50");
         row[12] = 1.5;
         row[20] = "cart-1";
-        when(onlinePositionRepository.findTokenDetailRow("61626364", List.of(), List.of()))
+        when(onlinePositionRepository.findTokenDetailRow("61626364"))
             .thenReturn(List.<Object[]>of(row));
         when(onlinePositionRepository.countOkTokensByNavAndPa(
             "351234567890123456",
@@ -152,7 +152,7 @@ class SertOnlineServiceImplTest {
         assertThat(token.getAmount().getAmount()).isEqualTo(12.5);
         assertThat(token.getPaymentInfo().getIsCart()).isTrue();
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
-        verify(onlinePositionRepository).findTokenDetailRow("61626364", List.of(), List.of());
+        verify(onlinePositionRepository).findTokenDetailRow("61626364");
         assertThat(service.getTokenInfo(" ", DATE_FROM, DATE_TO)).isNull();
     }
 

@@ -51,10 +51,14 @@ class SertHistoryDataServiceImplTest {
         row[21] = "PSP description";
         row[22] = "PT-PA description";
         row[23] = "PT-PSP description";
-        when(historyRepository.findTokenDetailRow("61626364", dateFrom, dateTo)).thenReturn(List.<Object[]>of(row));
+        when(onlineRepository.findTokenDetailRow("abcd")).thenReturn(List.of());
+        when(historyRepository.findTokenDetailRow("abcd", dateFrom, dateTo, List.of()))
+            .thenReturn(List.<Object[]>of(row));
+        when(historyRepository.searchByNavIds("NAV-1", "PA-1", dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(new Object[] { 12, 34 }));
         when(historyRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
 
-        var result = service.getTokenInfo(" 61626364 ", dateFrom, dateTo);
+        var result = service.getTokenInfo(" abcd ", dateFrom, dateTo);
 
         assertThat(result.getPositionInfo().getNav()).isEqualTo("NAV-1");
         assertThat(result.getPositionInfo().getIuv()).isEqualTo("IUV-1");
@@ -62,8 +66,8 @@ class SertHistoryDataServiceImplTest {
         assertThat(result.getAmount().getAmount()).isEqualTo(12.5);
         assertThat(result.getActors().getPsp()).isEqualTo("PSP");
         assertThat(result.getPaymentInfo().getIdCarrello()).isEqualTo("CART-1");
-        verify(historyRepository).findTokenDetailRow("61626364", dateFrom, dateTo);
-        verify(onlineRepository).findTokenDetailRow("61626364", List.of(12), List.of(34));
+        verify(onlineRepository).findTokenDetailRow("abcd");
+        verify(historyRepository).findTokenDetailRow("abcd", dateFrom, dateTo, List.of());
     }
 
     @Test
@@ -74,16 +78,23 @@ class SertHistoryDataServiceImplTest {
         requestedToken[5] = "REQUESTED-IUV";
         requestedToken[9] = Instant.parse("2026-01-04T00:00:00Z");
         requestedToken[10] = "OK";
+        when(onlineRepository.findTokenDetailRow("abcd"))
+            .thenReturn(List.of(otherToken, requestedToken));
         when(historyRepository.findTokenDetailRow(
-            "61626364",
+            "abcd",
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 1, 31),
+            List.of(1)
+        )).thenReturn(List.<Object[]>of());
+        when(historyRepository.searchByNavIds(
+            "NAV-1",
+            "PA-1",
             LocalDate.of(2026, 1, 1),
             LocalDate.of(2026, 1, 31)
-        )).thenReturn(List.<Object[]>of());
-        when(onlineRepository.findTokenDetailRow("61626364", List.of(), List.of()))
-            .thenReturn(List.of(otherToken, requestedToken));
+        )).thenReturn(List.<Object[]>of(new Object[] { 1, 34 }));
 
         var result = service.getTokenInfo(
-            "61626364",
+            "abcd",
             LocalDate.of(2026, 1, 1),
             LocalDate.of(2026, 1, 31)
         );
@@ -114,13 +125,15 @@ class SertHistoryDataServiceImplTest {
         onlineTokenRow[11] = new java.math.BigDecimal("12.50");
         onlineTokenRow[12] = new java.math.BigDecimal("1.50");
         onlineTokenRow[13] = "PSP-ONLINE";
-        when(historyRepository.findTokenDetailRow("61626364", dateFrom, dateTo))
-            .thenReturn(List.<Object[]>of(offlinePositionRow));
-        when(onlineRepository.findTokenDetailRow("61626364", List.of(12), List.of(34)))
+        when(onlineRepository.findTokenDetailRow("abcd"))
             .thenReturn(List.<Object[]>of(onlineTokenRow));
+        when(historyRepository.findTokenDetailRow("abcd", dateFrom, dateTo, List.of(12)))
+            .thenReturn(List.<Object[]>of(offlinePositionRow));
+        when(historyRepository.searchByNavIds("NAV-OFFLINE", "PA-OFFLINE", dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(new Object[] { 12, 34 }));
         when(historyRepository.countOkTokensByNavAndPa("NAV-OFFLINE", "PA-OFFLINE")).thenReturn(1L);
 
-        var result = service.getTokenInfo("61626364", dateFrom, dateTo);
+        var result = service.getTokenInfo("abcd", dateFrom, dateTo);
 
         assertThat(result.getPositionInfo().getNav()).isEqualTo("NAV-OFFLINE");
         assertThat(result.getPositionInfo().getPaEmittente()).isEqualTo("PA-OFFLINE");

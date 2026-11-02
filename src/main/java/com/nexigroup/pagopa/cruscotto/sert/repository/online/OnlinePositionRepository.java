@@ -140,7 +140,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
     );
 
     @Query(value = "SELECT " +
-        "p.id AS positionId, " +
+        "pt.fkPosition AS positionId, " +
         "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
         "ape.description AS paEmittente, " +
@@ -165,22 +165,16 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "aipa.description AS ptPaDesc, " +
         "aipsp.description AS ptPspDesc " +
         "FROM PositionTokens pt " +
-        "JOIN Position p ON p.id = pt.fkPosition " +
+        "LEFT JOIN Position p ON p.id = pt.fkPosition " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
         "LEFT JOIN AnagIntermediarioPa aipa ON aipa.id = pt.intermediarioPa " +
         "LEFT JOIN AnagIntermediarioPsp aipsp ON aipsp.id = pt.intermediarioPsp " +
         "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-        "OR p.id IN (:offlinePositionIds) " +
-        "OR pt.id IN (:offlinePositionTokenIds)) " +
+        "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8')) " +
         "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
-    List<Object[]> findTokenDetailRow(
-        @Param("token") String token,
-        @Param("offlinePositionIds") List<Integer> offlinePositionIds,
-        @Param("offlinePositionTokenIds") List<Integer> offlinePositionTokenIds
-    );
+    List<Object[]> findTokenDetailRow(@Param("token") String token);
 
     @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, p.lastEvent AS lastEvent, " +
         "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +

@@ -393,22 +393,21 @@ public class SertHistoryDataServiceImpl implements SertService {
         if (token == null || token.trim().isEmpty()) {
             return null;
         }
-
-        List<Object[]> historyPositionRows = historyPositionRepository.findTokenDetailRow(token.trim(), dateFrom, dateTo);
-        List<Object[]> safeHistoryRows = historyPositionRows == null ? List.of() : historyPositionRows;
-        List<Integer> offlinePositionIds = extraIdsAsIntegers(safeHistoryRows, 0);
-        List<Integer> offlinePositionTokenIds = extraIdsAsIntegers(safeHistoryRows, 1);
-        List<Object[]> onlineRows = onlinePositionRepository.findTokenDetailRow(
-            token.trim(), offlinePositionIds, offlinePositionTokenIds);
+        List<Object[]> onlineRows = onlinePositionRepository.findTokenDetailRow(token.trim());
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+        List<Integer> offlinePositionIds = extraIdsAsIntegers(safeOnlineRows, 0);
+
+        List<Object[]> historyPositionRows = historyPositionRepository.findTokenDetailRow(token.trim(), dateFrom, dateTo,offlinePositionIds);
+        List<Object[]> safeHistoryRows = historyPositionRows == null ? List.of() : historyPositionRows;
+
+
         List<Object[]> rows = mergePositionRows(safeHistoryRows, safeOnlineRows);
         if (rows.isEmpty()) {
             return null;
         }
-        sortPositionRows(rows, Pageable.unpaged());
 
         Object[] tokenRow = rows.stream()
-            .filter(candidate -> token.trim().equalsIgnoreCase(asString(candidate[7])))
+            .filter(candidate -> token.trim().equalsIgnoreCase(tokenAsHex(candidate[7])))
             .findFirst()
             .orElse(null);
         if (tokenRow == null) {

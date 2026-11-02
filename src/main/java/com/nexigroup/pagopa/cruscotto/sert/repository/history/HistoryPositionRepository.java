@@ -273,7 +273,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "OR pt.fkPosition IN (:onlinePositionIds))"+
         "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
         "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
         "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
@@ -281,7 +282,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
     List<Object[]> findTokenDetailRow(
         @Param("token") String token,
         @Param("dateFrom") LocalDate dateFrom,
-        @Param("dateTo") LocalDate dateTo
+        @Param("dateTo") LocalDate dateTo,
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds
     );
 
     @Query(value = "SELECT p.nav AS nav, " +
