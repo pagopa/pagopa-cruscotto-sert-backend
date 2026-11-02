@@ -87,9 +87,9 @@ class SertOnlineServiceImplTest {
         row[21] = "PSP description";
         row[22] = "PT-PA description";
         row[23] = "PT-PSP description";
-        when(onlinePositionRepository.findPositionDetailRows("NAV-1", "PA-1", null, null, pageable))
+        when(onlinePositionRepository.findPositionDetailRows("NAV-1", "PA-1", List.of(), List.of(), pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
-        when(onlinePositionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
+        when(onlinePositionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1", List.of(), List.of())).thenReturn(1L);
 
         var result = service.getPosition("NAV-1", "PA-1", LocalDate.now(), LocalDate.now(), pageable);
 
@@ -118,21 +118,29 @@ class SertOnlineServiceImplTest {
         var pageable = PageRequest.of(0, 10);
         assertThat(service.searchExtra(null, null, null,  LocalDate.now(), LocalDate.now(), pageable)).isEmpty();
 
-        Object[] row = new Object[22];
-        row[0] = "351234567890123456";
-        row[1] = "PA-1";
-        row[2] = Instant.parse("2026-01-01T00:00:00Z");
-        row[3] = "IUV-1";
-        row[4] = "CRID-1";
-        row[5] = "61626364";
-        row[6] = java.sql.Date.valueOf("2026-01-02");
-        row[7] = Instant.parse("2026-01-03T00:00:00Z");
-        row[8] = "ok";
-        row[9] = new java.math.BigDecimal("12.50");
-        row[10] = 1.5;
-        row[18] = "cart-1";
-        when(onlinePositionRepository.findTokenDetailRow("61626364")).thenReturn(List.<Object[]>of(row));
-        when(onlinePositionRepository.countOkTokensByNavAndPa("351234567890123456", "PA-1")).thenReturn(2L);
+        Object[] row = new Object[24];
+        row[0] = 12;
+        row[1] = 34;
+        row[2] = "351234567890123456";
+        row[3] = "PA-1";
+        row[4] = Instant.parse("2026-01-01T00:00:00Z");
+        row[5] = "IUV-1";
+        row[6] = "CRID-1";
+        row[7] = "61626364";
+        row[8] = java.sql.Date.valueOf("2026-01-02");
+        row[9] = Instant.parse("2026-01-03T00:00:00Z");
+        row[10] = "ok";
+        row[11] = new java.math.BigDecimal("12.50");
+        row[12] = 1.5;
+        row[20] = "cart-1";
+        when(onlinePositionRepository.findTokenDetailRow("61626364", List.of(), List.of()))
+            .thenReturn(List.<Object[]>of(row));
+        when(onlinePositionRepository.countOkTokensByNavAndPa(
+            "351234567890123456",
+            "PA-1",
+            List.of(),
+            List.of()
+        )).thenReturn(2L);
 
         var token = service.getTokenInfo(" 61626364 ", DATE_FROM, DATE_TO);
 
@@ -144,6 +152,7 @@ class SertOnlineServiceImplTest {
         assertThat(token.getAmount().getAmount()).isEqualTo(12.5);
         assertThat(token.getPaymentInfo().getIsCart()).isTrue();
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
+        verify(onlinePositionRepository).findTokenDetailRow("61626364", List.of(), List.of());
         assertThat(service.getTokenInfo(" ", DATE_FROM, DATE_TO)).isNull();
     }
 

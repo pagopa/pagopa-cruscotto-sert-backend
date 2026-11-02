@@ -179,14 +179,8 @@ public class SertHistoryDataServiceImpl implements SertService {
             pa
         );
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
-        String onlinePositionIds = safeOnlineRows.stream()
-            .map(row -> ((Number) row[0]).intValue())
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
-        String onlinePositionTokenIds = safeOnlineRows.stream()
-            .map(row -> ((Number) row[1]).intValue())
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+        String onlinePositionIds = extraIds(safeOnlineRows, 0);
+        String onlinePositionTokenIds = extraIds(safeOnlineRows, 1);
 
         log.info(searchValue +" :chiamata alla query in historyPositionRepository");
 
@@ -253,14 +247,8 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> safeHistoryRows = historyPositionRows == null || historyPositionRows.getContent() == null
             ? List.of()
             : historyPositionRows.getContent();
-        String offlinePositionIds = safeHistoryRows.stream()
-            .map(row -> ((Number) row[0]).intValue())
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
-        String offlinePositionTokenIds = safeHistoryRows.stream()
-            .map(row -> ((Number) row[1]).intValue())
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+        List<Integer> offlinePositionIds = extraIdsAsIntegers(safeHistoryRows, 0);
+        List<Integer> offlinePositionTokenIds = extraIdsAsIntegers(safeHistoryRows, 1);
 
         Page<Object[]> onlinePositionPage = onlinePositionRepository.findPositionDetailRows(
             nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
@@ -406,20 +394,52 @@ public class SertHistoryDataServiceImpl implements SertService {
             return null;
         }
 
-        List<Object[]> rows = historyPositionRepository.findTokenDetailRow(token.trim());
-        if (rows == null || rows.isEmpty()) {
+        List<Object[]> historyPositionRows = historyPositionRepository.findTokenDetailRow(token.trim(), dateFrom, dateTo);
+        List<Object[]> safeHistoryRows = historyPositionRows == null ? List.of() : historyPositionRows;
+        List<Integer> offlinePositionIds = extraIdsAsIntegers(safeHistoryRows, 0);
+        List<Integer> offlinePositionTokenIds = extraIdsAsIntegers(safeHistoryRows, 1);
+        List<Object[]> onlineRows = onlinePositionRepository.findTokenDetailRow(
+            token.trim(), offlinePositionIds, offlinePositionTokenIds);
+        List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+        List<Object[]> rows = mergePositionRows(safeHistoryRows, safeOnlineRows);
+        if (rows.isEmpty()) {
             return null;
         }
+        sortPositionRows(rows, Pageable.unpaged());
 
-        Object[] row = rows.get(0);
-        Boolean isPayed = row[8] != null && "OK".equalsIgnoreCase(row[8].toString());
+        Object[] tokenRow = rows.stream()
+            .filter(candidate -> token.trim().equalsIgnoreCase(asString(candidate[7])))
+            .findFirst()
+            .orElse(null);
+        if (tokenRow == null) {
+            return null;
+        }
+        Object[] positionRow = rows.stream()
+            .filter(candidate -> hasPositionDetails(candidate) && samePositionId(candidate[0], tokenRow[0]))
+            .findFirst()
+            .orElse(tokenRow);
+        Boolean isPayed = tokenRow[10] != null && "OK".equalsIgnoreCase(tokenRow[10].toString());
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
-        String rowNav = asString(row[0]);
-        String rowPa  = asString(row[1]);
+        String rowNav = asString(positionRow[2]);
+        String rowPa  = asString(positionRow[3]);
         boolean multiOutcome = false;
         if (rowNav != null && rowPa != null) {
-            long okTokenCount = historyPositionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+
+            List<Object[]> historyByNavPa = historyPositionRepository.searchByNavIds(rowNav, rowPa, dateFrom, dateTo);
+
+            List<Integer> offlinePositionByNavPaIds = extraIdsAsIntegers(historyByNavPa, 0);
+            List<Integer> offlinePositionTokenByNavPaIds = extraIdsAsIntegers(historyByNavPa, 1);
+
+            long onlineOkTokenCount = onlinePositionRepository.countOkTokensByNavAndPa(
+                rowNav,
+                rowPa,
+                offlinePositionByNavPaIds,
+                offlinePositionTokenByNavPaIds
+            );
+
+            long historyOkTokenCount = historyPositionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+            long okTokenCount = onlineOkTokenCount + historyOkTokenCount;
             multiOutcome = okTokenCount > 1;
         }
 
@@ -427,46 +447,73 @@ public class SertHistoryDataServiceImpl implements SertService {
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(rowNav)
                 .paEmittente(rowPa)
-                .iuv(asString(row[3]))
-                .creditorReferenceId(asString(row[4]))
-                .lastEvent(toInstant(row[2]))
+                .iuv(asString(tokenRow[5]))
+                .creditorReferenceId(asString(tokenRow[6]))
+                .lastEvent(toInstant(positionRow[4]))
                 .isCached(false)
                 .build())
             .isPayedToken(isPayed)
-            .tokenBorn(toInstantFromDate(row[6]))
+            .tokenBorn(toInstantFromDate(tokenRow[8]))
             .payed(
                 !isPayed
                     ? null
                     : PayedDTO.builder()
-                    .token(tokenAsHex(row[5]))
-                    .payedDate(toInstant(row[7]))
+                    .token(tokenAsHex(tokenRow[7]))
+
+                    .payedDate(toInstant(tokenRow[9]))
                     .multiOutcome(multiOutcome)
                     .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(row[11]))
-                .pspDescription(asString(row[19]))
-                .ptPa(asString(row[12]))
-                .ptPaDescription(asString(row[20]))
-                .ptPsp(asString(row[13]))
-                .ptPspDescription(asString(row[21]))
-                .station(asString(row[14]))
-                .channel(asString(row[15]))
+                .psp(asString(tokenRow[13]))
+                .pspDescription(asString(tokenRow[21]))
+                .ptPa(asString(tokenRow[14]))
+                .ptPaDescription(asString(tokenRow[22]))
+                .ptPsp(asString(tokenRow[15]))
+                .ptPspDescription(asString(tokenRow[23]))
+                .station(asString(tokenRow[16]))
+                .channel(asString(tokenRow[17]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(row[9]))
-                .fee(toDouble(row[10]))
+                .amount(toDouble(tokenRow[11]))
+                .fee(toDouble(tokenRow[12]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(row[16]))
-                .paymentMethod(asString(row[17]))
-                .isCart(row[18] != null)  // true se idCarrello != null
-                .idCarrello(row[18] != null ? asString(row[18]):null)
+                .touchpoint(asString(tokenRow[18]))
+                .paymentMethod(asString(tokenRow[19]))
+                .isCart(tokenRow[20] != null)  // true se idCarrello != null
+                .idCarrello(tokenRow[20] != null ? asString(tokenRow[20]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(rowNav != null && rowNav.startsWith("351"))
                 .build())
             .build();
+    }
+
+    private static String extraIds(List<Object[]> safeHistoryRows, int x) {
+        return safeHistoryRows.stream()
+            .map(row -> ((Number) row[x]).intValue())
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+    }
+
+    private static List<Integer> extraIdsAsIntegers(List<Object[]> rows, int column) {
+        return rows.stream()
+            .map(row -> row[column])
+            .filter(Objects::nonNull)
+            .map(id -> ((Number) id).intValue())
+            .toList();
+    }
+
+    private boolean hasPositionDetails(Object[] row) {
+        return row[2] != null || row[3] != null || row[4] != null;
+    }
+
+    private boolean samePositionId(Object left, Object right) {
+        if (left instanceof Number leftId && right instanceof Number rightId) {
+            return leftId.longValue() == rightId.longValue();
+        }
+        return Objects.equals(left, right);
     }
 
     @Override

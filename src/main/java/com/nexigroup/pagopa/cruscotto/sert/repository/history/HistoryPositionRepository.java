@@ -42,8 +42,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND ((pt.iuv = :param OR pt.creditorRefId = :param) " +
-            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
-            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
+            "OR p.id IN :onlinePositionIds "+
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -56,8 +56,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND ((pt.iuv = :param OR pt.creditorRefId = :param) " +
-            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
-            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
+            "OR p.id IN :onlinePositionIds "+
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -79,8 +79,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
-            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
+            "OR p.id IN :onlinePositionIds "+
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -91,8 +91,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
-            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
+            "OR p.id IN :onlinePositionIds "+
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -114,8 +114,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.idCarrello = :idCart " +
-            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
-            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
+            "OR p.id IN :onlinePositionIds "+
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -128,8 +128,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
             "AND (pt.idCarrello = :idCart " +
-            "OR p.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionIds, ''), ',')::integer[], ARRAY[]::integer[])) "+
-            "OR pt.id = ANY(COALESCE(string_to_array(NULLIF(:onlinePositionTokenIds, ''), ',')::integer[], ARRAY[]::integer[]))) " +
+            "OR p.id IN :onlinePositionIds "+
+            "OR pt.id IN :onlinePositionTokenIds) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -241,6 +241,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
     );
 
     @Query(value = "SELECT " +
+        "p.id AS positionId, " +
+        "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
         "ape.description AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
@@ -272,8 +274,15 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
         "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
-    List<Object[]> findTokenDetailRow(@Param("token") String token);
+    List<Object[]> findTokenDetailRow(
+        @Param("token") String token,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
+    );
 
     @Query(value = "SELECT p.nav AS nav, " +
         "ape.description AS paEmittente, " +
@@ -417,4 +426,19 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         @Param("stations") List<Integer> stations,
         Pageable pageable
     );
+
+    @Query(value = "SELECT p.id, pt.id FROM Position p, PositionTokens pt " +
+        "WHERE pt.fkPosition = p.id " +
+        "AND  (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+        "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        "GROUP BY p.nav, p.paEmittente ")
+    List<Object[]> searchByNavIds(
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
+    );
+
 }

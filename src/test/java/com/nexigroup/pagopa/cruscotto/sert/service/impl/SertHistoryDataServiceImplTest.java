@@ -23,6 +23,115 @@ class SertHistoryDataServiceImplTest {
     private final SertHistoryDataServiceImpl service = new SertHistoryDataServiceImpl(historyRepository, onlineRepository);
 
     @Test
+    void getsTokenInfoWithDateRangeAndPositionIds() {
+        var dateFrom = LocalDate.of(2026, 1, 1);
+        var dateTo = LocalDate.of(2026, 1, 31);
+        Object[] row = new Object[24];
+        row[0] = 12;
+        row[1] = 34;
+        row[2] = "NAV-1";
+        row[3] = "PA-1";
+        row[4] = Instant.parse("2026-01-01T00:00:00Z");
+        row[5] = "IUV-1";
+        row[6] = "CRID-1";
+        row[7] = "61626364";
+        row[8] = java.sql.Date.valueOf("2026-01-02");
+        row[9] = Instant.parse("2026-01-03T00:00:00Z");
+        row[10] = "OK";
+        row[11] = new java.math.BigDecimal("12.50");
+        row[12] = new java.math.BigDecimal("1.50");
+        row[13] = "PSP";
+        row[14] = "PT-PA";
+        row[15] = "PT-PSP";
+        row[16] = "STATION";
+        row[17] = "CHANNEL";
+        row[18] = "TOUCHPOINT";
+        row[19] = "CARD";
+        row[20] = "CART-1";
+        row[21] = "PSP description";
+        row[22] = "PT-PA description";
+        row[23] = "PT-PSP description";
+        when(historyRepository.findTokenDetailRow("61626364", dateFrom, dateTo)).thenReturn(List.<Object[]>of(row));
+        when(historyRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
+
+        var result = service.getTokenInfo(" 61626364 ", dateFrom, dateTo);
+
+        assertThat(result.getPositionInfo().getNav()).isEqualTo("NAV-1");
+        assertThat(result.getPositionInfo().getIuv()).isEqualTo("IUV-1");
+        assertThat(result.getPayed().getToken()).isEqualTo("abcd");
+        assertThat(result.getAmount().getAmount()).isEqualTo(12.5);
+        assertThat(result.getActors().getPsp()).isEqualTo("PSP");
+        assertThat(result.getPaymentInfo().getIdCarrello()).isEqualTo("CART-1");
+        verify(historyRepository).findTokenDetailRow("61626364", dateFrom, dateTo);
+        verify(onlineRepository).findTokenDetailRow("61626364", List.of(12), List.of(34));
+    }
+
+    @Test
+    void sortsOnlineTokenRowsAndReturnsTheRequestedToken() {
+        Object[] otherToken = positionRow(1, 35, "NAV-1", "65666768", Instant.parse("2026-01-03T00:00:00Z"));
+        otherToken[5] = "OTHER-IUV";
+        Object[] requestedToken = positionRow(1, 34, "NAV-1", "61626364", Instant.parse("2026-01-02T00:00:00Z"));
+        requestedToken[5] = "REQUESTED-IUV";
+        requestedToken[9] = Instant.parse("2026-01-04T00:00:00Z");
+        requestedToken[10] = "OK";
+        when(historyRepository.findTokenDetailRow(
+            "61626364",
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 1, 31)
+        )).thenReturn(List.<Object[]>of());
+        when(onlineRepository.findTokenDetailRow("61626364", List.of(), List.of()))
+            .thenReturn(List.of(otherToken, requestedToken));
+
+        var result = service.getTokenInfo(
+            "61626364",
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 1, 31)
+        );
+
+        assertThat(result.getPositionInfo().getIuv()).isEqualTo("REQUESTED-IUV");
+        assertThat(result.getPayed().getToken()).isEqualTo("abcd");
+    }
+
+    @Test
+    void mapsPositionAndTokenInfoFromDifferentSourceRows() {
+        var dateFrom = LocalDate.of(2026, 1, 1);
+        var dateTo = LocalDate.of(2026, 1, 31);
+        Object[] offlinePositionRow = new Object[24];
+        offlinePositionRow[0] = 12;
+        offlinePositionRow[1] = 34;
+        offlinePositionRow[2] = "NAV-OFFLINE";
+        offlinePositionRow[3] = "PA-OFFLINE";
+        offlinePositionRow[4] = Instant.parse("2026-01-01T00:00:00Z");
+        Object[] onlineTokenRow = new Object[24];
+        onlineTokenRow[0] = 12L;
+        onlineTokenRow[1] = 34L;
+        onlineTokenRow[5] = "IUV-ONLINE";
+        onlineTokenRow[6] = "CRID-ONLINE";
+        onlineTokenRow[7] = "61626364";
+        onlineTokenRow[8] = java.sql.Date.valueOf("2026-01-02");
+        onlineTokenRow[9] = Instant.parse("2026-01-03T00:00:00Z");
+        onlineTokenRow[10] = "OK";
+        onlineTokenRow[11] = new java.math.BigDecimal("12.50");
+        onlineTokenRow[12] = new java.math.BigDecimal("1.50");
+        onlineTokenRow[13] = "PSP-ONLINE";
+        when(historyRepository.findTokenDetailRow("61626364", dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(offlinePositionRow));
+        when(onlineRepository.findTokenDetailRow("61626364", List.of(12), List.of(34)))
+            .thenReturn(List.<Object[]>of(onlineTokenRow));
+        when(historyRepository.countOkTokensByNavAndPa("NAV-OFFLINE", "PA-OFFLINE")).thenReturn(1L);
+
+        var result = service.getTokenInfo("61626364", dateFrom, dateTo);
+
+        assertThat(result.getPositionInfo().getNav()).isEqualTo("NAV-OFFLINE");
+        assertThat(result.getPositionInfo().getPaEmittente()).isEqualTo("PA-OFFLINE");
+        assertThat(result.getPositionInfo().getLastEvent()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
+        assertThat(result.getPositionInfo().getIuv()).isEqualTo("IUV-ONLINE");
+        assertThat(result.getPayed().getToken()).isEqualTo("abcd");
+        assertThat(result.getAmount().getAmount()).isEqualTo(12.5);
+        assertThat(result.getActors().getPsp()).isEqualTo("PSP-ONLINE");
+    }
+
+    @Test
     void getsHistoryPositionWithPositionAndTokenIdsInFirstTwoColumns() {
         var pageable = PageRequest.of(0, 10);
         Object[] row = new Object[24];
@@ -45,7 +154,13 @@ class SertHistoryDataServiceImplTest {
         assertThat(result.getContent().get(0).getPositionInfo().getNav()).isEqualTo("NAV-1");
         assertThat(result.getContent().get(0).getPositionInfo().getPaEmittente()).isEqualTo("PA-1");
         verify(historyRepository).findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged());
-        verify(onlineRepository).findPositionDetailRows("NAV-1", "PA-1", "12", "34", Pageable.unpaged());
+        verify(onlineRepository).findPositionDetailRows(
+            "NAV-1",
+            "PA-1",
+            List.of(12),
+            List.of(34),
+            Pageable.unpaged()
+        );
     }
 
     @Test
@@ -69,7 +184,13 @@ class SertHistoryDataServiceImplTest {
 
         when(historyRepository.findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.of(historyFirst, historySecond)));
-        when(onlineRepository.findPositionDetailRows("NAV-1", "PA-1", "1,1", "10,11", Pageable.unpaged()))
+        when(onlineRepository.findPositionDetailRows(
+            "NAV-1",
+            "PA-1",
+            List.of(1, 1),
+            List.of(10, 11),
+            Pageable.unpaged()
+        ))
             .thenReturn(new PageImpl<>(List.of(partialOnline, onlineOnly)));
 
         var result = service.getPosition("NAV-1", "PA-1", dateFrom, dateTo, pageable);
@@ -91,7 +212,7 @@ class SertHistoryDataServiceImplTest {
 
         when(historyRepository.findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.<Object[]>of()));
-        when(onlineRepository.findPositionDetailRows("NAV-1", "PA-1", "", "", Pageable.unpaged()))
+        when(onlineRepository.findPositionDetailRows("NAV-1", "PA-1", List.of(), List.of(), Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.<Object[]>of(onlineRow)));
 
         var result = service.getPosition("NAV-1", "PA-1", dateFrom, dateTo, pageable);

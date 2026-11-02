@@ -114,8 +114,8 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
         "aipsp.description AS ptPspDesc " +
-        "FROM Position p " +
-        "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+        "FROM PositionTokens pt  " +
+        "LEFT JOIN Position p  ON pt.fkPosition = p.id " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
         "LEFT JOIN AnagIntermediarioPa aipa ON aipa.id = pt.intermediarioPa " +
         "LEFT JOIN AnagIntermediarioPsp aipsp ON aipsp.id = pt.intermediarioPsp " +
@@ -123,29 +123,25 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE ((p.nav = :nav AND p.paEmittente = :paEmittente) " +
-        "OR (:onlinePositionIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionIds), ','), " +
-        "CONCAT(CONCAT(',', CAST(p.id AS string)), ',')) > 0) " +
-        "OR (:onlinePositionTokenIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionTokenIds), ','), " +
-        "CONCAT(CONCAT(',', CAST(pt.id AS string)), ',')) > 0)) " +
+        "OR pt.fkPosition IN (:onlinePositionIds))"+
         "ORDER BY  p.lastEvent DESC ",
         countQuery =
             "SELECT COUNT(pt.id) " +
                 "FROM Position p " +
                 "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
                 "WHERE ((p.nav = :nav AND p.paEmittente = :paEmittente) " +
-                "OR (:onlinePositionIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionIds), ','), " +
-                "CONCAT(CONCAT(',', CAST(p.id AS string)), ',')) > 0) " +
-                "OR (:onlinePositionTokenIds IS NOT NULL AND FUNCTION('STRPOS', CONCAT(CONCAT(',', :onlinePositionTokenIds), ','), " +
-                "CONCAT(CONCAT(',', CAST(pt.id AS string)), ',')) > 0))")
+                "OR pt.fkPosition IN (:onlinePositionIds))")
     Page<Object[]> findPositionDetailRows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
-        @Param("onlinePositionIds") String onlinePositionIds,
-        @Param("onlinePositionTokenIds") String onlinePositionTokenIds,
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
+        @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds,
         Pageable pageable
     );
 
     @Query(value = "SELECT " +
+        "p.id AS positionId, " +
+        "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
         "ape.description AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
@@ -176,9 +172,15 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "OR p.id IN (:offlinePositionIds) " +
+        "OR pt.id IN (:offlinePositionTokenIds)) " +
         "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
-    List<Object[]> findTokenDetailRow(@Param("token") String token);
+    List<Object[]> findTokenDetailRow(
+        @Param("token") String token,
+        @Param("offlinePositionIds") List<Integer> offlinePositionIds,
+        @Param("offlinePositionTokenIds") List<Integer> offlinePositionTokenIds
+    );
 
     @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, p.lastEvent AS lastEvent, " +
         "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
@@ -268,9 +270,16 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
 
     @Query("SELECT COUNT(pt) FROM PositionTokens pt, Position p " +
         "WHERE p.id = pt.fkPosition " +
-        "AND p.nav = :nav AND p.paEmittente = :paEmittente " +
+        "AND (p.nav = :nav AND p.paEmittente = :paEmittente " +
+        "OR p.id IN (:offlinePositionIds) " +
+        "OR pt.id IN (:offlinePositionTokenIds)) " +
         "AND UPPER(pt.outcome) = 'OK'")
-    long countOkTokensByNavAndPa(@Param("nav") String nav, @Param("paEmittente") String paEmittente);
+    long countOkTokensByNavAndPa(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente,
+        @Param("offlinePositionIds") List<Integer> offlinePositionIds,
+        @Param("offlinePositionTokenIds") List<Integer> offlinePositionTokenIds
+    );
 
     @Query(
         "SELECT DISTINCT p.nav AS nav, p.paEmittente AS paEmittente " +

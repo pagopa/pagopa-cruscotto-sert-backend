@@ -167,7 +167,7 @@ public class SertOnlineServiceImpl implements SertService {
     public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        Page<Object[]> rows = onlinePositionRepository.findPositionDetailRows(nav, paEmittente, null, null, pageable);
+        Page<Object[]> rows = onlinePositionRepository.findPositionDetailRows(nav, paEmittente, List.of(), List.of(), pageable);
         if (rows == null || rows.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -182,7 +182,7 @@ public class SertOnlineServiceImpl implements SertService {
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
-        long okTokenCount = onlinePositionRepository.countOkTokensByNavAndPa(nav, paEmittente);
+        long okTokenCount = onlinePositionRepository.countOkTokensByNavAndPa(nav, paEmittente, List.of(), List.of());
         boolean multiOutcome = okTokenCount > 1;
 
         PositionPaymentDTO dto = PositionPaymentDTO.builder()
@@ -243,20 +243,20 @@ public class SertOnlineServiceImpl implements SertService {
             return null;
         }
 
-        List<Object[]> rows = onlinePositionRepository.findTokenDetailRow(token.trim());
+        List<Object[]> rows = onlinePositionRepository.findTokenDetailRow(token.trim(), List.of(), List.of());
         if (rows == null || rows.isEmpty()) {
             return null;
         }
 
         Object[] row = rows.get(0);
-        Boolean isPayed = row[8] != null && "OK".equalsIgnoreCase(row[8].toString());
+        Boolean isPayed = row[10] != null && "OK".equalsIgnoreCase(row[10].toString());
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
-        String rowNav = asString(row[0]);
-        String rowPa  = asString(row[1]);
+        String rowNav = asString(row[2]);
+        String rowPa  = asString(row[3]);
         boolean multiOutcome = false;
         if (rowNav != null && rowPa != null) {
-            long okTokenCount = onlinePositionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
+            long okTokenCount = onlinePositionRepository.countOkTokensByNavAndPa(rowNav, rowPa, List.of(), List.of());
             multiOutcome = okTokenCount > 1;
         }
 
@@ -264,42 +264,42 @@ public class SertOnlineServiceImpl implements SertService {
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(rowNav)
                 .paEmittente(rowPa)
-                .iuv(asString(row[3]))
-                .creditorReferenceId(asString(row[4]))
-                .lastEvent(toInstant(row[2]))
+                .iuv(asString(row[5]))
+                .creditorReferenceId(asString(row[6]))
+                .lastEvent(toInstant(row[4]))
                 .isCached(false)
                 .build())
             .isPayedToken(isPayed)
-            .tokenBorn(toInstantFromDate(row[6]))
+            .tokenBorn(toInstantFromDate(row[8]))
             .payed(
                 !isPayed
                     ? null
                     : PayedDTO.builder()
-                        .token(tokenAsHex(row[5]))
+                        .token(tokenAsHex(row[7]))
 
-                        .payedDate(toInstant(row[7]))
+                        .payedDate(toInstant(row[9]))
                         .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(row[11]))
-                .pspDescription(asString(row[19]))
-                .ptPa(asString(row[12]))
-                .ptPaDescription(asString(row[20]))
-                .ptPsp(asString(row[13]))
-                .ptPspDescription(asString(row[21]))
-                .station(asString(row[14]))
-                .channel(asString(row[15]))
+                .psp(asString(row[13]))
+                .pspDescription(asString(row[21]))
+                .ptPa(asString(row[14]))
+                .ptPaDescription(asString(row[22]))
+                .ptPsp(asString(row[15]))
+                .ptPspDescription(asString(row[23]))
+                .station(asString(row[16]))
+                .channel(asString(row[17]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(row[9]))
-                .fee(toDouble(row[10]))
+                .amount(toDouble(row[11]))
+                .fee(toDouble(row[12]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(row[16]))
-                .paymentMethod(asString(row[17]))
-                .isCart(row[18] != null)  // true se idCarrello != null
-                .idCarrello(row[18] != null ? asString(row[18]):null)
+                .touchpoint(asString(row[18]))
+                .paymentMethod(asString(row[19]))
+                .isCart(row[20] != null)  // true se idCarrello != null
+                .idCarrello(row[20] != null ? asString(row[20]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(rowNav != null && rowNav.startsWith("351"))
