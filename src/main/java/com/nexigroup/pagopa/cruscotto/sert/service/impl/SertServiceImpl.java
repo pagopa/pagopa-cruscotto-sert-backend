@@ -221,7 +221,7 @@ public class SertServiceImpl implements SertService {
                 .touchpoint(asString(preferredRow[16]))
                 .paymentMethod(asString(preferredRow[17]))
                 .isCart(rows.stream().anyMatch(r -> r[18] != null))  // true se almeno un token ha idCarrello != null
-                .idCarrello(rows.getTotalElements()==1? asString(firstRow[16]):null)
+                .idCarrello(rows.getTotalElements()==1? asString(firstRow[18]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))
