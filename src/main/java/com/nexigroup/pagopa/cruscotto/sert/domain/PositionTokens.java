@@ -74,4 +74,13 @@ public class PositionTokens {
 
     @Column(name = "PAYMENT_DATE")
     private LocalDateTime paymentDate;
+
+    @Column(name = "INSERTED_TIMESTAMP")
+    private LocalDateTime insertedTimestamp;
+
+    @Column(name = "ING_CREATED_AT", insertable = false, updatable = false)
+    private LocalDateTime ingCreatedAt;
+
+    @Column(name = "ING_UPDATED_AT", insertable = false, updatable = false)
+    private LocalDateTime ingUpdatedAt;
 }

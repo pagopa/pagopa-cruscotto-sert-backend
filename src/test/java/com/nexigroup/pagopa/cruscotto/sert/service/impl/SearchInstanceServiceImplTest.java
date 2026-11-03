@@ -3,12 +3,15 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nexigroup.pagopa.cruscotto.sert.domain.AuthUser;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchInstance;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchPerimeterFile;
 import com.nexigroup.pagopa.cruscotto.sert.domain.SearchResult;
@@ -27,13 +30,18 @@ import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.CsvFromFilterGe
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.csv.CsvTemplate;
 import com.nexigroup.pagopa.cruscotto.sert.service.massivesearch.validator.MassiveSearchCsvValidator;
 import com.nexigroup.pagopa.cruscotto.sert.service.storage.BlobStorageService;
+import com.nexigroup.pagopa.cruscotto.sert.service.util.UserUtils;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -47,6 +55,7 @@ class SearchInstanceServiceImplTest {
     private SearchFilterRepository searchFilterRepository;
     private MassiveSearchCsvValidator csvValidator;
     private BlobStorageService blobStorageService;
+    private UserUtils userUtils;
     private SearchInstanceServiceImpl service;
 
     @BeforeEach
@@ -59,6 +68,10 @@ class SearchInstanceServiceImplTest {
         searchFilterRepository = mock(SearchFilterRepository.class);
         csvValidator = mock(MassiveSearchCsvValidator.class);
         blobStorageService = mock(BlobStorageService.class);
+        userUtils = mock(UserUtils.class);
+        AuthUser loggedUser = new AuthUser();
+        loggedUser.setId(99L);
+        when(userUtils.getLoggedUser()).thenReturn(loggedUser);
         service = new SearchInstanceServiceImpl(
             instanceRepository,
             executionRepository,
@@ -70,7 +83,8 @@ class SearchInstanceServiceImplTest {
             searchFilterRepository,
             csvValidator,
             new ObjectMapper(),
-            mock(SearchLookupService.class)
+            mock(SearchLookupService.class),
+            userUtils
         );
     }
 
@@ -92,6 +106,50 @@ class SearchInstanceServiceImplTest {
         assertThat(result.getCreatedAt()).isNotNull();
         assertThat(result.getUpdatedAt()).isNotNull();
         verify(instanceRepository).save(any(SearchInstance.class));
+    }
+
+    @Test
+    void includesCreatorAndUpdaterNamesInFindAllAndFindOne() {
+        UUID id = UUID.randomUUID();
+        Object[] searchRow = {
+            id,
+            "batch",
+            "CSV",
+            "READY",
+            Instant.parse("2026-01-01T10:00:00Z"),
+            Instant.parse("2026-01-02T10:00:00Z"),
+            "POSITION,TOKEN",
+            "Rossi Mario",
+            "Bianchi Anna",
+        };
+        when(instanceRepository.findBySearchAndCreatedAtBetween(
+            isNull(),
+            isNull(),
+            isNull(),
+            isNull(),
+            isNull(),
+            any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.<Object[]>of(searchRow)));
+        when(instanceRepository.findBySearchAndCreatedAtBetween(
+            eq(id),
+            isNull(),
+            isNull(),
+            isNull(),
+            isNull(),
+            any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.<Object[]>of(searchRow)));
+        when(perimeterFileRepository.findInstanceIdsWithContent(List.of(id))).thenReturn(List.of());
+        when(searchFilterRepository.findById(id)).thenReturn(Optional.empty());
+
+        var all = service.findAll(null, null, null, null, Pageable.ofSize(10));
+        var one = service.findOne(id).orElseThrow();
+
+        assertThat(all.getContent()).singleElement().satisfies(dto -> {
+            assertThat(dto.getCreatedBy()).isEqualTo("Rossi Mario");
+            assertThat(dto.getUpdatedBy()).isEqualTo("Bianchi Anna");
+        });
+        assertThat(one.getCreatedBy()).isEqualTo("Rossi Mario");
+        assertThat(one.getUpdatedBy()).isEqualTo("Bianchi Anna");
     }
 
     @Test

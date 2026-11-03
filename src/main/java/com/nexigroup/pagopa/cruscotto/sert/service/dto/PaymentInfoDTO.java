@@ -31,4 +31,9 @@ public class PaymentInfoDTO implements Serializable {
 
     @JsonProperty("is-cart")
     private Boolean isCart;
+
+    @JsonProperty("id-carrello")
+    private String idCarrello;
+
+
 }
