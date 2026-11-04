@@ -134,7 +134,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "pt.idCarrello AS idCarrello, " +
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc " +
+        "aipsp.description AS ptPspDesc, " +
+        "pt.isCart AS isCart " +
         "FROM Position p " +
         "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
@@ -176,7 +177,8 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "pt.idCarrello AS idCarrello, " +
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc " +
+        "aipsp.description AS ptPspDesc, " +
+        "pt.isCart AS isCart " +
         "FROM PositionTokens pt " +
         "JOIN Position p ON p.id = pt.fkPosition " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +

@@ -51,6 +51,9 @@ public class PositionTokens {
     @Column(name = "ID_CARRELLO")
     private String idCarrello;
 
+    @Column(name = "IS_CART")
+    private boolean isCart;
+
     @Column(name = "STAZIONE")
     private Short stazione;
 

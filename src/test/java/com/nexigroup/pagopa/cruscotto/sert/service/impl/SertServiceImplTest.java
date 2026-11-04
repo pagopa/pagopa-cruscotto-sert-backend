@@ -60,7 +60,7 @@ class SertServiceImplTest {
         var pageable = PageRequest.of(0, 10);
         assertThat(service.searchExtra(null, null, null, pageable)).isEmpty();
 
-        Object[] row = new Object[22];
+        Object[] row = new Object[23];
         row[0] = "351234567890123456";
         row[1] = "PA-1";
         row[2] = Instant.parse("2026-01-01T00:00:00Z");
@@ -72,7 +72,8 @@ class SertServiceImplTest {
         row[8] = "ok";
         row[9] = new java.math.BigDecimal("12.50");
         row[10] = 1.5;
-        row[18] = "cart-1";
+        row[18] = null;
+        row[22] = true;
         when(positionRepository.findTokenDetailRow("61626364")).thenReturn(List.<Object[]>of(row));
         when(positionRepository.countOkTokensByNavAndPa("351234567890123456", "PA-1")).thenReturn(2L);
 
@@ -87,6 +88,25 @@ class SertServiceImplTest {
         assertThat(token.getPaymentInfo().getIsCart()).isTrue();
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
         assertThat(service.getTokenInfo(" ")).isNull();
+    }
+
+    @Test
+    void mapsIsCartFromPositionTokenIsCartField() {
+        var pageable = PageRequest.of(0, 10);
+        Object[] row = new Object[23];
+        row[0] = "NAV-1";
+        row[1] = "PA-1";
+        row[2] = Instant.parse("2026-01-01T00:00:00Z");
+        row[5] = "61626364";
+        row[18] = null;
+        row[22] = true;
+        when(positionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
+            .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
+
+        var result = service.getPosition("NAV-1", "PA-1", pageable);
+
+        assertThat(result.getContent()).singleElement()
+            .satisfies(position -> assertThat(position.getPaymentInfo().getIsCart()).isTrue());
     }
 
     @Test

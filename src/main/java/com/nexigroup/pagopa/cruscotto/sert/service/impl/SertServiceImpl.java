@@ -221,7 +221,7 @@ public class SertServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(preferredRow[16]))
                 .paymentMethod(asString(preferredRow[17]))
-                .isCart(rows.stream().anyMatch(r -> r[18] != null))  // true se almeno un token ha idCarrello != null
+                .isCart(rows.stream().anyMatch(r -> Boolean.TRUE.equals(r[22])))
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))
@@ -294,7 +294,7 @@ public class SertServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(row[16]))
                 .paymentMethod(asString(row[17]))
-                .isCart(row[18] != null)  // true se idCarrello != null
+                .isCart(Boolean.TRUE.equals(row[22]))
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(rowNav != null && rowNav.startsWith("351"))
