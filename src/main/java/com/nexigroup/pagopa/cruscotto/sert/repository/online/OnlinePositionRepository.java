@@ -176,19 +176,31 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
     List<Object[]> findTokenDetailRow(@Param("token") String token);
 
-    @Query(value = "SELECT p.nav AS nav, ape.description AS paEmittente, p.lastEvent AS lastEvent, " +
-        "pt.iuv AS iuv, pt.creditorRefId AS creditorReferenceId, FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
+    @Query(value = "SELECT " +
+        "p,p.id as positionId, " +
+        "pt.id as positionTokensId, "+
+        "p.nav AS nav, " +
+        "ape.description AS paEmittente, " +
+        "p.lastEvent AS lastEvent, " +
+        "pt.iuv AS iuv, " +
+        "pt.creditorRefId AS creditorReferenceId, " +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
         "(SELECT COUNT(ptr2.id) FROM PositionTransfers ptr2 WHERE ptr2.fkToken = pt.id) AS transfersCount, " +
-        "ptr.idTransfer AS idTransfer, ptr.isBollo AS isBollo, " +
-        "ptr.ibanTransfer AS ibanTransfer, ptr.amountTransfer AS amountTransfer, ptr.paTransfer AS paTransfer, " +
+        "ptr.idTransfer AS idTransfer, " +
+        "ptr.isBollo AS isBollo, " +
+        "ptr.ibanTransfer AS ibanTransfer, " +
+        "ptr.amountTransfer AS amountTransfer, " +
+        "ptr.paTransfer AS paTransfer, " +
         "ptr.dateEvent AS transferDateEvent " +
-        "FROM Position p " +
-        "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-        "JOIN PositionTransfers ptr ON ptr.fkToken = pt.id " +
+        "FROM PositionTransfers ptr " +
+        "LEFT JOIN PositionTokens pt ON ptr.fkToken = pt.id " +
+        "LEFT JOIN Position p ON pt.fkPosition = p.id " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-    Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
+        "WHERE  (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "OR ptr.fkToken IN (:onlinePositionTokenIds))")
+    List<Object[]> findTransferDetailRows(
+        @Param("token") String token,
+        @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds);
 
     @Query(value =
         "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +

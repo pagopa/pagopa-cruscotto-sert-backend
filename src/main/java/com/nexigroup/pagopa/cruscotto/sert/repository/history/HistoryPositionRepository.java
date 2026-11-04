@@ -110,6 +110,27 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         Pageable pageable
     );
 
+
+    @Query(
+        value = "SELECT pt.fkPosition, pt.id " +
+            "FROM PositionTokens pt " +
+            "JOIN Position p ON pt.fkPosition = p.id " +
+            "WHERE  (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa) " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo)) "
+    )
+    List<Object[]> findByTokenNoPage(
+        @Param("token") String token,
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
+    );
+
+
     @Query(
         value = "SELECT p.nav, p.paEmittente FROM Position p, PositionTokens pt " +
             "WHERE pt.fkPosition = p.id " +
@@ -244,7 +265,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "p.id AS positionId, " +
         "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
-        "ape.description AS paEmittente, " +
+        "p.pa AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
         "pt.iuv AS iuv, " +
         "pt.creditorRefId AS creditorReferenceId, " +
@@ -265,8 +286,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
         "aipsp.description AS ptPspDesc " +
-        "FROM PositionTokens pt " +
-        "JOIN Position p ON p.id = pt.fkPosition " +
+        "FROM  Position p " +
+        "LEFT JOIN PositionTokens pt ON p.id = pt.fkPosition " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
         "LEFT JOIN AnagIntermediarioPa aipa ON aipa.id = pt.intermediarioPa " +
         "LEFT JOIN AnagIntermediarioPsp aipsp ON aipsp.id = pt.intermediarioPsp " +
@@ -274,7 +295,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-        "OR pt.fkPosition IN (:onlinePositionIds))"+
+        "OR p.id IN (:onlinePositionIds))"+
         "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
         "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
         "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
@@ -286,7 +307,10 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         @Param("onlinePositionIds") List<Integer> onlinePositionIds
     );
 
-    @Query(value = "SELECT p.nav AS nav, " +
+    @Query(value = "SELECT " +
+        "p,p.id as positionId, " +
+        "pt.id as positionTokensId, "+
+        "p.nav AS nav, " +
         "ape.description AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
         "pt.iuv AS iuv, " +
@@ -299,13 +323,18 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "ptr.amountTransfer AS amountTransfer, " +
         "ptr.paTransfer AS paTransfer, " +
         "ptr.dateEvent AS transferDateEvent " +
-        "FROM Position p " +
-        "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-        "JOIN PositionTransfers ptr ON ptr.fkToken = pt.id " +
+        "FROM Position p   " +
+        "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+        "LEFT JOIN PositionTransfers ptr ON ptr.fkToken = pt.id " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-        "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-    Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
+        "WHERE   " +
+        "(p.nav = :nav AND p.paEmittente = :paEmittente) " +
+        "OR pt.token = FUNCTION('convert_to', :token, 'UTF8') "  )
+
+    List<Object[]> findTransferDetailRows(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente,
+        @Param("token") String token);
 
     @Query(value =
         "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +

@@ -422,25 +422,8 @@ public class SertHistoryDataServiceImpl implements SertService {
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
         String rowNav = asString(positionRow[2]);
         String rowPa  = asString(positionRow[3]);
-        boolean multiOutcome = false;
-        if (rowNav != null && rowPa != null) {
-
-            List<Object[]> historyByNavPa = historyPositionRepository.searchByNavIds(rowNav, rowPa, dateFrom, dateTo);
-
-            List<Integer> offlinePositionByNavPaIds = extraIdsAsIntegers(historyByNavPa, 0);
-            List<Integer> offlinePositionTokenByNavPaIds = extraIdsAsIntegers(historyByNavPa, 1);
-
-            long onlineOkTokenCount = onlinePositionRepository.countOkTokensByNavAndPa(
-                rowNav,
-                rowPa,
-                offlinePositionByNavPaIds,
-                offlinePositionTokenByNavPaIds
-            );
-
-            long historyOkTokenCount = historyPositionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
-            long okTokenCount = onlineOkTokenCount + historyOkTokenCount;
-            multiOutcome = okTokenCount > 1;
-        }
+        String outcomeToken = tokenRow[10]!=null ? asString(tokenRow[10]):"KO";
+        boolean multiOutcome = outcomeToken.equalsIgnoreCase("OK")?true:false;
 
         return TokenInfoDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
@@ -517,47 +500,161 @@ public class SertHistoryDataServiceImpl implements SertService {
 
     @Override
     public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
-        log.debug("Request to get transfers for: {}, {}, {}, {}, {}", nav, paEmittente, token,pageable.getOffset(), pageable.getPageSize() );
+        log.debug(
+            "Request to get transfers for: {}, {}, {}, {}, {}",
+            nav,
+            paEmittente,
+            token,
+            pageable.getOffset(),
+            pageable.isUnpaged() ? "unpaged" : pageable.getPageSize()
+        );
 
         if (nav == null || paEmittente == null || token == null || token.trim().isEmpty()) {
             return null;
         }
 
-        Page<Object[]> rows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), pageable);
-        if (rows == null || rows.isEmpty()) {
+        List<Object[]> byTokenNoPage = historyPositionRepository.findByTokenNoPage(token.trim(), nav, paEmittente, dateFrom, dateTo);
+        List<Object[]> safeTokenRows = byTokenNoPage == null ? List.of() : byTokenNoPage;
+        List<Integer> positionTokenIds = extraIdsAsIntegers(safeTokenRows, 1);
+        List<Object[]> onlineRows = onlinePositionRepository.findTransferDetailRows(token.trim(), positionTokenIds);
+        List<Object[]> historyRows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim());
+
+        List<Object[]> rows = new ArrayList<>();
+        if (onlineRows != null) {
+            rows.addAll(onlineRows);
+        }
+        if (historyRows != null) {
+            rows.addAll(historyRows);
+        }
+        if (rows.isEmpty()) {
             return null;
         }
 
-        Object[] latestRow = rows.getContent().get(0);
+        Object[] tokenRow = rows.stream()
+            .filter(row -> hasRequestedToken(row, token))
+            .filter(this::hasTokenDetails)
+            .findFirst()
+            .orElseGet(() -> rows.stream()
+                .filter(row -> hasPositionTokenId(row) && positionTokenIds.stream()
+                    .anyMatch(id -> samePositionId(id, row[2])))
+                .findFirst()
+                .orElseGet(() -> rows.stream()
+                    .filter(row -> hasPositionTokenId(row) && (row[3] != null || row[6] != null || row[8] != null))
+                    .findFirst()
+                    .orElse(rows.get(0))));
+        List<Object[]> transferRows = rows.stream()
+            .filter(this::hasTransferDetails)
+            .filter(row -> hasRequestedToken(row, token) || (hasPositionTokenId(row) && positionTokenIds.stream()
+                .anyMatch(id -> samePositionId(id, row[2]))))
+            .collect(Collectors.toCollection(ArrayList::new));
+        sortTransferRows(transferRows, pageable);
+        long totalTransfers = transferRows.size();
+        List<Object[]> pageTransferRows = paginateTransferRows(transferRows, pageable);
 
-        List<TransferObjectDTO> transfers = rows.stream()
+        List<TransferObjectDTO> transfers = pageTransferRows.stream()
             .map(this::toTransferObject)
             .collect(Collectors.toList());
 
         TransferPaymentDTO dto = TransferPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(latestRow[0]))
-                .paEmittente(asString(latestRow[1]))
-                .iuv(asString(latestRow[3]))
-                .creditorReferenceId(asString(latestRow[4]))
-                .lastEvent(toInstant(latestRow[2]))
+                .nav(asString(tokenRow[3]))
+                .paEmittente(asString(tokenRow[4]))
+                .iuv(asString(tokenRow[6]))
+                .creditorReferenceId(asString(tokenRow[7]))
+                .lastEvent(toInstant(tokenRow[5]))
                 .isCached(false)
                 .build())
-            .token(tokenAsHex(latestRow[5]))
-            .transfersCount(toDouble(latestRow[6]))
+            .token(tokenAsHex(tokenRow[8]))
+            .transfersCount(toDouble(tokenRow[9]))
             .transfers(transfers)
             .build();
 
-        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, rows.getTotalElements());
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalTransfers);
+    }
+
+    private boolean hasTransferDetails(Object[] row) {
+        return row.length > 10 && (row[10] != null || row[11] != null || row[12] != null || row[13] != null || row[14] != null);
+    }
+
+    private boolean hasPositionTokenId(Object[] row) {
+        return row.length > 2 && row[2] != null;
+    }
+
+    private boolean hasRequestedToken(Object[] row, String token) {
+        return row.length > 8 && Objects.equals(token.trim(), tokenAsHex(row[8]));
+    }
+
+    private boolean hasTokenDetails(Object[] row) {
+        return hasPositionTokenId(row) && (row[3] != null || row[6] != null || row[8] != null);
+    }
+
+    private void sortTransferRows(List<Object[]> rows, Pageable pageable) {
+        if (!pageable.getSort().isSorted()) {
+            return;
+        }
+        rows.sort((left, right) -> {
+            for (Sort.Order order : pageable.getSort()) {
+                Object leftValue = transferSortValue(left, order.getProperty());
+                Object rightValue = transferSortValue(right, order.getProperty());
+                int comparison;
+                if (leftValue == null || rightValue == null) {
+                    comparison = leftValue == rightValue ? 0 : (leftValue == null ? 1 : -1);
+                } else {
+                    comparison = compareTransferSortValues(leftValue, rightValue);
+                    if (!order.isAscending()) {
+                        comparison = -comparison;
+                    }
+                }
+                if (comparison != 0) {
+                    return comparison;
+                }
+            }
+            return 0;
+        });
+    }
+
+    private Object transferSortValue(Object[] row, String property) {
+        return switch (property) {
+            case "idTransfer" -> row[10];
+            case "typeTransfer" -> Boolean.TRUE.equals(row[11]) ? "bollo" : "sepa";
+            case "isBollo" -> row[11];
+            case "iban", "ibanTransfer" -> row[12];
+            case "amount", "amountTransfer" -> row[13];
+            case "paFiscalCode", "paTransfer" -> row[14];
+            case "transferDateEvent", "dateEvent" -> row.length > 15 ? row[15] : null;
+            default -> null;
+        };
+    }
+
+    private int compareTransferSortValues(Object left, Object right) {
+        if (left instanceof Number leftNumber && right instanceof Number rightNumber) {
+            return Double.compare(leftNumber.doubleValue(), rightNumber.doubleValue());
+        }
+        if (left instanceof LocalDate leftDate && right instanceof LocalDate rightDate) {
+            return leftDate.compareTo(rightDate);
+        }
+        if (left instanceof java.time.temporal.TemporalAccessor && right instanceof java.time.temporal.TemporalAccessor) {
+            return left.toString().compareTo(right.toString());
+        }
+        return left.toString().compareTo(right.toString());
+    }
+
+    private List<Object[]> paginateTransferRows(List<Object[]> rows, Pageable pageable) {
+        if (pageable.isUnpaged()) {
+            return rows;
+        }
+        int fromIndex = (int) Math.min(pageable.getOffset(), rows.size());
+        int toIndex = Math.min(fromIndex + pageable.getPageSize(), rows.size());
+        return rows.subList(fromIndex, toIndex);
     }
 
     private TransferObjectDTO toTransferObject(Object[] row) {
         return TransferObjectDTO.builder()
-            .idTransfer(row[7] == null ? null : Integer.valueOf(asString(row[7])))
-            .typeTransfer(Boolean.TRUE.equals(row[8]) ? "bollo" : "sepa")
-            .iban(asString(row[9]))
-            .amount(toDouble(row[10]))
-            .paFiscalCode(asString(row[11]))
+            .idTransfer(row[10] == null ? null : Integer.valueOf(asString(row[10])))
+            .typeTransfer(Boolean.TRUE.equals(row[11]) ? "bollo" : "sepa")
+            .iban(asString(row[12]))
+            .amount(toDouble(row[13]))
+            .paFiscalCode(asString(row[14]))
             .build();
     }
 

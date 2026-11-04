@@ -5,7 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.nexigroup.pagopa.cruscotto.sert.repository.online.OnlinePositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.repository.online.PositionRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,16 +19,16 @@ class SertOnlineServiceImplTest {
     private static final LocalDate DATE_FROM = LocalDate.of(2026, 1, 1);
     private static final LocalDate DATE_TO = LocalDate.of(2026, 1, 31);
 
-    private final OnlinePositionRepository onlinePositionRepository = mock(OnlinePositionRepository.class);
-    private final SertOnlineServiceImpl service = new SertOnlineServiceImpl(onlinePositionRepository);
+    private final PositionRepository positionRepository = mock(PositionRepository.class);
+    private final SertOnlineServiceImpl service = new SertOnlineServiceImpl(positionRepository);
 
     @Test
     void skipsEmptyTokenSearchAndMapsNavSearchRows() {
         var pageable = PageRequest.of(0, 10);
         assertThat(service.searchByToken("pa", "nav", "   ", LocalDate.now(), LocalDate.now(), pageable)).isEmpty();
-        org.mockito.Mockito.verifyNoInteractions(onlinePositionRepository);
+        org.mockito.Mockito.verifyNoInteractions(positionRepository);
 
-        when(onlinePositionRepository.findByNavOrPa("nav-1", "pa-1", pageable))
+        when(positionRepository.findByNavOrPa("nav-1", "pa-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(new Object[] { "nav-1", "pa-1" }), pageable, 1));
 
         var result = service.searchByNav("nav-1", "pa-1", LocalDate.now(), LocalDate.now(), pageable);
@@ -42,7 +42,7 @@ class SertOnlineServiceImplTest {
     @Test
     void searchesExtraInfoSortsAndPagesMappedRows() {
         var pageable = PageRequest.of(0, 1, Sort.by("nav"));
-        when(onlinePositionRepository.findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null)).thenReturn(List.<Object[]>of(
+        when(positionRepository.findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null)).thenReturn(List.<Object[]>of(
             new Object[] { "NAV-B", "PA-B" },
             new Object[] { "NAV-A", "PA-A" }
         ));
@@ -56,7 +56,7 @@ class SertOnlineServiceImplTest {
             assertThat(item.getPaEmittenteDsc()).isNull();
             assertThat(item.getMatch()).isNull();
         });
-        verify(onlinePositionRepository).findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null);
+        verify(positionRepository).findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null);
     }
 
     @Test
@@ -87,9 +87,9 @@ class SertOnlineServiceImplTest {
         row[21] = "PSP description";
         row[22] = "PT-PA description";
         row[23] = "PT-PSP description";
-        when(onlinePositionRepository.findPositionDetailRows("NAV-1", "PA-1", List.of(), List.of(), pageable))
+        when(positionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
-        when(onlinePositionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1", List.of(), List.of())).thenReturn(1L);
+        when(positionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
 
         var result = service.getPosition("NAV-1", "PA-1", LocalDate.now(), LocalDate.now(), pageable);
 
@@ -133,13 +133,11 @@ class SertOnlineServiceImplTest {
         row[11] = new java.math.BigDecimal("12.50");
         row[12] = 1.5;
         row[20] = "cart-1";
-        when(onlinePositionRepository.findTokenDetailRow("61626364"))
+        when(positionRepository.findTokenDetailRow("61626364"))
             .thenReturn(List.<Object[]>of(row));
-        when(onlinePositionRepository.countOkTokensByNavAndPa(
+        when(positionRepository.countOkTokensByNavAndPa(
             "351234567890123456",
-            "PA-1",
-            List.of(),
-            List.of()
+            "PA-1"
         )).thenReturn(2L);
 
         var token = service.getTokenInfo(" 61626364 ", DATE_FROM, DATE_TO);
@@ -152,7 +150,7 @@ class SertOnlineServiceImplTest {
         assertThat(token.getAmount().getAmount()).isEqualTo(12.5);
         assertThat(token.getPaymentInfo().getIsCart()).isTrue();
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
-        verify(onlinePositionRepository).findTokenDetailRow("61626364");
+        verify(positionRepository).findTokenDetailRow("61626364");
         assertThat(service.getTokenInfo(" ", DATE_FROM, DATE_TO)).isNull();
     }
 
@@ -172,7 +170,7 @@ class SertOnlineServiceImplTest {
         row[9] = "IBAN-1";
         row[10] = new java.math.BigDecimal("25.00");
         row[11] = "FISCAL-1";
-        when(onlinePositionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
+        when(positionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
 
         var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", DATE_FROM, DATE_TO, pageable);
@@ -204,7 +202,7 @@ class SertOnlineServiceImplTest {
         event[6] = "61626364";
         event[7] = "REQ";
         event[8] = "id-1";
-        when(onlinePositionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
+        when(positionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(event), pageable, 1));
         var workflows = service.getWorkflows("NAV-1", "PA-1", DATE_FROM, DATE_TO, pageable);
         assertThat(workflows.getContent()).singleElement().satisfies(response -> {
@@ -222,7 +220,7 @@ class SertOnlineServiceImplTest {
         visible[4] = "value";
         visible[5] = "event";
         Object[] nameless = new Object[] { "NAV-2", "PA-2", "61626364", null, "ignored", "event" };
-        when(onlinePositionRepository.findExtraInfoByToken("token", pageable))
+        when(positionRepository.findExtraInfoByToken("token", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(visible, nameless), pageable, 2));
 
         var extraInfo = service.getExtraInfo("token", DATE_FROM, DATE_TO, pageable);

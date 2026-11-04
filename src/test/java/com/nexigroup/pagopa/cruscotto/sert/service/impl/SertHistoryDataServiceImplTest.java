@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.repository.history.HistoryPositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.online.OnlinePositionRepository;
+import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -526,5 +527,62 @@ class SertHistoryDataServiceImplTest {
             "",
             ""
         );
+    }
+
+    @Test
+    void mergesTransferRowsSortsAndPaginatesTransfers() {
+        var dateFrom = LocalDate.of(2026, 1, 1);
+        var dateTo = LocalDate.of(2026, 1, 31);
+        var pageable = PageRequest.of(1, 1, Sort.by(Sort.Direction.DESC, "amount"));
+        Object[] positionTokenRow = transferRow(20, null, null);
+        positionTokenRow[0] = Position.builder().id(10).nav("NAV-1").build();
+        positionTokenRow[3] = "NAV-1";
+        positionTokenRow[4] = "PA-1";
+        positionTokenRow[5] = Instant.parse("2026-01-01T00:00:00Z");
+        positionTokenRow[6] = "IUV-1";
+        positionTokenRow[7] = "CRID-1";
+        positionTokenRow[8] = "61626364";
+        positionTokenRow[9] = 3L;
+        Object[] onlineTransfer = transferRow(20, 1, new java.math.BigDecimal("8.00"));
+        Object[] otherTokenTransfer = transferRow(21, 4, new java.math.BigDecimal("50.00"));
+        otherTokenTransfer[8] = "6f74686572";
+        Object[] historyTransfer = transferRow(20, 3, new java.math.BigDecimal("13.00"));
+        when(historyRepository.findByTokenNoPage("abcd", "NAV-1", "PA-1", dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(new Object[] { 10, 20 }));
+        when(onlineRepository.findTransferDetailRows("abcd", List.of(20)))
+            .thenReturn(List.<Object[]>of(onlineTransfer));
+        when(historyRepository.findTransferDetailRows("NAV-1", "PA-1", "abcd"))
+            .thenReturn(List.<Object[]>of(otherTokenTransfer, positionTokenRow, historyTransfer));
+
+        var result = service.getTransfers("NAV-1", "PA-1", " abcd ", dateFrom, dateTo, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getContent()).singleElement().satisfies(item -> {
+            assertThat(item.getPositionInfo().getNav()).isEqualTo("NAV-1");
+            assertThat(item.getPositionInfo().getPaEmittente()).isEqualTo("PA-1");
+            assertThat(item.getPositionInfo().getIuv()).isEqualTo("IUV-1");
+            assertThat(item.getPositionInfo().getCreditorReferenceId()).isEqualTo("CRID-1");
+            assertThat(item.getToken()).isEqualTo("abcd");
+            assertThat(item.getTransfersCount()).isEqualTo(3.0);
+            assertThat(item.getTransfers()).singleElement().satisfies(transfer -> {
+                assertThat(transfer.getIdTransfer()).isEqualTo(1);
+                assertThat(transfer.getAmount()).isEqualTo(8.0);
+            });
+        });
+    }
+
+    private Object[] transferRow(Integer positionTokenId, Integer transferId, java.math.BigDecimal amount) {
+        Object[] row = new Object[16];
+        row[1] = 10;
+        row[2] = positionTokenId;
+        if (transferId != null) {
+            row[10] = transferId;
+            row[11] = Boolean.FALSE;
+            row[12] = "IBAN";
+            row[13] = amount;
+            row[14] = "PA-FISCAL";
+            row[15] = LocalDate.of(2026, 1, 2);
+        }
+        return row;
     }
 }
