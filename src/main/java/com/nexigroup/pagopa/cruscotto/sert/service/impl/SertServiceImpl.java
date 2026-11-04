@@ -198,7 +198,6 @@ public class SertServiceImpl implements SertService {
                     ? null
                     : PayedDTO.builder()
                         .token(tokenAsHex(payedRow[5]))
-                        .paymentBorn(toInstantFromDate(payedRow[6]))
                         .payedDate(toInstant(payedRow[7]))
                         .multiOutcome(multiOutcome)
                         .build()
@@ -274,7 +273,6 @@ public class SertServiceImpl implements SertService {
                     ? null
                     : PayedDTO.builder()
                         .token(tokenAsHex(row[5]))
-                        .paymentBorn(toInstantFromDate(row[6]))
                         .payedDate(toInstant(row[7]))
                         .multiOutcome(multiOutcome)
                         .build()
