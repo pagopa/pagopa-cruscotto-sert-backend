@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "OpenAPI definition",
-    "version": "2.1.23-4-rilascio-change-26102026"
+    "version": "2.2.0"
   },
   "servers": [
     {
