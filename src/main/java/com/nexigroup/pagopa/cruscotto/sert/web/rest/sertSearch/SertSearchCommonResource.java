@@ -237,7 +237,7 @@ public class SertSearchCommonResource {
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, orderSecondColumn,
                 PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING,
-                List.of(Sort.Order.desc("insertedtimestamp") ));
+                List.of(Sort.Order.asc("insertedtimestamp") ));
 
             Page<WorkflowResponseDTO> page = sertService.getWorkflows(nav, paEmittente, remappedPageable);
 

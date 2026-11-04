@@ -21,4 +21,11 @@ public class UserUtils {
         String subJwt = SecurityUtils.getSubJwt();
         return authUserRepository.findOneBySub(subJwt).orElseThrow(() -> new RuntimeException("Current user login not found"));
     }
+
+    public AuthUser getUserByID(Long id ) {
+
+        return authUserRepository.getReferenceById(id);
+    }
+
+
 }
