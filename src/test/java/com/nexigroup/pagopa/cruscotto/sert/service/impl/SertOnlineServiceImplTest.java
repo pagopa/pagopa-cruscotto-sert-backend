@@ -60,33 +60,32 @@ class SertOnlineServiceImplTest {
     }
 
     @Test
-    void mapsPositionDetailsAfterRemovingUnusedOutcomeColumn() {
+    void mapsPositionDetailsUsingRepositoryColumnOrder() {
         var pageable = PageRequest.of(0, 10);
-        Object[] row = new Object[24];
-        row[0] = 1;
-        row[1] = 2;
-        row[2] = "NAV-1";
-        row[3] = "PA description";
-        row[4] = Instant.parse("2026-01-01T00:00:00Z");
-        row[5] = "IUV-1";
-        row[6] = "CRID-1";
-        row[7] = "61626364";
-        row[8] = java.sql.Date.valueOf("2026-01-02");
-        row[9] = Instant.parse("2026-01-03T00:00:00Z");
-        row[10] = "OK";
-        row[11] = new java.math.BigDecimal("12.50");
-        row[12] = new java.math.BigDecimal("1.50");
-        row[13] = "PSP";
-        row[14] = "PT-PA";
-        row[15] = "PT-PSP";
-        row[16] = "STATION";
-        row[17] = "CHANNEL";
-        row[18] = "TOUCHPOINT";
-        row[19] = "CARD";
-        row[20] = "CART-1";
-        row[21] = "PSP description";
-        row[22] = "PT-PA description";
-        row[23] = "PT-PSP description";
+        Object[] row = new Object[23];
+        row[0] = "NAV-1";
+        row[1] = "PA description";
+        row[2] = Instant.parse("2026-01-01T00:00:00Z");
+        row[3] = "IUV-1";
+        row[4] = "CRID-1";
+        row[5] = "61626364";
+        row[6] = java.sql.Date.valueOf("2026-01-02");
+        row[7] = Instant.parse("2026-01-03T00:00:00Z");
+        row[8] = "OK";
+        row[9] = new java.math.BigDecimal("12.50");
+        row[10] = new java.math.BigDecimal("1.50");
+        row[11] = "PSP";
+        row[12] = "PT-PA";
+        row[13] = "PT-PSP";
+        row[14] = "STATION";
+        row[15] = "CHANNEL";
+        row[16] = "TOUCHPOINT";
+        row[17] = "CARD";
+        row[18] = "CART-1";
+        row[19] = "PSP description";
+        row[20] = "PT-PA description";
+        row[21] = "PT-PSP description";
+        row[22] = true;
         when(positionRepository.findPositionDetailRows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
         when(positionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
@@ -97,6 +96,11 @@ class SertOnlineServiceImplTest {
             assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
             assertThat(position.getPositionInfo().getPaEmittente()).isEqualTo("PA description");
             assertThat(position.getPositionInfo().getIuv()).isEqualTo("IUV-1");
+            assertThat(position.getPositionInfo().getCreditorReferenceId()).isEqualTo("CRID-1");
+            assertThat(position.getPositionInfo().getLastEvent()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
+            assertThat(position.getTokenBorn()).isEqualTo(Instant.parse("2026-01-02T00:00:00Z"));
+            assertThat(position.getPayed().getToken()).isEqualTo("abcd");
+            assertThat(position.getPayed().getPayedDate()).isEqualTo(Instant.parse("2026-01-03T00:00:00Z"));
             assertThat(position.getAmount().getAmount()).isEqualTo(12.5);
             assertThat(position.getAmount().getFee()).isEqualTo(1.5);
             assertThat(position.getActors().getPsp()).isEqualTo("PSP");
@@ -110,6 +114,7 @@ class SertOnlineServiceImplTest {
             assertThat(position.getPaymentInfo().getTouchpoint()).isEqualTo("TOUCHPOINT");
             assertThat(position.getPaymentInfo().getPaymentMethod()).isEqualTo("CARD");
             assertThat(position.getPaymentInfo().getIsCart()).isTrue();
+            assertThat(position.getPaymentInfo().getIdCarrello()).isEqualTo("CART-1");
         });
     }
 
@@ -118,21 +123,30 @@ class SertOnlineServiceImplTest {
         var pageable = PageRequest.of(0, 10);
         assertThat(service.searchExtra(null, null, null,  LocalDate.now(), LocalDate.now(), pageable)).isEmpty();
 
-        Object[] row = new Object[24];
-        row[0] = 12;
-        row[1] = 34;
-        row[2] = "351234567890123456";
-        row[3] = "PA-1";
-        row[4] = Instant.parse("2026-01-01T00:00:00Z");
-        row[5] = "IUV-1";
-        row[6] = "CRID-1";
-        row[7] = "61626364";
-        row[8] = java.sql.Date.valueOf("2026-01-02");
-        row[9] = Instant.parse("2026-01-03T00:00:00Z");
-        row[10] = "ok";
-        row[11] = new java.math.BigDecimal("12.50");
-        row[12] = 1.5;
-        row[20] = "cart-1";
+        Object[] row = new Object[23];
+        row[0] = "351234567890123456";
+        row[1] = "PA-1";
+        row[2] = Instant.parse("2026-01-01T00:00:00Z");
+        row[3] = "IUV-1";
+        row[4] = "CRID-1";
+        row[5] = "61626364";
+        row[6] = java.sql.Date.valueOf("2026-01-02");
+        row[7] = Instant.parse("2026-01-03T00:00:00Z");
+        row[8] = "ok";
+        row[9] = new java.math.BigDecimal("12.50");
+        row[10] = 1.5;
+        row[11] = "PSP";
+        row[12] = "PT-PA";
+        row[13] = "PT-PSP";
+        row[14] = "STATION";
+        row[15] = "CHANNEL";
+        row[16] = "TOUCHPOINT";
+        row[17] = "CARD";
+        row[18] = "cart-1";
+        row[19] = "PSP description";
+        row[20] = "PT-PA description";
+        row[21] = "PT-PSP description";
+        row[22] = true;
         when(positionRepository.findTokenDetailRow("61626364"))
             .thenReturn(List.<Object[]>of(row));
         when(positionRepository.countOkTokensByNavAndPa(
@@ -145,10 +159,26 @@ class SertOnlineServiceImplTest {
         assertThat(token.getIsPayedToken()).isTrue();
         assertThat(token.getPositionInfo().getNav()).isEqualTo("351234567890123456");
         assertThat(token.getPositionInfo().getIuv()).isEqualTo("IUV-1");
+        assertThat(token.getPositionInfo().getCreditorReferenceId()).isEqualTo("CRID-1");
+        assertThat(token.getPositionInfo().getLastEvent()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
         assertThat(token.getPayed().getToken()).isEqualTo("abcd");
         assertThat(token.getPayed().getMultiOutcome()).isTrue();
+        assertThat(token.getPayed().getPayedDate()).isEqualTo(Instant.parse("2026-01-03T00:00:00Z"));
+        assertThat(token.getTokenBorn()).isEqualTo(Instant.parse("2026-01-02T00:00:00Z"));
         assertThat(token.getAmount().getAmount()).isEqualTo(12.5);
+        assertThat(token.getAmount().getFee()).isEqualTo(1.5);
+        assertThat(token.getActors().getPsp()).isEqualTo("PSP");
+        assertThat(token.getActors().getPtPa()).isEqualTo("PT-PA");
+        assertThat(token.getActors().getPtPsp()).isEqualTo("PT-PSP");
+        assertThat(token.getActors().getStation()).isEqualTo("STATION");
+        assertThat(token.getActors().getChannel()).isEqualTo("CHANNEL");
+        assertThat(token.getActors().getPspDescription()).isEqualTo("PSP description");
+        assertThat(token.getActors().getPtPaDescription()).isEqualTo("PT-PA description");
+        assertThat(token.getActors().getPtPspDescription()).isEqualTo("PT-PSP description");
+        assertThat(token.getPaymentInfo().getTouchpoint()).isEqualTo("TOUCHPOINT");
+        assertThat(token.getPaymentInfo().getPaymentMethod()).isEqualTo("CARD");
         assertThat(token.getPaymentInfo().getIsCart()).isTrue();
+        assertThat(token.getPaymentInfo().getIdCarrello()).isEqualTo("cart-1");
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
         verify(positionRepository).findTokenDetailRow("61626364");
         assertThat(service.getTokenInfo(" ", DATE_FROM, DATE_TO)).isNull();

@@ -115,7 +115,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         value = "SELECT pt.fkPosition, pt.id " +
             "FROM PositionTokens pt " +
             "JOIN Position p ON pt.fkPosition = p.id " +
-            "WHERE  (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+            "WHERE  ((:token IS NULL OR pt.token = FUNCTION('convert_to', :token, 'UTF8')) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -354,7 +354,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -371,26 +372,15 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
             " )"
-        ,
-        countQuery =
-            "SELECT COUNT(*) FROM ( " +
-                "SELECT ew.id AS id " +
-                "FROM Position p " +
-                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-                "UNION ALL " +
-                "SELECT ew.id AS id " +
-                "FROM Position p " +
-                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
-                ") "
     )
-    Page<Object[]> findPositionWorkflows(
+    List<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
-        Pageable pageable
+        @Param("positionIds") List<Integer> positionIds,
+        @Param("positionTokenIds") List<Integer> positionTokenIds
     );
 
     @Query(value = "SELECT " +

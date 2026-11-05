@@ -220,7 +220,8 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -237,7 +238,8 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
             " )"
         ,
         countQuery =
@@ -245,18 +247,23 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
                 "SELECT ew.id AS id " +
                 "FROM Position p " +
                 "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+                "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+                "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+                "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
                 "UNION ALL " +
                 "SELECT ew.id AS id " +
                 "FROM Position p " +
                 "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+                "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+                "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+                "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
                 ") "
     )
-    Page<Object[]> findPositionWorkflows(
+    List<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
-        Pageable pageable
+        @Param("positionIds") List<Integer> positionIds,
+        @Param("positionTokenIds") List<Integer> positionTokenIds
     );
 
     @Query(value = "SELECT " +

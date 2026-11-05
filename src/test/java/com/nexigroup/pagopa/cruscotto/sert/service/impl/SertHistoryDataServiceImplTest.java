@@ -571,6 +571,94 @@ class SertHistoryDataServiceImplTest {
         });
     }
 
+    @Test
+    void mapsPositionDetailsFromSeparateHistoryRowWhenTokenIsOnline() {
+        var dateFrom = LocalDate.of(2026, 1, 1);
+        var dateTo = LocalDate.of(2026, 1, 31);
+        var pageable = PageRequest.of(0, 10);
+        Object[] onlineTokenRow = transferRow(20, null, null);
+        onlineTokenRow[6] = "IUV-ONLINE";
+        onlineTokenRow[7] = "CRID-ONLINE";
+        onlineTokenRow[8] = "61626364";
+        Object[] historyPositionRow = transferRow(null, null, null);
+        historyPositionRow[0] = Position.builder()
+            .id(10)
+            .nav("NAV-1")
+            .paEmittente("PA-1")
+            .build();
+        historyPositionRow[1] = 10;
+        historyPositionRow[3] = "NAV-1";
+        historyPositionRow[4] = "PA description";
+        historyPositionRow[5] = Instant.parse("2026-01-01T00:00:00Z");
+        Object[] onlineTransfer = transferRow(20, 1, new java.math.BigDecimal("8.00"));
+        when(historyRepository.findByTokenNoPage("abcd", "NAV-1", "PA-1", dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(new Object[] { 10, 20 }));
+        when(onlineRepository.findTransferDetailRows("abcd", List.of(20)))
+            .thenReturn(List.<Object[]>of(onlineTokenRow, onlineTransfer));
+        when(historyRepository.findTransferDetailRows("NAV-1", "PA-1", "abcd"))
+            .thenReturn(List.<Object[]>of(historyPositionRow));
+
+        var result = service.getTransfers("NAV-1", "PA-1", "abcd", dateFrom, dateTo, pageable);
+
+        assertThat(result.getContent()).singleElement().satisfies(item -> {
+            assertThat(item.getPositionInfo().getNav()).isEqualTo("NAV-1");
+            assertThat(item.getPositionInfo().getPaEmittente()).isEqualTo("PA description");
+            assertThat(item.getPositionInfo().getLastEvent()).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"));
+            assertThat(item.getPositionInfo().getIuv()).isEqualTo("IUV-ONLINE");
+            assertThat(item.getPositionInfo().getCreditorReferenceId()).isEqualTo("CRID-ONLINE");
+            assertThat(item.getToken()).isEqualTo("abcd");
+            assertThat(item.getTransfers()).singleElement().satisfies(transfer ->
+                assertThat(transfer.getIdTransfer()).isEqualTo(1)
+            );
+        });
+    }
+
+    @Test
+    void mergesWorkflowRowsUsingPositionAndTokenIdsFromHistory() {
+        var dateFrom = LocalDate.of(2026, 1, 1);
+        var dateTo = LocalDate.of(2026, 1, 31);
+        var pageable = PageRequest.of(0, 10);
+        Object[] historyWorkflow = workflowRow("HISTORY-EVENT", "61626364");
+        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", "61626364");
+        when(historyRepository.findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(new Object[] { 10, 20 }));
+        when(historyRepository.findPositionWorkflows(
+            "NAV-1",
+            "PA-1",
+            List.of(10),
+            List.of(20)
+        )).thenReturn(List.<Object[]>of(historyWorkflow));
+        when(onlineRepository.findPositionWorkflows(
+            "NAV-1",
+            "PA-1",
+            List.of(10),
+            List.of(20)
+        )).thenReturn(List.<Object[]>of(onlineWorkflow));
+
+        var result = service.getWorkflows("NAV-1", "PA-1", dateFrom, dateTo, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getContent()).singleElement().satisfies(item ->
+            assertThat(item.getEventsPosition())
+                .extracting(event -> event.getEventId())
+                .containsExactly("HISTORY-EVENT", "ONLINE-EVENT")
+        );
+        verify(historyRepository).findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo);
+    }
+
+    private Object[] workflowRow(String eventId, String token) {
+        Object[] row = new Object[9];
+        row[0] = Instant.parse("2026-01-01T00:00:00Z");
+        row[1] = "EVENT";
+        row[2] = "REQ/RESP";
+        row[3] = "OK";
+        row[4] = eventId;
+        row[6] = token;
+        row[7] = "RESP";
+        row[8] = eventId;
+        return row;
+    }
+
     private Object[] transferRow(Integer positionTokenId, Integer transferId, java.math.BigDecimal amount) {
         Object[] row = new Object[16];
         row[1] = 10;

@@ -1,5 +1,6 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
+import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import com.nexigroup.pagopa.cruscotto.sert.repository.history.HistoryPositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.repository.online.OnlinePositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
@@ -542,6 +543,12 @@ public class SertHistoryDataServiceImpl implements SertService {
                     .filter(row -> hasPositionTokenId(row) && (row[3] != null || row[6] != null || row[8] != null))
                     .findFirst()
                     .orElse(rows.get(0))));
+        Object[] positionRow = rows.stream()
+            .filter(row -> row.length > 5 && row[0] instanceof Position position
+                && Objects.equals(nav, position.getNav())
+                && Objects.equals(paEmittente, position.getPaEmittente()))
+            .findFirst()
+            .orElse(tokenRow);
         List<Object[]> transferRows = rows.stream()
             .filter(this::hasTransferDetails)
             .filter(row -> hasRequestedToken(row, token) || (hasPositionTokenId(row) && positionTokenIds.stream()
@@ -557,11 +564,11 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         TransferPaymentDTO dto = TransferPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(tokenRow[3]))
-                .paEmittente(asString(tokenRow[4]))
+                .nav(asString(positionRow[3]))
+                .paEmittente(asString(positionRow[4]))
                 .iuv(asString(tokenRow[6]))
                 .creditorReferenceId(asString(tokenRow[7]))
-                .lastEvent(toInstant(tokenRow[5]))
+                .lastEvent(toInstant(positionRow[5]))
                 .isCached(false)
                 .build())
             .token(tokenAsHex(tokenRow[8]))
@@ -662,18 +669,43 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
-        Page<Object[]> workflowEvents = historyPositionRepository.findPositionWorkflows(nav, paEmittente, pageable);
+        List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(null, nav, paEmittente, dateFrom, dateTo);
+        List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
+        List<Integer> positionIds = extraIdsAsIntegers(safeHistoryPositionRows, 0);
+        List<Integer> positionTokenIds = extraIdsAsIntegers(safeHistoryPositionRows, 1);
+        List<Integer> queryPositionIds = positionIds.isEmpty() ? List.of(-1) : positionIds;
+        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : positionTokenIds;
 
-        if (workflowEvents == null || workflowEvents.isEmpty()) {
+        List<Object[]> historyWorkflowEvents = historyPositionRepository.findPositionWorkflows(
+            nav,
+            paEmittente,
+            queryPositionIds,
+            queryPositionTokenIds
+        );
+        List<Object[]> onlineWorkflowEvents = onlinePositionRepository.findPositionWorkflows(
+            nav,
+            paEmittente,
+            queryPositionIds,
+            queryPositionTokenIds
+        );
+        List<Object[]> workflowRows = new ArrayList<>();
+        if (historyWorkflowEvents != null) {
+            workflowRows.addAll(historyWorkflowEvents);
+        }
+        if (onlineWorkflowEvents != null) {
+            workflowRows.addAll(onlineWorkflowEvents);
+        }
+        if (workflowRows.isEmpty()) {
             return null;
         }
 
+        long totalCount = workflowRows.size();
+        int fromIndex = pageable.isUnpaged() ? 0 : (int) Math.min(pageable.getOffset(), totalCount);
+        int toIndex = pageable.isUnpaged() ? workflowRows.size() : Math.min(fromIndex + pageable.getPageSize(), workflowRows.size());
+        List<Object[]> pageRows = workflowRows.subList(fromIndex, toIndex);
         List<WorkflowObjectDTO> eventsPositionList = new java.util.ArrayList<>();
 
-        List<Object[]> rows = workflowEvents.getContent();
-        int offset = (int) pageable.getOffset();
-        for (int i = 0; i < rows.size(); i++) {
-            Object[] row = rows.get(i);
+        for (Object[] row : pageRows) {
             // In case of a LEFT JOIN where there are no events at all, all event fields would be null.
             if (row[0] == null && row[4] == null) {
                 continue;
@@ -681,14 +713,14 @@ public class SertHistoryDataServiceImpl implements SertService {
 
             String token = tokenAsHex(row[6]);
             String faultcode =  (row[5] != null ? String.valueOf(row[5]) : null);
-            if ((asString(row[2]).equals("REQ/RESP"))&& asString(row[7]).equals("REQ")){
+            if ("REQ/RESP".equals(asString(row[2])) && "REQ".equals(asString(row[7]))) {
                 faultcode=null;
             }
 
             WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
                 .insertedtimestamp(toInstant(row[0]))
                 .tipoevento(asString(row[1]))
-                .sottotipoevento(asString(row[2]).equals("REQ/RESP")?asString(row[7]):asString(row[2]))
+                .sottotipoevento("REQ/RESP".equals(asString(row[2])) ? asString(row[7]) : asString(row[2]))
                 .outcome(asString(row[3]))
                 .eventId(asString(row[4]))
                 .faultcode( faultcode)
@@ -698,8 +730,6 @@ public class SertHistoryDataServiceImpl implements SertService {
             eventsPositionList.add(tokenDTO);
 
         }
-
-        Long totalCount = workflowEvents.getTotalElements();
 
         WorkflowResponseDTO dto = WorkflowResponseDTO.builder()
             .eventsPosition(eventsPositionList)

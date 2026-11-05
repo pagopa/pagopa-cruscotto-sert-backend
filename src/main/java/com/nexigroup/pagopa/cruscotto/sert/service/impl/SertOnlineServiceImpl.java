@@ -173,11 +173,11 @@ public class SertOnlineServiceImpl implements SertService {
         }
 
         Object[] firstRow = rows.getContent().get(0);
-        Object[] preferredRow = rows.stream().filter(row -> row[7] != null).findFirst().orElse(firstRow);
-        Object[] payedRow = rows.stream().filter(row -> row[9] != null && row[7] != null).findFirst().orElse(null);
+        Object[] preferredRow = rows.stream().filter(row -> row[5] != null).findFirst().orElse(firstRow);
+        Object[] payedRow = rows.stream().filter(row -> row[7] != null && row[5] != null).findFirst().orElse(null);
 
         List<String> allTokens = rows.stream()
-            .map(row -> tokenAsHex(row[7]))
+            .map(row -> tokenAsHex(row[5]))
             .filter(Objects::nonNull)
             .collect(Collectors.collectingAndThen(Collectors.toCollection(LinkedHashSet::new), List::copyOf));
 
@@ -187,44 +187,44 @@ public class SertOnlineServiceImpl implements SertService {
 
         PositionPaymentDTO dto = PositionPaymentDTO.builder()
             .positionInfo(PositionPaymentInfoDTO.builder()
-                .nav(asString(firstRow[2]))
-                .paEmittente(asString(firstRow[3]))
-                .iuv(asString(preferredRow[5]))
-                .creditorReferenceId(asString(preferredRow[6]))
-                .lastEvent(toInstant(firstRow[4]))
+                .nav(asString(firstRow[0]))
+                .paEmittente(asString(firstRow[1]))
+                .iuv(asString(preferredRow[3]))
+                .creditorReferenceId(asString(preferredRow[4]))
+                .lastEvent(toInstant(firstRow[2]))
                 .isCached(false)
                 .build())
             .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
-            .tokenBorn(payedRow == null ? null : toInstantFromDate(payedRow[8]))
+            .tokenBorn(payedRow == null ? null : toInstantFromDate(payedRow[6]))
             .payed(
                 payedRow == null
                     ? null
                     : PayedDTO.builder()
-                        .token(tokenAsHex(payedRow[7]))
-                        .payedDate(toInstant(payedRow[9]))
+                        .token(tokenAsHex(payedRow[5]))
+                        .payedDate(toInstant(payedRow[7]))
                         .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(preferredRow[13]))
-                .pspDescription(asString(preferredRow[21]))
-                .ptPa(asString(preferredRow[14]))
-                .ptPaDescription(asString(preferredRow[22]))
-                .ptPsp(asString(preferredRow[15]))
-                .ptPspDescription(asString(preferredRow[23]))
-                .station(asString(preferredRow[16]))
-                .channel(asString(preferredRow[17]))
+                .psp(asString(preferredRow[11]))
+                .pspDescription(asString(preferredRow[19]))
+                .ptPa(asString(preferredRow[12]))
+                .ptPaDescription(asString(preferredRow[20]))
+                .ptPsp(asString(preferredRow[13]))
+                .ptPspDescription(asString(preferredRow[21]))
+                .station(asString(preferredRow[14]))
+                .channel(asString(preferredRow[15]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(preferredRow[11]))
-                .fee(toDouble(preferredRow[12]))
+                .amount(toDouble(preferredRow[9]))
+                .fee(toDouble(preferredRow[10]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(preferredRow[18]))
-                .paymentMethod(asString(preferredRow[19]))
-                .isCart(rows.stream().anyMatch(r -> r[20] != null))  // true se almeno un token ha idCarrello != null
-                .idCarrello((rows.getTotalElements()==1 && firstRow[20]!=null) ? asString(firstRow[20]):null)
+                .touchpoint(asString(preferredRow[16]))
+                .paymentMethod(asString(preferredRow[17]))
+                .isCart(rows.stream().anyMatch(r -> Boolean.TRUE.equals(r[22])))
+                .idCarrello((rows.getTotalElements()==1 && firstRow[18]!=null) ? asString(firstRow[18]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(nav.startsWith("351"))
@@ -249,11 +249,11 @@ public class SertOnlineServiceImpl implements SertService {
         }
 
         Object[] row = rows.get(0);
-        Boolean isPayed = row[10] != null && "OK".equalsIgnoreCase(row[10].toString());
+        Boolean isPayed = row[8] != null && "OK".equalsIgnoreCase(row[8].toString());
 
         // multiOutcome = true se ci sono piu' token con outcome=OK per la stessa posizione (nav, pa)
-        String rowNav = asString(row[2]);
-        String rowPa  = asString(row[3]);
+        String rowNav = asString(row[0]);
+        String rowPa  = asString(row[1]);
         boolean multiOutcome = false;
         if (rowNav != null && rowPa != null) {
             long okTokenCount = positionRepository.countOkTokensByNavAndPa(rowNav, rowPa);
@@ -264,42 +264,42 @@ public class SertOnlineServiceImpl implements SertService {
             .positionInfo(PositionPaymentInfoDTO.builder()
                 .nav(rowNav)
                 .paEmittente(rowPa)
-                .iuv(asString(row[5]))
-                .creditorReferenceId(asString(row[6]))
-                .lastEvent(toInstant(row[4]))
+                .iuv(asString(row[3]))
+                .creditorReferenceId(asString(row[4]))
+                .lastEvent(toInstant(row[2]))
                 .isCached(false)
                 .build())
             .isPayedToken(isPayed)
-            .tokenBorn(toInstantFromDate(row[8]))
+            .tokenBorn(toInstantFromDate(row[6]))
             .payed(
                 !isPayed
                     ? null
                     : PayedDTO.builder()
-                        .token(tokenAsHex(row[7]))
+                        .token(tokenAsHex(row[5]))
 
-                        .payedDate(toInstant(row[9]))
+                        .payedDate(toInstant(row[7]))
                         .multiOutcome(multiOutcome)
                         .build()
             )
             .actors(ActorsDTO.builder()
-                .psp(asString(row[13]))
-                .pspDescription(asString(row[21]))
-                .ptPa(asString(row[14]))
-                .ptPaDescription(asString(row[22]))
-                .ptPsp(asString(row[15]))
-                .ptPspDescription(asString(row[23]))
-                .station(asString(row[16]))
-                .channel(asString(row[17]))
+                .psp(asString(row[11]))
+                .pspDescription(asString(row[19]))
+                .ptPa(asString(row[12]))
+                .ptPaDescription(asString(row[20]))
+                .ptPsp(asString(row[13]))
+                .ptPspDescription(asString(row[21]))
+                .station(asString(row[14]))
+                .channel(asString(row[15]))
                 .build())
             .amount(AmountDTO.builder()
-                .amount(toDouble(row[11]))
-                .fee(toDouble(row[12]))
+                .amount(toDouble(row[9]))
+                .fee(toDouble(row[10]))
                 .build())
             .paymentInfo(PaymentInfoDTO.builder()
-                .touchpoint(asString(row[18]))
-                .paymentMethod(asString(row[19]))
-                .isCart(row[20] != null)  // true se idCarrello != null
-                .idCarrello(row[20] != null ? asString(row[20]):null)
+                .touchpoint(asString(row[16]))
+                .paymentMethod(asString(row[17]))
+                .isCart(Boolean.TRUE.equals(row[22]))
+                .idCarrello(row[18] != null ? asString(row[18]):null)
                 .isGpd(false)
                 .isStandin(false)
                 .isDw(rowNav != null && rowNav.startsWith("351"))
