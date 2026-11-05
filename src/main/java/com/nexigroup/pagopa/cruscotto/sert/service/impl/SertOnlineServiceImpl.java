@@ -1,14 +1,9 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.asString;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.tokenAsHex;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toDouble;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstant;
-import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.toInstantFromDate;
-
 import com.nexigroup.pagopa.cruscotto.sert.repository.online.PositionRepository;
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.parseInfoMatch;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.*;
 
 /**
  * Service Implementation for SERT APIs with Mock Data.
@@ -125,6 +122,7 @@ public class SertOnlineServiceImpl implements SertService {
             .map(row -> PositionPaymentExtraDTO.builder()
                 .nav((String) row[0])
                 .paEmittente((String) row[1])
+                .match(parseInfoMatch(row[2]))
                 .fromHistory(false)
                 .build())
             .toList());
@@ -196,7 +194,7 @@ public class SertOnlineServiceImpl implements SertService {
                 .build())
             .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
-            .tokenBorn(payedRow == null ? null : toInstantFromDate(payedRow[6]))
+            .tokenBorn((preferredRow!=null &&preferredRow[6] !=null)? toInstantFromDate(preferredRow[6]): null) // ex paymentBorn
             .payed(
                 payedRow == null
                     ? null
@@ -270,13 +268,13 @@ public class SertOnlineServiceImpl implements SertService {
                 .isCached(false)
                 .build())
             .isPayedToken(isPayed)
-            .tokenBorn(toInstantFromDate(row[6]))
+
+            .tokenBorn(( row!=null && row[6] !=null) ? toInstantFromDate(row[6]):null)  // ex paymentBorn
             .payed(
                 !isPayed
                     ? null
                     : PayedDTO.builder()
                         .token(tokenAsHex(row[5]))
-
                         .payedDate(toInstant(row[7]))
                         .multiOutcome(multiOutcome)
                         .build()
