@@ -192,7 +192,7 @@ public class SertServiceImpl implements SertService {
                 .build())
             .tokens(allTokens==null || allTokens.isEmpty()? 0L: rows.getTotalElements())
             .allTokens(allTokens)
-            .tokenBorn((payedRow!=null &&payedRow[6] !=null)? toInstantFromDate(payedRow[6]): null) // ex paymentBorn
+            .tokenBorn((preferredRow!=null &&preferredRow[6] !=null)? toInstantFromDate(preferredRow[6]): null) // ex paymentBorn
             .payed(
                 payedRow == null
                     ? null
