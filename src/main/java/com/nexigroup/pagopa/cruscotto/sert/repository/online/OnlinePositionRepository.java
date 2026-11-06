@@ -113,7 +113,8 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "pt.idCarrello AS idCarrello, " +
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc " +
+        "aipsp.description AS ptPspDesc, " +
+        "pt.isCart AS isCart " +
         "FROM PositionTokens pt  " +
         "LEFT JOIN Position p  ON pt.fkPosition = p.id " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
@@ -163,7 +164,8 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         "pt.idCarrello AS idCarrello, " +
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc " +
+        "aipsp.description AS ptPspDesc, " +
+        "pt.isCart AS isCart " +
         "FROM PositionTokens pt " +
         "LEFT JOIN Position p ON p.id = pt.fkPosition " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
@@ -215,13 +217,13 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
             "'RESP' AS reqResp, " +
             "ew.id AS id " +
-            "FROM Position p " +
-            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+            "FROM EventsWf ew " +
+            "LEFT JOIN Position p ON ew.fkPosition = p.id " +
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
+            "OR ew.fkPosition IN :positionIds OR ew.fkTokens IN :positionTokenIds " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -233,31 +235,15 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
             "'REQ' AS reqResp, " +
             "ew.id AS id " +
-            "FROM Position p " +
-            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+            "FROM EventsWf ew " +
+            "LEFT JOIN Position p ON ew.fkPosition = p.id " +
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
+            "OR ew.fkPosition IN :positionIds OR ew.fkTokens IN :positionTokenIds " +
             " )"
-        ,
-        countQuery =
-            "SELECT COUNT(*) FROM ( " +
-                "SELECT ew.id AS id " +
-                "FROM Position p " +
-                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
-                "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-                "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
-                "UNION ALL " +
-                "SELECT ew.id AS id " +
-                "FROM Position p " +
-                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
-                "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-                "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
-                ") "
+
     )
     List<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
@@ -267,19 +253,28 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
     );
 
     @Query(value = "SELECT " +
+        "p.id AS positionId, " +
+        "pt.id AS positionTokenId, " +
+        "ei.id AS extraInfoId, " +
         "p.nav AS nav," +
-        " ape.description AS paEmittente," +
-        " FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-        " ei.infoName AS infoName," +
-        " ei.infoValue AS infoValue, " +
-        " ae.nomeEvento  AS tipoEvento " +
-        "FROM PositionTokens pt " +
-        "JOIN Position p ON p.id = pt.fkPosition " +
-        "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
+        "ape.description AS paEmittente," +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+        "ei.infoName AS infoName," +
+        "ei.infoValue AS infoValue, " +
+        "ae.nomeEvento AS tipoEvento " +
+        "FROM Position p " +
+        "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
+        "LEFT JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "LEFT JOIN AnagEvento ae ON ae.id = ei.tipoEvento " +
-        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-    Page<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
+        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "OR p.id IN (:offlinePositionIds) " +
+        "OR pt.id IN (:offlinePositionTokenIds) " )
+    List<Object[]> findExtraInfoByToken(
+        @Param("token") String token,
+        @Param("offlinePositionIds") List<Integer> offlinePositionIds,
+        @Param("offlinePositionTokenIds") List<Integer> offlinePositionTokenIds
+    );
 
     @Query("SELECT COUNT(pt) FROM PositionTokens pt, Position p " +
         "WHERE p.id = pt.fkPosition " +

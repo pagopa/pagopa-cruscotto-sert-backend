@@ -316,7 +316,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(preferredRow[18]))
                 .paymentMethod(asString(preferredRow[19]))
-                .isCart(rows.stream().anyMatch(r -> r[20] != null))  // true se almeno un token ha idCarrello != null
+                .isCart(rows.stream().anyMatch(r -> Boolean.TRUE.equals(r[24])))
                 .idCarrello((rows.size() == 1 && firstRow[20] != null) ? asString(firstRow[20]) : null)
                 .isGpd(false)
                 .isStandin(false)
@@ -464,7 +464,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             .paymentInfo(PaymentInfoDTO.builder()
                 .touchpoint(asString(tokenRow[18]))
                 .paymentMethod(asString(tokenRow[19]))
-                .isCart(tokenRow[20] != null)  // true se idCarrello != null
+                .isCart(Boolean.TRUE.equals(tokenRow[24]))
                 .idCarrello(tokenRow[20] != null ? asString(tokenRow[20]):null)
                 .isGpd(false)
                 .isStandin(false)
@@ -518,7 +518,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> safeTokenRows = byTokenNoPage == null ? List.of() : byTokenNoPage;
         List<Integer> positionTokenIds = extraIdsAsIntegers(safeTokenRows, 1);
         List<Object[]> onlineRows = onlinePositionRepository.findTransferDetailRows(token.trim(), positionTokenIds);
-        List<Object[]> historyRows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim());
+        List<Object[]> historyRows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), dateFrom, dateTo);
 
         List<Object[]> rows = new ArrayList<>();
         if (onlineRows != null) {
@@ -679,8 +679,8 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> historyWorkflowEvents = historyPositionRepository.findPositionWorkflows(
             nav,
             paEmittente,
-            queryPositionIds,
-            queryPositionTokenIds
+            dateFrom,
+            dateTo
         );
         List<Object[]> onlineWorkflowEvents = onlinePositionRepository.findPositionWorkflows(
             nav,
@@ -690,15 +690,16 @@ public class SertHistoryDataServiceImpl implements SertService {
         );
         List<Object[]> workflowRows = new ArrayList<>();
         if (historyWorkflowEvents != null) {
-            workflowRows.addAll(historyWorkflowEvents);
+            workflowRows.addAll(historyWorkflowEvents.stream().filter(this::hasWorkflowEvent).toList());
         }
         if (onlineWorkflowEvents != null) {
-            workflowRows.addAll(onlineWorkflowEvents);
+            workflowRows.addAll(onlineWorkflowEvents.stream().filter(this::hasWorkflowEvent).toList());
         }
         if (workflowRows.isEmpty()) {
             return null;
         }
 
+        sortWorkflowRows(workflowRows, pageable);
         long totalCount = workflowRows.size();
         int fromIndex = pageable.isUnpaged() ? 0 : (int) Math.min(pageable.getOffset(), totalCount);
         int toIndex = pageable.isUnpaged() ? workflowRows.size() : Math.min(fromIndex + pageable.getPageSize(), workflowRows.size());
@@ -738,31 +739,170 @@ public class SertHistoryDataServiceImpl implements SertService {
         return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);
     }
 
+    private boolean hasWorkflowEvent(Object[] row) {
+        return row != null && row.length > 8 && row[8] != null;
+    }
+
+    private void sortWorkflowRows(List<Object[]> rows, Pageable pageable) {
+        if (!pageable.getSort().isSorted()) {
+            return;
+        }
+        rows.sort((left, right) -> {
+            for (Sort.Order order : pageable.getSort()) {
+                Object leftValue = workflowSortValue(left, order.getProperty());
+                Object rightValue = workflowSortValue(right, order.getProperty());
+                int comparison;
+                if (leftValue == null || rightValue == null) {
+                    comparison = leftValue == rightValue ? 0 : (leftValue == null ? 1 : -1);
+                } else {
+                    comparison = compareTransferSortValues(leftValue, rightValue);
+                    if (!order.isAscending()) {
+                        comparison = -comparison;
+                    }
+                }
+                if (comparison != 0) {
+                    return comparison;
+                }
+            }
+            return 0;
+        });
+    }
+
+    private Object workflowSortValue(Object[] row, String property) {
+        return switch (property) {
+            case "insertedtimestamp", "insertedTimestamp" -> row[0];
+            case "tipoevento", "tipoEvento" -> row[1];
+            case "sottotipoevento", "sottotipoEvento" -> row[2];
+            case "outcome" -> row[3];
+            case "eventId", "event-id" -> row[4];
+            case "faultcode", "faultCode" -> row[5];
+            case "token" -> row[6];
+            case "id" -> row[8];
+            default -> null;
+        };
+    }
+
     @Override
     public Page<ExtraInfoResponseDTO> getExtraInfo(String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
-        Page<Object[]> rows = historyPositionRepository.findExtraInfoByToken(token.trim(),pageable);
-        if (rows == null || rows.isEmpty()) {
-            return null;
+        if (token == null || token.trim().isEmpty()) {
+            return Page.empty(pageable);
         }
 
-        List<ExtraInfoObjectDTO> results = rows.stream()
-            .filter(row -> row[3] != null)
+        String normalizedToken = token.trim();
+        List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(normalizedToken, null, null, dateFrom, dateTo);
+        List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
+        List<Integer> positionIds = extraIdsAsIntegers(safeHistoryPositionRows, 0);
+        List<Integer> positionTokenIds = extraIdsAsIntegers(safeHistoryPositionRows, 1);
+        List<Integer> queryPositionIds = positionIds.isEmpty() ? List.of(-1) : positionIds;
+        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : positionTokenIds;
+
+        List<Object[]> onlineRows = onlinePositionRepository.findExtraInfoByToken(
+            normalizedToken,
+            queryPositionIds,
+            queryPositionTokenIds
+        );
+        List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
+
+        Set<Integer> allPositionIds = new LinkedHashSet<>(positionIds);
+        allPositionIds.addAll(extraIdsAsIntegers(safeOnlineRows, 0));
+        List<Integer> historyQueryPositionIds = allPositionIds.isEmpty() ? List.of(-1) : new ArrayList<>(allPositionIds);
+        List<Object[]> historyRows = historyPositionRepository.findExtraInfoByToken(
+            normalizedToken,
+            historyQueryPositionIds,
+            dateFrom,
+            dateTo
+        );
+        List<Object[]> safeHistoryRows = historyRows == null ? List.of() : historyRows;
+
+        List<Object[]> rows = new ArrayList<>(safeOnlineRows);
+        rows.addAll(safeHistoryRows);
+
+        List<Object[]> positionRows = rows.stream()
+            .filter(row -> row[0] != null && row[1] == null)
+            .toList();
+        List<Object[]> positionTokenRows = rows.stream()
+            .filter(row -> row[1] != null && row[2] == null)
+            .toList();
+        List<Object[]> extraInfoRows = rows.stream()
+            .filter(row -> row[2] != null)
+            .toList();
+
+
+        String positionNav = positionRows != null && !positionRows.isEmpty()? asString(positionRows.get(0)[3]) : null ;
+        String positionPa = positionRows != null && !positionRows.isEmpty()? asString(positionRows.get(0)[4]) : null ;
+        String positionToken = positionTokenRows != null && !positionTokenRows.isEmpty()?   tokenAsHex(positionTokenRows.get(0)[5]) :null ;
+
+        List<ExtraInfoObjectDTO> allResults = extraInfoRows.stream()
             .map(row -> ExtraInfoObjectDTO.builder()
-                .nav(asString(row[0]))
-                .paEmittente(asString(row[1]))
-                .token(tokenAsHex(row[2]))
-                .name(asString(row[3]))
-                .value(asString(row[4]))
-                .tipoevento(asString(row[5]))
+                .nav(asString(row[3]) == null ? positionNav : asString(row[3]))
+                .paEmittente(asString(row[4]) == null ? positionPa : asString(row[4]))
+                .token(tokenAsHex(row[5]) == null ? positionToken : tokenAsHex(row[5]))
+                .name(asString(row[6]))
+                .value(asString(row[7]))
+                .tipoevento(asString(row[8]))
                 .build())
-            .collect(Collectors.toList());
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        sortExtraInfoResults(allResults, pageable.getSort());
+        long totalCount = allResults.size();
+        int fromIndex = pageable.isUnpaged() ? 0 : (int) Math.min(pageable.getOffset(), totalCount);
+        int toIndex = pageable.isUnpaged() ? allResults.size() : Math.min(fromIndex + pageable.getPageSize(), allResults.size());
+        List<ExtraInfoObjectDTO> results = allResults.subList(fromIndex, toIndex);
 
         ExtraInfoResponseDTO dto = ExtraInfoResponseDTO.builder()
-            .count(rows.getTotalElements())
+            .count(totalCount)
             .results(results)
             .build();
-        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, rows.getTotalElements());
+        return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);
+    }
+
+    private boolean hasExtraInfoProjection(Object[] row) {
+        return row != null && row.length >= 9;
+    }
+
+    private boolean isRequestedExtraInfoToken(Object[] row, String token) {
+        if (row == null || row.length <= 5) {
+            return false;
+        }
+        return token.equals(tokenAsHex(row[5]));
+    }
+
+    private void sortExtraInfoResults(List<ExtraInfoObjectDTO> results, Sort sort) {
+        if (!sort.isSorted()) {
+            return;
+        }
+        results.sort((left, right) -> {
+            for (Sort.Order order : sort) {
+                String leftValue = extraInfoSortValue(left, order.getProperty());
+                String rightValue = extraInfoSortValue(right, order.getProperty());
+                int comparison;
+                if (leftValue == null || rightValue == null) {
+                    comparison = leftValue == rightValue ? 0 : (leftValue == null ? 1 : -1);
+                } else {
+                    comparison = leftValue.compareTo(rightValue);
+                    if (!order.isAscending()) {
+                        comparison = -comparison;
+                    }
+                }
+                if (comparison != 0) {
+                    return comparison;
+                }
+            }
+            return 0;
+        });
+    }
+
+    private String extraInfoSortValue(ExtraInfoObjectDTO result, String property) {
+        return switch (property) {
+            case "nav" -> result.getNav();
+            case "paEmittente", "pa-emittente" -> result.getPaEmittente();
+            case "token" -> result.getToken();
+            case "name", "infoName" -> result.getName();
+            case "value", "infoValue" -> result.getValue();
+            case "tipoevento", "tipoEvento" -> result.getTipoevento();
+            default -> null;
+        };
     }
 }

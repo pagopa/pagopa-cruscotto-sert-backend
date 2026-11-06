@@ -229,7 +229,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "pt.idCarrello AS idCarrello, " +
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc " +
+        "aipsp.description AS ptPspDesc, " +
+        "pt.isCart AS isCart " +
         "FROM Position p " +
         "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
@@ -265,7 +266,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "p.id AS positionId, " +
         "pt.id AS positionTokenId, " +
         "p.nav AS nav, " +
-        "p.pa AS paEmittente, " +
+        "p.paEmittente AS paEmittente, " +
         "p.lastEvent AS lastEvent, " +
         "pt.iuv AS iuv, " +
         "pt.creditorRefId AS creditorReferenceId, " +
@@ -285,7 +286,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "pt.idCarrello AS idCarrello, " +
         "apsp.description AS pspDesc, " +
         "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc " +
+        "aipsp.description AS ptPspDesc, " +
+        "pt.isCart AS isCart " +
         "FROM  Position p " +
         "LEFT JOIN PositionTokens pt ON p.id = pt.fkPosition " +
         "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
@@ -295,10 +297,10 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-        "OR p.id IN (:onlinePositionIds))"+
+        "OR p.id IN (:onlinePositionIds)) " +
         "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-        "OR p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-        "OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        "OR ((p.id IS NULL OR p.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo))) " +
         "ORDER BY pt.paymentDate DESC, pt.dateEvent DESC, pt.id DESC")
     List<Object[]> findTokenDetailRow(
         @Param("token") String token,
@@ -328,13 +330,19 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         "LEFT JOIN PositionTransfers ptr ON ptr.fkToken = pt.id " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "WHERE   " +
-        "(p.nav = :nav AND p.paEmittente = :paEmittente) " +
-        "OR pt.token = FUNCTION('convert_to', :token, 'UTF8') "  )
+        "((p.nav = :nav AND p.paEmittente = :paEmittente) " +
+        "OR pt.token = FUNCTION('convert_to', :token, 'UTF8')) " +
+        "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        "AND (ptr.id IS NULL OR ptr.dateEvent BETWEEN :dateFrom AND :dateTo))) " )
 
     List<Object[]> findTransferDetailRows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
-        @Param("token") String token);
+        @Param("token") String token,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo);
 
     @Query(value =
         "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
@@ -355,7 +363,10 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "AND (ew.id IS NULL OR ew.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+            "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo))) " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -373,30 +384,46 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-            "OR p.id IN :positionIds OR pt.id IN :positionTokenIds " +
+            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+            "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "AND (ew.id IS NULL OR ew.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+            "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo))) " +
             " )"
     )
     List<Object[]> findPositionWorkflows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
-        @Param("positionIds") List<Integer> positionIds,
-        @Param("positionTokenIds") List<Integer> positionTokenIds
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
     );
 
     @Query(value = "SELECT " +
+        "p.id AS positionId, " +
+        "pt.id AS positionTokenId, " +
+        "ei.id AS extraInfoId, " +
         "p.nav AS nav," +
-        " ape.description AS paEmittente," +
-        " FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-        " ei.infoName AS infoName," +
-        " ei.infoValue AS infoValue, " +
-        " ae.nomeEvento  AS tipoEvento " +
-        "FROM PositionTokens pt " +
-        "JOIN Position p ON p.id = pt.fkPosition " +
-        "JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
+        "ape.description AS paEmittente," +
+        "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+        "ei.infoName AS infoName," +
+        "ei.infoValue AS infoValue, " +
+        "ae.nomeEvento AS tipoEvento " +
+        "FROM Position p     " +
+        "LEFT JOIN PositionTokens pt ON p.id = pt.fkPosition " +
+        "LEFT JOIN ExtraInfo ei  ON ei.fkToken = pt.id " +
         "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
         "LEFT JOIN AnagEvento ae ON ae.id = ei.tipoEvento " +
-        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
-    Page<Object[]> findExtraInfoByToken(@Param("token") String token, Pageable pageable);
+        "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
+        "OR p.id IN (:onlinePositionIds)) " +
+        "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
+        "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
+        "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
+        "AND (ei.id IS NULL OR ei.dateEvent BETWEEN :dateFrom AND :dateTo))) " )
+    List<Object[]> findExtraInfoByToken(
+        @Param("token") String token,
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
+        @Param("dateFrom") LocalDate dateFrom,
+        @Param("dateTo") LocalDate dateTo
+    );
 
     @Query("SELECT COUNT(pt) FROM PositionTokens pt, Position p " +
         "WHERE p.id = pt.fkPosition " +
