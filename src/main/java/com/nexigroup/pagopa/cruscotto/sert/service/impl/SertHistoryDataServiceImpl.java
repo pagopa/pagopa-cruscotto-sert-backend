@@ -551,8 +551,6 @@ public class SertHistoryDataServiceImpl implements SertService {
             .orElse(tokenRow);
         List<Object[]> transferRows = rows.stream()
             .filter(this::hasTransferDetails)
-            .filter(row -> hasRequestedToken(row, token) || (hasPositionTokenId(row) && positionTokenIds.stream()
-                .anyMatch(id -> samePositionId(id, row[2]))))
             .collect(Collectors.toCollection(ArrayList::new));
         sortTransferRows(transferRows, pageable);
         long totalTransfers = transferRows.size();
@@ -580,7 +578,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     private boolean hasTransferDetails(Object[] row) {
-        return row.length > 10 && (row[10] != null || row[11] != null || row[12] != null || row[13] != null || row[14] != null);
+        return row.length > 10 && (row[9] != null ) && (row[12] != null );
     }
 
     private boolean hasPositionTokenId(Object[] row) {
@@ -672,30 +670,52 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(null, nav, paEmittente, dateFrom, dateTo);
         List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
         List<Integer> positionIds = extraIdsAsIntegers(safeHistoryPositionRows, 0);
-        List<Integer> positionTokenIds = extraIdsAsIntegers(safeHistoryPositionRows, 1);
         List<Integer> queryPositionIds = positionIds.isEmpty() ? List.of(-1) : positionIds;
-        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : positionTokenIds;
+
+        Set<Integer> positionTokenIds = new LinkedHashSet<>(extraIdsAsIntegers(safeHistoryPositionRows, 1));
+        Map<Integer, String> tokenById = new LinkedHashMap<>();
+        for (Object[] row : safeHistoryPositionRows) {
+            if (row.length > 2 && row[1] instanceof Number tokenId && row[2] != null) {
+                tokenById.put(tokenId.intValue(), tokenAsHex(row[2]));
+            }
+        }
+
+        List<Object[]> onlinePositionTokenRows = onlinePositionRepository.findTokenByPositionIds(queryPositionIds);
+        if (onlinePositionTokenRows != null) {
+            for (Object[] row : onlinePositionTokenRows) {
+                if (row.length > 1 && row[0] instanceof Number tokenId) {
+                    positionTokenIds.add(tokenId.intValue());
+                    if (row[1] != null) {
+                        tokenById.put(tokenId.intValue(), tokenAsHex(row[1]));
+                    }
+                }
+            }
+        }
+        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionTokenIds);
 
         List<Object[]> historyWorkflowEvents = historyPositionRepository.findPositionWorkflows(
-            nav,
-            paEmittente,
+            queryPositionTokenIds,
             dateFrom,
             dateTo
         );
         List<Object[]> onlineWorkflowEvents = onlinePositionRepository.findPositionWorkflows(
-            nav,
-            paEmittente,
-            queryPositionIds,
             queryPositionTokenIds
         );
         List<Object[]> workflowRows = new ArrayList<>();
+        List<Object[]> tokenRows = new ArrayList<>();
         if (historyWorkflowEvents != null) {
             workflowRows.addAll(historyWorkflowEvents.stream().filter(this::hasWorkflowEvent).toList());
+            tokenRows.addAll(historyWorkflowEvents.stream().filter(this::hasTokenWorkflowEvent).toList());
         }
         if (onlineWorkflowEvents != null) {
             workflowRows.addAll(onlineWorkflowEvents.stream().filter(this::hasWorkflowEvent).toList());
+            tokenRows.addAll(onlineWorkflowEvents.stream().filter(this::hasTokenWorkflowEvent).toList());
         }
         if (workflowRows.isEmpty()) {
+            return null;
+        }
+
+        if (tokenRows.isEmpty()) {
             return null;
         }
 
@@ -712,7 +732,7 @@ public class SertHistoryDataServiceImpl implements SertService {
                 continue;
             }
 
-            String token = tokenAsHex(row[6]);
+
             String faultcode =  (row[5] != null ? String.valueOf(row[5]) : null);
             if ("REQ/RESP".equals(asString(row[2])) && "REQ".equals(asString(row[7]))) {
                 faultcode=null;
@@ -725,7 +745,7 @@ public class SertHistoryDataServiceImpl implements SertService {
                 .outcome(asString(row[3]))
                 .eventId(asString(row[4]))
                 .faultcode( faultcode)
-                .token(token)
+                .token(row[6]!=null  ? tokenById.get((Integer)row[6]):null)
                 .id(asString(row[8]))
                 .build();
             eventsPositionList.add(tokenDTO);
@@ -741,6 +761,9 @@ public class SertHistoryDataServiceImpl implements SertService {
 
     private boolean hasWorkflowEvent(Object[] row) {
         return row != null && row.length > 8 && row[8] != null;
+    }
+    private boolean hasTokenWorkflowEvent(Object[] row) {
+        return row != null  && row[6] != null;
     }
 
     private void sortWorkflowRows(List<Object[]> rows, Pageable pageable) {
@@ -794,23 +817,30 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(normalizedToken, null, null, dateFrom, dateTo);
         List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
         List<Integer> positionIds = extraIdsAsIntegers(safeHistoryPositionRows, 0);
-        List<Integer> positionTokenIds = extraIdsAsIntegers(safeHistoryPositionRows, 1);
         List<Integer> queryPositionIds = positionIds.isEmpty() ? List.of(-1) : positionIds;
-        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : positionTokenIds;
+
+
+        Set<Integer> positionTokenIds = new LinkedHashSet<>(extraIdsAsIntegers(safeHistoryPositionRows, 1));
+
+
+        List<Object[]> onlinePositionTokenRows = onlinePositionRepository.findTokenByPositionIds(queryPositionIds);
+        if (onlinePositionTokenRows != null) {
+            for (Object[] row : onlinePositionTokenRows) {
+                if (row.length > 1 && row[0] instanceof Number tokenId) {
+                    positionTokenIds.add(tokenId.intValue());
+                }
+            }
+        }
+        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionTokenIds);
+
 
         List<Object[]> onlineRows = onlinePositionRepository.findExtraInfoByToken(
-            normalizedToken,
-            queryPositionIds,
             queryPositionTokenIds
         );
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
 
-        Set<Integer> allPositionIds = new LinkedHashSet<>(positionIds);
-        allPositionIds.addAll(extraIdsAsIntegers(safeOnlineRows, 0));
-        List<Integer> historyQueryPositionIds = allPositionIds.isEmpty() ? List.of(-1) : new ArrayList<>(allPositionIds);
         List<Object[]> historyRows = historyPositionRepository.findExtraInfoByToken(
-            normalizedToken,
-            historyQueryPositionIds,
+            queryPositionTokenIds,
             dateFrom,
             dateTo
         );
@@ -819,29 +849,30 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> rows = new ArrayList<>(safeOnlineRows);
         rows.addAll(safeHistoryRows);
 
-        List<Object[]> positionRows = rows.stream()
-            .filter(row -> row[0] != null && row[1] == null)
-            .toList();
-        List<Object[]> positionTokenRows = rows.stream()
-            .filter(row -> row[1] != null && row[2] == null)
-            .toList();
+        String positionNav = safeHistoryPositionRows.stream()
+            .filter(row -> row != null && row.length > 3 && row[3] != null)
+            .map(row -> asString(row[3]))
+            .findFirst()
+            .orElse(null);
+        String positionPa = safeHistoryPositionRows.stream()
+            .filter(row -> row != null && row.length > 4 && row[4] != null)
+            .map(row -> asString(row[4]))
+            .findFirst()
+            .orElse(null);
+
         List<Object[]> extraInfoRows = rows.stream()
             .filter(row -> row[2] != null)
             .toList();
 
 
-        String positionNav = positionRows != null && !positionRows.isEmpty()? asString(positionRows.get(0)[3]) : null ;
-        String positionPa = positionRows != null && !positionRows.isEmpty()? asString(positionRows.get(0)[4]) : null ;
-        String positionToken = positionTokenRows != null && !positionTokenRows.isEmpty()?   tokenAsHex(positionTokenRows.get(0)[5]) :null ;
-
         List<ExtraInfoObjectDTO> allResults = extraInfoRows.stream()
             .map(row -> ExtraInfoObjectDTO.builder()
-                .nav(asString(row[3]) == null ? positionNav : asString(row[3]))
-                .paEmittente(asString(row[4]) == null ? positionPa : asString(row[4]))
-                .token(tokenAsHex(row[5]) == null ? positionToken : tokenAsHex(row[5]))
-                .name(asString(row[6]))
-                .value(asString(row[7]))
-                .tipoevento(asString(row[8]))
+                .nav(positionNav)
+                .paEmittente(positionPa)
+                .token(token)
+                .name(asString(row[1]))
+                .value(asString(row[2]))
+                .tipoevento(asString(row[3]))
                 .build())
             .collect(Collectors.toCollection(ArrayList::new));
 

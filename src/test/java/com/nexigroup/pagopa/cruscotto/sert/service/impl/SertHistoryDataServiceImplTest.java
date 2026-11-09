@@ -11,6 +11,8 @@ import com.nexigroup.pagopa.cruscotto.sert.domain.Position;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowTokenObjectDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -625,25 +627,19 @@ class SertHistoryDataServiceImplTest {
         var dateFrom = LocalDate.of(2026, 1, 1);
         var dateTo = LocalDate.of(2026, 1, 31);
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("insertedtimestamp")));
-        Object[] historyWorkflow = workflowRow("HISTORY-EVENT", "61626364");
-        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", "61626364");
+        Object[] historyWorkflow = workflowRow("HISTORY-EVENT", "686973746f7279", 20);
+        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", "6f6e6c696e65", 21);
         onlineWorkflow[0] = Instant.parse("2026-01-02T00:00:00Z");
         Object[] leftJoinPlaceholder = new Object[9];
         leftJoinPlaceholder[7] = "RESP";
         when(historyRepository.findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo))
-            .thenReturn(List.<Object[]>of(new Object[] { 10, 20 }));
-        when(historyRepository.findPositionWorkflows(
-            "NAV-1",
-            "PA-1",
-            dateFrom,
-            dateTo
-        )).thenReturn(List.<Object[]>of(historyWorkflow, leftJoinPlaceholder));
-        when(onlineRepository.findPositionWorkflows(
-            "NAV-1",
-            "PA-1",
-            List.of(10),
-            List.of(20)
-        )).thenReturn(List.<Object[]>of(onlineWorkflow, leftJoinPlaceholder));
+            .thenReturn(List.<Object[]>of(new Object[] { 10, 20, "686973746f7279" }));
+        when(onlineRepository.findTokenByPositionIds(List.of(10)))
+            .thenReturn(List.<Object[]>of(new Object[] { 21, "6f6e6c696e65" }));
+        when(historyRepository.findPositionWorkflows(List.of(20, 21), dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(historyWorkflow, leftJoinPlaceholder));
+        when(onlineRepository.findPositionWorkflows(List.of(20, 21)))
+            .thenReturn(List.<Object[]>of(onlineWorkflow, leftJoinPlaceholder));
 
         var result = service.getWorkflows("NAV-1", "PA-1", dateFrom, dateTo, pageable);
 
@@ -653,8 +649,12 @@ class SertHistoryDataServiceImplTest {
                 .extracting(event -> event.getEventId())
                 .containsExactly("ONLINE-EVENT", "HISTORY-EVENT")
         );
+        assertThat(result.getContent().get(0).getEventsPosition())
+            .extracting(event -> ((WorkflowTokenObjectDTO) event).getToken())
+            .containsExactly("online", "history");
         verify(historyRepository).findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo);
-        verify(historyRepository).findPositionWorkflows("NAV-1", "PA-1", dateFrom, dateTo);
+        verify(historyRepository).findPositionWorkflows(List.of(20, 21), dateFrom, dateTo);
+        verify(onlineRepository).findTokenByPositionIds(List.of(10));
     }
 
     @Test
@@ -670,9 +670,9 @@ class SertHistoryDataServiceImplTest {
         Object[] historyExtraInfo = { 100, 300, 301, "NAV-HISTORY", "PA-HISTORY", "61626364", "Alpha", "history-value", "HISTORY" };
         when(historyRepository.findByTokenNoPage("abcd", null, null, dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(new Object[] { 100, 300 }));
-        when(onlineRepository.findExtraInfoByToken("abcd", List.of(100), List.of(300)))
+        when(onlineRepository.findExtraInfoByToken( List.of(300)))
             .thenReturn(List.<Object[]>of(onlinePositionRow, onlineTokenRow, onlineExtraInfo));
-        when(historyRepository.findExtraInfoByToken("abcd", List.of(100, 200), dateFrom, dateTo))
+        when(historyRepository.findExtraInfoByToken( List.of(100, 200), dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(historyPositionRow, historyTokenRow, historyExtraInfo));
 
         var result = service.getExtraInfo(" abcd ", dateFrom, dateTo, pageable);
@@ -686,12 +686,12 @@ class SertHistoryDataServiceImplTest {
                 assertThat(extraInfo.getNav()).isEqualTo("NAV-HISTORY");
             });
         });
-        verify(onlineRepository).findExtraInfoByToken("abcd", List.of(100), List.of(300));
-        verify(historyRepository).findExtraInfoByToken("abcd", List.of(100, 200), dateFrom, dateTo);
+        verify(onlineRepository).findExtraInfoByToken( List.of(300));
+        verify(historyRepository).findExtraInfoByToken( List.of(100, 200), dateFrom, dateTo);
     }
 
-    private Object[] workflowRow(String eventId, String token) {
-        Object[] row = new Object[9];
+    private Object[] workflowRow(String eventId, String token, int positionTokenId) {
+        Object[] row = new Object[10];
         row[0] = Instant.parse("2026-01-01T00:00:00Z");
         row[1] = "EVENT";
         row[2] = "REQ/RESP";
@@ -700,6 +700,7 @@ class SertHistoryDataServiceImplTest {
         row[6] = token;
         row[7] = "RESP";
         row[8] = eventId;
+        row[9] = positionTokenId;
         return row;
     }
 

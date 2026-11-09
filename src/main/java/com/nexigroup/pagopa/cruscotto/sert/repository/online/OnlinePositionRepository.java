@@ -205,7 +205,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds);
 
     @Query(value =
-        "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
+        "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id, positionTokenId  " +
             "FROM ( " +
             "SELECT " +
             "ew.insertedTimestampResp AS insertedtimestamp, " +
@@ -214,16 +214,15 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "ew.outcomeResp AS outcome, " +
             "ew.eventIdResp AS eventid, " +
             "afc.codice AS faultcode, " +
-            "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+            "ew.fkTokens  AS token, " +
             "'RESP' AS reqResp, " +
-            "ew.id AS id " +
+            "ew.id AS id, " +
+            "pt.id AS positionTokenId " +
             "FROM EventsWf ew " +
-            "LEFT JOIN Position p ON ew.fkPosition = p.id " +
-            "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+            "LEFT JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-            "OR ew.fkPosition IN :positionIds OR ew.fkTokens IN :positionTokenIds " +
+            "WHERE ew.fkTokens IN :positionTokenIds " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -232,47 +231,34 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "ew.outcomeReq AS outcome, " +
             "ew.eventIdReq AS eventid, " +
             "afc.codice AS faultcode, " +
-            "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
+            "ew.fkTokens  AS token, " +
             "'REQ' AS reqResp, " +
-            "ew.id AS id " +
+            "ew.id AS id, " +
+            "pt.id AS positionTokenId " +
             "FROM EventsWf ew " +
-            "LEFT JOIN Position p ON ew.fkPosition = p.id " +
-            "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+            "LEFT JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
-            "OR ew.fkPosition IN :positionIds OR ew.fkTokens IN :positionTokenIds " +
+            "WHERE ew.fkTokens IN :positionTokenIds " +
             " )"
 
     )
     List<Object[]> findPositionWorkflows(
-        @Param("nav") String nav,
-        @Param("paEmittente") String paEmittente,
-        @Param("positionIds") List<Integer> positionIds,
         @Param("positionTokenIds") List<Integer> positionTokenIds
     );
 
+    @Query("SELECT pt.id, FUNCTION('ENCODE', pt.token, 'hex') FROM PositionTokens pt WHERE pt.fkPosition IN :positionIds")
+    List<Object[]> findTokenByPositionIds(@Param("positionIds") List<Integer> positionIds);
+
     @Query(value = "SELECT " +
-        "p.id AS positionId, " +
-        "pt.id AS positionTokenId, " +
         "ei.id AS extraInfoId, " +
-        "p.nav AS nav," +
-        "ape.description AS paEmittente," +
-        "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-        "ei.infoName AS infoName," +
+        "ei.infoName AS infoName, " +
         "ei.infoValue AS infoValue, " +
         "ae.nomeEvento AS tipoEvento " +
-        "FROM Position p " +
-        "LEFT JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-        "LEFT JOIN ExtraInfo ei ON ei.fkToken = pt.id " +
-        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+        "FROM ExtraInfo ei " +
         "LEFT JOIN AnagEvento ae ON ae.id = ei.tipoEvento " +
-        "WHERE pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-        "OR p.id IN (:offlinePositionIds) " +
-        "OR pt.id IN (:offlinePositionTokenIds) " )
+        "WHERE ei.fkToken IN (:offlinePositionTokenIds) ")
     List<Object[]> findExtraInfoByToken(
-        @Param("token") String token,
-        @Param("offlinePositionIds") List<Integer> offlinePositionIds,
         @Param("offlinePositionTokenIds") List<Integer> offlinePositionTokenIds
     );
 

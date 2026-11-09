@@ -112,10 +112,12 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
 
 
     @Query(
-        value = "SELECT pt.fkPosition, pt.id " +
-            "FROM PositionTokens pt " +
-            "JOIN Position p ON pt.fkPosition = p.id " +
-            "WHERE  ((:token IS NULL OR pt.token = FUNCTION('convert_to', :token, 'UTF8')) " +
+        value = "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description " +
+            "FROM Position p  " +
+            "LEFT JOIN PositionTokens pt  ON pt.fkPosition = p.id " +
+            "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+            "WHERE  ((CAST(:token AS string) IS NULL " +
+            "OR pt.token = FUNCTION('convert_to', CAST(:token AS string), 'UTF8')) " +
             "AND (:nav IS NULL OR p.nav = :nav) " +
             "AND (:pa IS NULL OR p.paEmittente = :pa) " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
@@ -344,83 +346,46 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         @Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo);
 
-    @Query(value =
-        "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
-            "FROM ( " +
-            "SELECT " +
-            "ew.insertedTimestampResp AS insertedtimestamp, " +
-            "ae.nomeEvento AS nomeevento, " +
-            "ae.tipoEvento AS tipoevento, " +
-            "ew.outcomeResp AS outcome, " +
-            "ew.eventIdResp AS eventid, " +
-            "afc.codice AS faultcode, " +
-            "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-            "'RESP' AS reqResp, " +
-            "ew.id AS id " +
-            "FROM Position p " +
-            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-            "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+    @Query(
+        "SELECT ew.insertedTimestampResp, ae.nomeEvento, ae.tipoEvento, ew.outcomeResp, ew.eventIdResp, " +
+            "afc.codice, ew.fkTokens , 'RESP', ew.id, pt.id " +
+            "FROM EventsWf ew " +
+            "JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+            "WHERE pt.id IN :positionTokenIds " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-            "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "AND (ew.id IS NULL OR ew.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-            "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo))) " +
+            "OR (ew.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "AND pt.dateEvent BETWEEN :dateFrom AND :dateTo)) " +
             "UNION ALL " +
-            "SELECT " +
-            "ew.insertedTimestampReq AS insertedtimestamp, " +
-            "ae.nomeEvento AS nomeevento, " +
-            "ae.tipoEvento AS tipoevento, " +
-            "ew.outcomeReq AS outcome, " +
-            "ew.eventIdReq AS eventid, " +
-            "afc.codice AS faultcode, " +
-            "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
-            "'REQ' AS reqResp, " +
-            "ew.id AS id " +
-            "FROM Position p " +
-            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-            "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
+            "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, " +
+                "afc.codice, ew.fkTokens , 'REQ', ew.id, pt.id " +
+            "FROM EventsWf ew " +
+            "JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE (p.nav = :nav AND p.paEmittente = :paEmittente) " +
+            "WHERE pt.id IN :positionTokenIds " +
             "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-            "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "AND (ew.id IS NULL OR ew.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-            "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo))) " +
-            " )"
+            "OR (ew.dateEvent BETWEEN :dateFrom AND :dateTo " +
+            "AND pt.dateEvent BETWEEN :dateFrom AND :dateTo))"
     )
     List<Object[]> findPositionWorkflows(
-        @Param("nav") String nav,
-        @Param("paEmittente") String paEmittente,
+        @Param("positionTokenIds") List<Integer> positionTokenIds,
         @Param("dateFrom") LocalDate dateFrom,
-        @Param("dateTo") LocalDate dateTo
-    );
+        @Param("dateTo") LocalDate dateTo);
 
     @Query(value = "SELECT " +
-        "p.id AS positionId, " +
-        "pt.id AS positionTokenId, " +
         "ei.id AS extraInfoId, " +
-        "p.nav AS nav," +
-        "ape.description AS paEmittente," +
-        "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
         "ei.infoName AS infoName," +
         "ei.infoValue AS infoValue, " +
         "ae.nomeEvento AS tipoEvento " +
-        "FROM Position p     " +
-        "LEFT JOIN PositionTokens pt ON p.id = pt.fkPosition " +
-        "LEFT JOIN ExtraInfo ei  ON ei.fkToken = pt.id " +
-        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+        "FROM ExtraInfo ei " +
         "LEFT JOIN AnagEvento ae ON ae.id = ei.tipoEvento " +
-        "WHERE (pt.token = FUNCTION('convert_to', :token, 'UTF8') " +
-        "OR p.id IN (:onlinePositionIds)) " +
+        "WHERE ei.fkToken IN :positionTokenIds " +
         "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-        "OR (p.dateEvent BETWEEN :dateFrom AND :dateTo " +
-        "AND (pt.id IS NULL OR pt.dateEvent BETWEEN :dateFrom AND :dateTo) " +
-        "AND (ei.id IS NULL OR ei.dateEvent BETWEEN :dateFrom AND :dateTo))) " )
+        "OR ei.dateEvent BETWEEN :dateFrom AND :dateTo)")
     List<Object[]> findExtraInfoByToken(
-        @Param("token") String token,
-        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
+        @Param("positionTokenIds") List<Integer> positionTokenIds,
         @Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo
     );
