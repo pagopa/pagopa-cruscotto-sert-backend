@@ -664,7 +664,7 @@ class SertHistoryDataServiceImplTest {
         var dateTo = LocalDate.of(2026, 1, 31);
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("insertedtimestamp")));
         Object[] historyWorkflow = workflowRow("HISTORY-EVENT", 20);
-        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", 21);
+        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", 22);
         onlineWorkflow[0] = Instant.parse("2026-01-02T00:00:00Z");
         Object[] leftJoinPlaceholder = new Object[9];
         leftJoinPlaceholder[7] = "RESP";
@@ -672,11 +672,9 @@ class SertHistoryDataServiceImplTest {
             .thenReturn(List.<Object[]>of(new Object[] { 10, 20, "history" }));
         when(onlineRepository.findByTokenNoPage(null, "NAV-1", "PA-1"))
             .thenReturn(List.<Object[]>of(new Object[] { 11, 22, "online" }));
-        when(onlineRepository.findTokenByPositionIds(List.of(10, 11)))
-            .thenReturn(List.<Object[]>of(new Object[] { 21, "online" }));
-        when(historyRepository.findPositionWorkflows(List.of(20, 21), dateFrom, dateTo))
+        when(historyRepository.findPositionWorkflows(List.of(20, 22), dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(historyWorkflow, leftJoinPlaceholder));
-        when(onlineRepository.findPositionWorkflows(List.of(20, 21)))
+        when(onlineRepository.findPositionWorkflows(List.of(20, 22)))
             .thenReturn(List.<Object[]>of(onlineWorkflow, leftJoinPlaceholder));
 
         var result = service.getWorkflows("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
@@ -691,8 +689,8 @@ class SertHistoryDataServiceImplTest {
             .extracting(event -> ((WorkflowTokenObjectDTO) event).getToken())
             .containsExactly("online", "history");
         verify(historyRepository).findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo);
-        verify(historyRepository).findPositionWorkflows(List.of(20, 21), dateFrom, dateTo);
-        verify(onlineRepository).findTokenByPositionIds(List.of(10, 11));
+        verify(historyRepository).findPositionWorkflows(List.of(20, 22), dateFrom, dateTo);
+        verify(onlineRepository).findPositionWorkflows(List.of(20, 22));
     }
 
     @Test
