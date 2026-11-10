@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API",
     "description": "API Cruscotto Sert",
-    "version": "2.1.23-4-recupero_db_svecchiato_gestionesalti"
+    "version": "2.1.23-5-recupero_db_svecchiato_gestionesalti"
   },
   "servers": [
     {
