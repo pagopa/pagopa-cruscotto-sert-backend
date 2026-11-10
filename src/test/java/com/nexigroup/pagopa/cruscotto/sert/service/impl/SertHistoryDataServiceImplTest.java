@@ -3,6 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.nexigroup.pagopa.cruscotto.sert.repository.history.HistoryPositionRepository;
@@ -24,6 +25,23 @@ class SertHistoryDataServiceImplTest {
     private final HistoryPositionRepository historyRepository = mock(HistoryPositionRepository.class);
     private final OnlinePositionRepository onlineRepository = mock(OnlinePositionRepository.class);
     private final SertHistoryDataServiceImpl service = new SertHistoryDataServiceImpl(historyRepository, onlineRepository);
+
+    @Test
+    void skipsOnlineRepositoryQueriesWhenSearchFromOnlineIsDisabled() {
+        var dateFrom = LocalDate.of(2026, 1, 1);
+        var dateTo = LocalDate.of(2026, 1, 31);
+        var pageable = PageRequest.of(0, 10);
+
+        assertThat(service.getPosition("NAV-1", "PA-1", false, dateFrom, dateTo, pageable)).isEmpty();
+        assertThat(service.getTokenInfo("abcd", false, dateFrom, dateTo)).isNull();
+        assertThat(service.getTransfers("NAV-1", "PA-1", "abcd", false, dateFrom, dateTo, pageable)).isNull();
+        assertThat(service.getWorkflows("NAV-1", "PA-1", false, dateFrom, dateTo, pageable)).isNull();
+        assertThat(service.getExtraInfo("abcd", false, dateFrom, dateTo, pageable))
+            .singleElement()
+            .satisfies(extraInfo -> assertThat(extraInfo.getResults()).isEmpty());
+
+        verifyNoInteractions(onlineRepository);
+    }
 
     @Test
     void getsTokenInfoWithDateRangeAndPositionIds() {
@@ -62,7 +80,7 @@ class SertHistoryDataServiceImplTest {
             .thenReturn(List.<Object[]>of(new Object[] { 12, 34 }));
         when(historyRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
 
-        var result = service.getTokenInfo(" abcd ", dateFrom, dateTo);
+        var result = service.getTokenInfo(" abcd ", true, dateFrom, dateTo);
 
         assertThat(result.getPositionInfo().getNav()).isEqualTo("NAV-1");
         assertThat(result.getPositionInfo().getIuv()).isEqualTo("IUV-1");
@@ -100,6 +118,7 @@ class SertHistoryDataServiceImplTest {
 
         var result = service.getTokenInfo(
             "abcd",
+            true,
             LocalDate.of(2026, 1, 1),
             LocalDate.of(2026, 1, 31)
         );
@@ -139,7 +158,7 @@ class SertHistoryDataServiceImplTest {
             .thenReturn(List.<Object[]>of(new Object[] { 12, 34 }));
         when(historyRepository.countOkTokensByNavAndPa("NAV-OFFLINE", "PA-OFFLINE")).thenReturn(1L);
 
-        var result = service.getTokenInfo("abcd", dateFrom, dateTo);
+        var result = service.getTokenInfo("abcd", true, dateFrom, dateTo);
 
         assertThat(result.getPositionInfo().getNav()).isEqualTo("NAV-OFFLINE");
         assertThat(result.getPositionInfo().getPaEmittente()).isEqualTo("PA-OFFLINE");
@@ -170,7 +189,7 @@ class SertHistoryDataServiceImplTest {
         var dateTo = LocalDate.of(2026, 1, 31);
         when(historyRepository.findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
-        var result = service.getPosition("NAV-1", "PA-1", dateFrom, dateTo, pageable);
+        var result = service.getPosition("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getPositionInfo().getNav()).isEqualTo("NAV-1");
@@ -210,13 +229,13 @@ class SertHistoryDataServiceImplTest {
         when(onlineRepository.findPositionDetailRows(
             "NAV-1",
             "PA-1",
-            List.of(1, 1),
+            List.of(1),
             List.of(10, 11),
             Pageable.unpaged()
         ))
             .thenReturn(new PageImpl<>(List.of(partialOnline, onlineOnly)));
 
-        var result = service.getPosition("NAV-1", "PA-1", dateFrom, dateTo, pageable);
+        var result = service.getPosition("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(position -> {
             assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
@@ -224,6 +243,22 @@ class SertHistoryDataServiceImplTest {
             assertThat(position.getAllTokens()).containsExactly("cc", "aa", "bb");
             assertThat(position.getPayed().getMultiOutcome()).isTrue();
         });
+    }
+
+    @Test
+    void sendsDistinctOnlineIdsWhenSearchingExtra() {
+        when(onlineRepository.searchExtra("query", "NAV-1", "PA-1"))
+            .thenReturn(List.<Object[]>of(
+                new Object[] { 3, 7 },
+                new Object[] { 3, 8 },
+                new Object[] { 4, 7 }
+            ));
+        when(historyRepository.searchExtra("query", "NAV-1", "PA-1", null, null, "3,4", "7,8"))
+            .thenReturn(List.of());
+
+        service.searchExtra("PA-1", "NAV-1", "query", null, null, PageRequest.of(0, 10));
+
+        verify(historyRepository).searchExtra("query", "NAV-1", "PA-1", null, null, "3,4", "7,8");
     }
 
     @Test
@@ -238,7 +273,7 @@ class SertHistoryDataServiceImplTest {
         when(onlineRepository.findPositionDetailRows("NAV-1", "PA-1", List.of(), List.of(), Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.<Object[]>of(onlineRow)));
 
-        var result = service.getPosition("NAV-1", "PA-1", dateFrom, dateTo, pageable);
+        var result = service.getPosition("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(position -> {
             assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
@@ -555,6 +590,7 @@ class SertHistoryDataServiceImplTest {
         Object[] onlineTransfer = transferRow(20, 1, new java.math.BigDecimal("8.00"));
         Object[] otherTokenTransfer = transferRow(21, 4, new java.math.BigDecimal("50.00"));
         otherTokenTransfer[8] = "6f74686572";
+        otherTokenTransfer[9] = null;
         Object[] historyTransfer = transferRow(20, 3, new java.math.BigDecimal("13.00"));
         when(historyRepository.findByTokenNoPage("abcd", "NAV-1", "PA-1", dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(new Object[] { 10, 20 }));
@@ -563,7 +599,7 @@ class SertHistoryDataServiceImplTest {
         when(historyRepository.findTransferDetailRows("NAV-1", "PA-1", "abcd", dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(otherTokenTransfer, positionTokenRow, historyTransfer));
 
-        var result = service.getTransfers("NAV-1", "PA-1", " abcd ", dateFrom, dateTo, pageable);
+        var result = service.getTransfers("NAV-1", "PA-1", " abcd ", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).singleElement().satisfies(item -> {
@@ -607,7 +643,7 @@ class SertHistoryDataServiceImplTest {
         when(historyRepository.findTransferDetailRows("NAV-1", "PA-1", "abcd", dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(historyPositionRow));
 
-        var result = service.getTransfers("NAV-1", "PA-1", "abcd", dateFrom, dateTo, pageable);
+        var result = service.getTransfers("NAV-1", "PA-1", "abcd", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(item -> {
             assertThat(item.getPositionInfo().getNav()).isEqualTo("NAV-1");
@@ -627,21 +663,23 @@ class SertHistoryDataServiceImplTest {
         var dateFrom = LocalDate.of(2026, 1, 1);
         var dateTo = LocalDate.of(2026, 1, 31);
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("insertedtimestamp")));
-        Object[] historyWorkflow = workflowRow("HISTORY-EVENT", "686973746f7279", 20);
-        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", "6f6e6c696e65", 21);
+        Object[] historyWorkflow = workflowRow("HISTORY-EVENT", 20);
+        Object[] onlineWorkflow = workflowRow("ONLINE-EVENT", 21);
         onlineWorkflow[0] = Instant.parse("2026-01-02T00:00:00Z");
         Object[] leftJoinPlaceholder = new Object[9];
         leftJoinPlaceholder[7] = "RESP";
         when(historyRepository.findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo))
-            .thenReturn(List.<Object[]>of(new Object[] { 10, 20, "686973746f7279" }));
-        when(onlineRepository.findTokenByPositionIds(List.of(10)))
-            .thenReturn(List.<Object[]>of(new Object[] { 21, "6f6e6c696e65" }));
+            .thenReturn(List.<Object[]>of(new Object[] { 10, 20, "history" }));
+        when(onlineRepository.findByTokenNoPage(null, "NAV-1", "PA-1"))
+            .thenReturn(List.<Object[]>of(new Object[] { 11, 22, "online" }));
+        when(onlineRepository.findTokenByPositionIds(List.of(10, 11)))
+            .thenReturn(List.<Object[]>of(new Object[] { 21, "online" }));
         when(historyRepository.findPositionWorkflows(List.of(20, 21), dateFrom, dateTo))
             .thenReturn(List.<Object[]>of(historyWorkflow, leftJoinPlaceholder));
         when(onlineRepository.findPositionWorkflows(List.of(20, 21)))
             .thenReturn(List.<Object[]>of(onlineWorkflow, leftJoinPlaceholder));
 
-        var result = service.getWorkflows("NAV-1", "PA-1", dateFrom, dateTo, pageable);
+        var result = service.getWorkflows("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).singleElement().satisfies(item ->
@@ -654,7 +692,7 @@ class SertHistoryDataServiceImplTest {
             .containsExactly("online", "history");
         verify(historyRepository).findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo);
         verify(historyRepository).findPositionWorkflows(List.of(20, 21), dateFrom, dateTo);
-        verify(onlineRepository).findTokenByPositionIds(List.of(10));
+        verify(onlineRepository).findTokenByPositionIds(List.of(10, 11));
     }
 
     @Test
@@ -662,20 +700,17 @@ class SertHistoryDataServiceImplTest {
         var dateFrom = LocalDate.of(2026, 1, 1);
         var dateTo = LocalDate.of(2026, 1, 31);
         var pageable = PageRequest.of(1, 1, Sort.by(Sort.Direction.DESC, "name"));
-        Object[] onlinePositionRow = { 200, null, null, "NAV-ONLINE", "PA-ONLINE", null, null, null, null };
-        Object[] onlineTokenRow = { 200, 201, null, "NAV-ONLINE", "PA-ONLINE", "61626364", null, null, null };
-        Object[] onlineExtraInfo = { 200, 201, 202, "NAV-ONLINE", "PA-ONLINE", "61626364", "Zeta", "online-value", "ONLINE" };
-        Object[] historyPositionRow = { 100, null, null, "NAV-HISTORY", "PA-HISTORY", null, null, null, null };
-        Object[] historyTokenRow = { 100, 300, null, "NAV-HISTORY", "PA-HISTORY", "61626364", null, null, null };
-        Object[] historyExtraInfo = { 100, 300, 301, "NAV-HISTORY", "PA-HISTORY", "61626364", "Alpha", "history-value", "HISTORY" };
+        Object[] onlineExtraInfo = { 202, "Zeta", "online-value", "ONLINE" };
+        Object[] historyPositionRow = { 100, 300, null, "NAV-HISTORY", "PA-HISTORY" };
+        Object[] historyExtraInfo = { 301, "Alpha", "history-value", "HISTORY" };
         when(historyRepository.findByTokenNoPage("abcd", null, null, dateFrom, dateTo))
-            .thenReturn(List.<Object[]>of(new Object[] { 100, 300 }));
-        when(onlineRepository.findExtraInfoByToken( List.of(300)))
-            .thenReturn(List.<Object[]>of(onlinePositionRow, onlineTokenRow, onlineExtraInfo));
-        when(historyRepository.findExtraInfoByToken( List.of(100, 200), dateFrom, dateTo))
-            .thenReturn(List.<Object[]>of(historyPositionRow, historyTokenRow, historyExtraInfo));
+            .thenReturn(List.<Object[]>of(historyPositionRow));
+        when(onlineRepository.findExtraInfoByToken(List.of(300)))
+            .thenReturn(List.<Object[]>of(onlineExtraInfo));
+        when(historyRepository.findExtraInfoByToken(List.of(300), dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(historyExtraInfo));
 
-        var result = service.getExtraInfo(" abcd ", dateFrom, dateTo, pageable);
+        var result = service.getExtraInfo(" abcd ", true, dateFrom, dateTo, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).singleElement().satisfies(item -> {
@@ -686,18 +721,18 @@ class SertHistoryDataServiceImplTest {
                 assertThat(extraInfo.getNav()).isEqualTo("NAV-HISTORY");
             });
         });
-        verify(onlineRepository).findExtraInfoByToken( List.of(300));
-        verify(historyRepository).findExtraInfoByToken( List.of(100, 200), dateFrom, dateTo);
+        verify(onlineRepository).findExtraInfoByToken(List.of(300));
+        verify(historyRepository).findExtraInfoByToken(List.of(300), dateFrom, dateTo);
     }
 
-    private Object[] workflowRow(String eventId, String token, int positionTokenId) {
+    private Object[] workflowRow(String eventId, int positionTokenId) {
         Object[] row = new Object[10];
         row[0] = Instant.parse("2026-01-01T00:00:00Z");
         row[1] = "EVENT";
         row[2] = "REQ/RESP";
         row[3] = "OK";
         row[4] = eventId;
-        row[6] = token;
+        row[6] = positionTokenId;
         row[7] = "RESP";
         row[8] = eventId;
         row[9] = positionTokenId;
@@ -709,6 +744,7 @@ class SertHistoryDataServiceImplTest {
         row[1] = 10;
         row[2] = positionTokenId;
         if (transferId != null) {
+            row[9] = transferId;
             row[10] = transferId;
             row[11] = Boolean.FALSE;
             row[12] = "IBAN";

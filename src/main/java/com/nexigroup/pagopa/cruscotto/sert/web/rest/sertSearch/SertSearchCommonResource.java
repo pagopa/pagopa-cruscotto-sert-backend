@@ -291,7 +291,7 @@ public class SertSearchCommonResource {
     public ResponseEntity<PositionPaymentDTO> getPosition(
         String nav,
         String paEmittente,
-        boolean searchFromHistory,
+        boolean searchFromOnline, boolean searchFromHistory,
         LocalDate dateFrom, LocalDate dateTo, Pageable pageable
     ) {
         try {
@@ -301,8 +301,8 @@ public class SertSearchCommonResource {
                 List.of(Sort.Order.desc("tokenDateEvent")));
 
             Page<PositionPaymentDTO> page = searchFromHistory
-                ? sertHistoryDataService.getPosition(nav, paEmittente, dateFrom, dateTo, remappedPageable)
-                : sertOnlineService.getPosition(nav, paEmittente, dateFrom, dateTo, remappedPageable);
+                ? sertHistoryDataService.getPosition(nav, paEmittente, searchFromOnline, dateFrom, dateTo, remappedPageable)
+                : sertOnlineService.getPosition(nav, paEmittente, searchFromOnline, dateFrom, dateTo, remappedPageable);
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -324,11 +324,11 @@ public class SertSearchCommonResource {
     }
 
 
-    public ResponseEntity<TokenInfoDTO> getTokenInfo(String token, boolean searchFromHistory, LocalDate dateFrom, LocalDate dateTo) {
+    public ResponseEntity<TokenInfoDTO> getTokenInfo(String token, boolean searchFromOnline, boolean searchFromHistory, LocalDate dateFrom, LocalDate dateTo) {
         try {
             TokenInfoDTO tokenInfo = searchFromHistory
-                ? sertHistoryDataService.getTokenInfo(token, dateFrom, dateTo)
-                : sertOnlineService.getTokenInfo(token, dateFrom, dateTo);
+                ? sertHistoryDataService.getTokenInfo(token, searchFromOnline, dateFrom, dateTo)
+                : sertOnlineService.getTokenInfo(token, searchFromOnline, dateFrom, dateTo);
             if (tokenInfo == null) {
                 throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -352,7 +352,7 @@ public class SertSearchCommonResource {
         String nav,
         String paEmittente,
         String token,
-        boolean searchFromHistory,
+        boolean searchFromOnline, boolean searchFromHistory,
         LocalDate dateFrom, LocalDate dateTo,
         Pageable pageable
     ) {
@@ -364,8 +364,8 @@ public class SertSearchCommonResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable,List.of(Sort.Order.asc("idTransfer")),PaymentUtil.TRANSFER_SORT_MAPPING,
                 List.of(Sort.Order.asc("idTransfer"),Sort.Order.desc("paTransfer")));
             Page<TransferPaymentDTO> page = searchFromHistory
-                ? sertHistoryDataService.getTransfers(nav, paEmittente, token,dateFrom,dateTo, remappedPageable)
-                : sertOnlineService.getTransfers(nav, paEmittente, token, dateFrom, dateTo, remappedPageable);
+                ? sertHistoryDataService.getTransfers(nav, paEmittente, token, searchFromOnline, dateFrom, dateTo, remappedPageable)
+                : sertOnlineService.getTransfers(nav, paEmittente, token, searchFromOnline, dateFrom, dateTo, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
@@ -391,7 +391,7 @@ public class SertSearchCommonResource {
     public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         String nav,
         String paEmittente,
-        boolean searchFromHistory, LocalDate dateFrom, LocalDate dateTo, Pageable pageable
+        boolean searchFromOnline, boolean searchFromHistory, LocalDate dateFrom, LocalDate dateTo, Pageable pageable
     ) {
         try {
 
@@ -415,8 +415,8 @@ public class SertSearchCommonResource {
                 List.of(Sort.Order.asc("insertedtimestamp") ));
 
             Page<WorkflowResponseDTO> page = searchFromHistory
-                ? sertHistoryDataService.getWorkflows(nav, paEmittente, dateFrom, dateTo, remappedPageable)
-                : sertOnlineService.getWorkflows(nav, paEmittente, dateFrom, dateTo, remappedPageable);
+                ? sertHistoryDataService.getWorkflows(nav, paEmittente, searchFromOnline, dateFrom, dateTo, remappedPageable)
+                : sertOnlineService.getWorkflows(nav, paEmittente, searchFromOnline, dateFrom, dateTo, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(
@@ -440,18 +440,9 @@ public class SertSearchCommonResource {
         }
     }
 
-    public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
-        String nav,
-        String paEmittente,
-        boolean searchFromHistory,
-        Pageable pageable
-    ) {
-        return getWorkflows(nav, paEmittente, searchFromHistory, null, null, pageable);
-    }
-
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
         String token,
-        boolean searchFromHistory,
+        boolean searchFromOnline, boolean searchFromHistory,
         LocalDate dateFrom,
         LocalDate dateTo,
         Pageable pageable) {
@@ -463,8 +454,8 @@ public class SertSearchCommonResource {
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, null, PaymentUtil.EXTRA_INFO_SORT_MAPPING,
                 List.of(Sort.Order.desc("infoName")));
             Page<ExtraInfoResponseDTO> page = searchFromHistory
-                ? sertHistoryDataService.getExtraInfo(token, dateFrom, dateTo, remappedPageable)
-                : sertOnlineService.getExtraInfo(token, dateFrom, dateTo, remappedPageable);
+                ? sertHistoryDataService.getExtraInfo(token, searchFromOnline, dateFrom, dateTo, remappedPageable)
+                : sertOnlineService.getExtraInfo(token, searchFromOnline, dateFrom, dateTo, remappedPageable);
 
             if (page == null || page.getContent()==null || page.getContent().isEmpty()) {
                 throw new ResponseStatusException(

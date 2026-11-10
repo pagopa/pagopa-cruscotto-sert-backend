@@ -42,8 +42,8 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
         @RequestParam(required = false) String token,
         @RequestParam(required = false, name = "idCarrello") String idCarrello,
         @RequestParam(required = false) String info,
-        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
@@ -57,23 +57,25 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
     public ResponseEntity<PositionPaymentDTO> getPosition(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getPosition(nav, paEmittente, searchFromHistory, dateFrom, dateTo, pageable);
+        return super.getPosition(nav, paEmittente, searchFromOnline, searchFromHistory, dateFrom, dateTo, pageable);
     }
 
     @GetMapping("/token/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<TokenInfoDTO> getTokenInfo(
         @PathVariable("token") String token,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
     ) {
-        return super.getTokenInfo(token, searchFromHistory,dateFrom,dateTo);
+        return super.getTokenInfo(token, searchFromOnline, searchFromHistory, dateFrom,dateTo);
     }
 
     @GetMapping("/transfers/{nav}/{pa-emittente}/{token}")
@@ -82,12 +84,13 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
         @PathVariable("token") String token,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getTransfers(nav, paEmittente, token, searchFromHistory,dateFrom,dateTo, pageable);
+        return super.getTransfers(nav, paEmittente, token,searchFromOnline, searchFromHistory,dateFrom,dateTo, pageable);
     }
 
     @GetMapping("/workflows/{nav}/{pa-emittente}")
@@ -95,23 +98,25 @@ public class SertSearchSubKeyResource extends SertSearchCommonResource {
     public ResponseEntity<List<WorkflowObjectDTO>> getWorkflows(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getWorkflows(nav, paEmittente, searchFromHistory,dateFrom,dateTo, pageable);
+        return super.getWorkflows(nav, paEmittente, searchFromOnline, searchFromHistory,dateFrom,dateTo, pageable);
     }
 
     @GetMapping("/extra/{token}")
     @Operation(tags = "Visualizzazione Dettagli")
     public ResponseEntity<ExtraInfoResponseDTO> getExtraInfo(
         @PathVariable("token") String token,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
         @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
     ) {
-        return super.getExtraInfo(token, searchFromHistory,dateFrom,dateTo, pageable);
+        return super.getExtraInfo(token,searchFromOnline, searchFromHistory,dateFrom,dateTo, pageable);
     }
 }

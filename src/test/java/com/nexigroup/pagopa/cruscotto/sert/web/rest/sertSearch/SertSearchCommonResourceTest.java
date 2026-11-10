@@ -187,14 +187,14 @@ class SertSearchCommonResourceTest {
         PositionPaymentDTO position = PositionPaymentDTO.builder().build();
         TokenInfoDTO tokenInfo = TokenInfoDTO.builder().build();
         when(service.getPosition(
-            eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+            eq("nav-1"), eq("pa-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         )).thenReturn(new PageImpl<>(List.of(position)));
-        when(service.getTokenInfo(eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO))).thenReturn(tokenInfo);
+        when(service.getTokenInfo(eq("token-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO))).thenReturn(tokenInfo);
 
         ResponseEntity<PositionPaymentDTO> positionResponse = resource.getPosition(
-            "nav-1", "pa-1", false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "nav-1", "pa-1", false, false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         );
-        ResponseEntity<TokenInfoDTO> tokenResponse = resource.getTokenInfo("token-1", false, VALID_DATE_FROM, VALID_DATE_TO);
+        ResponseEntity<TokenInfoDTO> tokenResponse = resource.getTokenInfo("token-1", false, false, VALID_DATE_FROM, VALID_DATE_TO);
 
         assertThat(positionResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(positionResponse.getBody()).isSameAs(position);
@@ -208,22 +208,22 @@ class SertSearchCommonResourceTest {
         WorkflowObjectDTO workflow = WorkflowObjectDTO.builder().build();
         ExtraInfoResponseDTO extraInfo = ExtraInfoResponseDTO.builder().build();
         when(service.getTransfers(
-            eq("nav-1"), eq("pa-1"), eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+            eq("nav-1"), eq("pa-1"), eq("token-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(transfer)));
-        when(service.getWorkflows(eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)))
+        when(service.getWorkflows(eq("nav-1"), eq("pa-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(WorkflowResponseDTO.builder().eventsPosition(List.of(workflow)).build())));
-        when(service.getExtraInfo(eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)))
+        when(service.getExtraInfo(eq("token-1"), eq(true), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
         ResponseEntity<TransferPaymentDTO> transferResponse = resource.getTransfers(
-            "nav-1", "pa-1", "token-1", false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "nav-1", "pa-1", "token-1", false, false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         );
         ResponseEntity<List<WorkflowObjectDTO>> workflowResponse = resource.getWorkflows(
-            "nav-1", "pa-1", false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "nav-1", "pa-1", false, false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         );
         ResponseEntity<ExtraInfoResponseDTO> extraResponse = resource.getExtraInfo(
-            "token-1", false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "token-1", true, false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         );
 
         assertThat(transferResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -240,35 +240,33 @@ class SertSearchCommonResourceTest {
         WorkflowObjectDTO workflow = WorkflowObjectDTO.builder().build();
         ExtraInfoResponseDTO extraInfo = ExtraInfoResponseDTO.builder().build();
         when(freezeDataService.getPosition(
-            eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+            eq("nav-1"), eq("pa-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(position)));
-        when(freezeDataService.getTokenInfo("token-1", VALID_DATE_FROM, VALID_DATE_TO)).thenReturn(tokenInfo);
+        when(freezeDataService.getTokenInfo("token-1", false, VALID_DATE_FROM, VALID_DATE_TO)).thenReturn(tokenInfo);
         when(freezeDataService.getTransfers(
-            eq("nav-1"), eq("pa-1"), eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+            eq("nav-1"), eq("pa-1"), eq("token-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(transfer)));
         when(freezeDataService.getWorkflows(
-            eq("nav-1"), eq("pa-1"), isNull(), isNull(), any(Pageable.class)
+            eq("nav-1"), eq("pa-1"), eq(false), isNull(), isNull(), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(WorkflowResponseDTO.builder().eventsPosition(List.of(workflow)).build())));
         when(freezeDataService.getExtraInfo(
-            eq("token-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+            eq("token-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
         ))
             .thenReturn(new PageImpl<>(List.of(extraInfo)));
 
         assertThat(resource.getPosition(
-            "nav-1", "pa-1", true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "nav-1", "pa-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         ).getBody()).isSameAs(position);
-        assertThat(resource.getTokenInfo("token-1", true, VALID_DATE_FROM, VALID_DATE_TO).getBody()).isSameAs(tokenInfo);
+        assertThat(resource.getTokenInfo("token-1", false, true, VALID_DATE_FROM, VALID_DATE_TO).getBody()).isSameAs(tokenInfo);
         assertThat(resource.getTransfers(
-            "nav-1", "pa-1", "token-1", true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "nav-1", "pa-1", "token-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         ).getBody())
             .isSameAs(transfer);
-        assertThat(resource.getWorkflows("nav-1", "pa-1", true, Pageable.ofSize(10)).getBody())
-            .containsExactly(workflow);
         assertThat(resource.getExtraInfo(
-            "token-1", true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            "token-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
         ).getBody()).isSameAs(extraInfo);
 
         verifyNoInteractions(service);

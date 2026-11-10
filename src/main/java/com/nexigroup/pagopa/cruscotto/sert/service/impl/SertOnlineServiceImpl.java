@@ -162,7 +162,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
         Page<Object[]> rows = positionRepository.findPositionDetailRows(nav, paEmittente,  pageable);
@@ -234,7 +234,7 @@ public class SertOnlineServiceImpl implements SertService {
 
 
     @Override
-    public TokenInfoDTO getTokenInfo(String token, LocalDate dateFrom, LocalDate dateTo) {
+    public TokenInfoDTO getTokenInfo(String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo) {
         log.debug("Request to get token info: {}", token);
 
         if (token == null || token.trim().isEmpty()) {
@@ -306,7 +306,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get transfers for: {}, {}, {}, {}, {}", nav, paEmittente, token,pageable.getOffset(), pageable.getPageSize() );
 
         if (nav == null || paEmittente == null || token == null || token.trim().isEmpty()) {
@@ -352,7 +352,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
         Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(nav, paEmittente, pageable);
@@ -402,7 +402,7 @@ public class SertOnlineServiceImpl implements SertService {
     }
 
     @Override
-    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
         Page<Object[]> rows = positionRepository.findExtraInfoByToken(token.trim(),pageable);

@@ -17,11 +17,15 @@ import java.util.List;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SertSearchSubKeyResource;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 class SertSearchSubKeyResourceTest {
 
@@ -31,13 +35,18 @@ class SertSearchSubKeyResourceTest {
         service, freezeDataService, new ApplicationProperties()
     );
 
+    @BeforeEach
+    void setUpRequestContext() {
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+    }
+
     @Test
     void delegatesSearchToCommonResource() {
         PageImpl<PositionPaymentExtraDTO> page = new PageImpl<>(List.of(new PositionPaymentExtraDTO()));
         when(service.searchByNav(eq("nav-1"), eq("pa-1"), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
 
         ResponseEntity<List<PositionPaymentExtraDTO>> response = resource.search(
-            "pa-1", "nav-1", null, null, null, null, false, true, null, null, Pageable.ofSize(10)
+            "pa-1", "nav-1", null, null, null, null, true, false, null, null, Pageable.ofSize(10)
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

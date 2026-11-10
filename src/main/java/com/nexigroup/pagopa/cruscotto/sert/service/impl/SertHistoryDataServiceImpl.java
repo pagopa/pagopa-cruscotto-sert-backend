@@ -180,8 +180,12 @@ public class SertHistoryDataServiceImpl implements SertService {
             pa
         );
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
-        String onlinePositionIds = extraIds(safeOnlineRows, 0);
-        String onlinePositionTokenIds = extraIds(safeOnlineRows, 1);
+        String onlinePositionIds = extraIds(safeOnlineRows, 0).stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        String onlinePositionTokenIds = extraIds(safeOnlineRows, 1).stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
 
         log.info(searchValue +" :chiamata alla query in historyPositionRepository");
 
@@ -239,7 +243,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
         Page<Object[]> historyPositionRows = historyPositionRepository.findPositionDetailRows(
@@ -251,9 +255,11 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Integer> offlinePositionIds = extraIdsAsIntegers(safeHistoryRows, 0);
         List<Integer> offlinePositionTokenIds = extraIdsAsIntegers(safeHistoryRows, 1);
 
-        Page<Object[]> onlinePositionPage = onlinePositionRepository.findPositionDetailRows(
-            nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
-        );
+        Page<Object[]> onlinePositionPage = searchFromOnline
+            ? onlinePositionRepository.findPositionDetailRows(
+                nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
+            )
+            : Page.empty();
         List<Object[]> safeOnlineRows = onlinePositionPage == null || onlinePositionPage.getContent() == null
             ? List.of()
             : onlinePositionPage.getContent();
@@ -287,9 +293,9 @@ public class SertHistoryDataServiceImpl implements SertService {
                 .lastEvent(toInstant(firstRow[4]))
                 .isCached(false)
                 .build())
-            .tokens((long) allTokens.size())
+            .tokens( allTokens.size())
             .allTokens(allTokens)
-            .tokenBorn(payedRow == null ? null : toInstantFromDate(payedRow[8]))
+            .tokenBorn(preferredRow == null ? null : toInstantFromDate(preferredRow[8]))
             .payed(
                 payedRow == null
                     ? null
@@ -388,13 +394,15 @@ public class SertHistoryDataServiceImpl implements SertService {
 
 
     @Override
-    public TokenInfoDTO getTokenInfo(String token, LocalDate dateFrom, LocalDate dateTo) {
+    public TokenInfoDTO getTokenInfo(String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo) {
         log.debug("Request to get token info: {}", token);
 
         if (token == null || token.trim().isEmpty()) {
             return null;
         }
-        List<Object[]> onlineRows = onlinePositionRepository.findTokenDetailRow(token.trim());
+        List<Object[]> onlineRows = searchFromOnline
+            ? onlinePositionRepository.findTokenDetailRow(token.trim())
+            : List.of();
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
         List<Integer> offlinePositionIds = extraIdsAsIntegers(safeOnlineRows, 0);
 
@@ -473,11 +481,11 @@ public class SertHistoryDataServiceImpl implements SertService {
             .build();
     }
 
-    private static String extraIds(List<Object[]> safeHistoryRows, int x) {
+    private static List<Integer> extraIds(List<Object[]> safeHistoryRows, int x) {
         return safeHistoryRows.stream()
             .map(row -> ((Number) row[x]).intValue())
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+            .distinct()
+            .toList();
     }
 
     private static List<Integer> extraIdsAsIntegers(List<Object[]> rows, int column) {
@@ -485,6 +493,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> row[column])
             .filter(Objects::nonNull)
             .map(id -> ((Number) id).intValue())
+            .distinct()
             .toList();
     }
 
@@ -500,7 +509,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<TransferPaymentDTO> getTransfers(String nav, String paEmittente, String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug(
             "Request to get transfers for: {}, {}, {}, {}, {}",
             nav,
@@ -517,7 +526,9 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> byTokenNoPage = historyPositionRepository.findByTokenNoPage(token.trim(), nav, paEmittente, dateFrom, dateTo);
         List<Object[]> safeTokenRows = byTokenNoPage == null ? List.of() : byTokenNoPage;
         List<Integer> positionTokenIds = extraIdsAsIntegers(safeTokenRows, 1);
-        List<Object[]> onlineRows = onlinePositionRepository.findTransferDetailRows(token.trim(), positionTokenIds);
+        List<Object[]> onlineRows = searchFromOnline
+            ? onlinePositionRepository.findTransferDetailRows(token.trim(), positionTokenIds)
+            : List.of();
         List<Object[]> historyRows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), dateFrom, dateTo);
 
         List<Object[]> rows = new ArrayList<>();
@@ -664,15 +675,16 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
         List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(null, nav, paEmittente, dateFrom, dateTo);
         List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
-        List<Integer> positionIds = extraIdsAsIntegers(safeHistoryPositionRows, 0);
-        List<Integer> queryPositionIds = positionIds.isEmpty() ? List.of(-1) : positionIds;
+
 
         Set<Integer> positionTokenIds = new LinkedHashSet<>(extraIdsAsIntegers(safeHistoryPositionRows, 1));
+
+
         Map<Integer, String> tokenById = new LinkedHashMap<>();
         for (Object[] row : safeHistoryPositionRows) {
             if (row.length > 2 && row[1] instanceof Number tokenId && row[2] != null) {
@@ -680,17 +692,22 @@ public class SertHistoryDataServiceImpl implements SertService {
             }
         }
 
-        List<Object[]> onlinePositionTokenRows = onlinePositionRepository.findTokenByPositionIds(queryPositionIds);
-        if (onlinePositionTokenRows != null) {
-            for (Object[] row : onlinePositionTokenRows) {
-                if (row.length > 1 && row[0] instanceof Number tokenId) {
-                    positionTokenIds.add(tokenId.intValue());
-                    if (row[1] != null) {
-                        tokenById.put(tokenId.intValue(), tokenAsHex(row[1]));
+
+        if (searchFromOnline){
+            List<Object[]> onlineByTokenNoPage = onlinePositionRepository.findByTokenNoPage(null, nav, paEmittente);
+            List<Object[]> safeOnlineByTokenNoPage = onlineByTokenNoPage == null ? List.of() : onlineByTokenNoPage;
+
+            if (safeOnlineByTokenNoPage != null) {
+                for (Object[] row : safeOnlineByTokenNoPage) {
+                    if (row.length > 2 && row[1] instanceof Number tokenId && row[2] != null) {
+                        positionTokenIds.add(tokenId.intValue());
+                        tokenById.put(tokenId.intValue(), tokenAsHex(row[2]));
+
                     }
                 }
             }
         }
+
         List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionTokenIds);
 
         List<Object[]> historyWorkflowEvents = historyPositionRepository.findPositionWorkflows(
@@ -698,9 +715,9 @@ public class SertHistoryDataServiceImpl implements SertService {
             dateFrom,
             dateTo
         );
-        List<Object[]> onlineWorkflowEvents = onlinePositionRepository.findPositionWorkflows(
-            queryPositionTokenIds
-        );
+        List<Object[]> onlineWorkflowEvents = searchFromOnline
+            ? onlinePositionRepository.findPositionWorkflows(queryPositionTokenIds)
+            : List.of();
         List<Object[]> workflowRows = new ArrayList<>();
         List<Object[]> tokenRows = new ArrayList<>();
         if (historyWorkflowEvents != null) {
@@ -806,7 +823,7 @@ public class SertHistoryDataServiceImpl implements SertService {
     }
 
     @Override
-    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
+    public Page<ExtraInfoResponseDTO> getExtraInfo(String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get extra info for token: {}", token);
 
         if (token == null || token.trim().isEmpty()) {
@@ -816,27 +833,34 @@ public class SertHistoryDataServiceImpl implements SertService {
         String normalizedToken = token.trim();
         List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(normalizedToken, null, null, dateFrom, dateTo);
         List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
-        List<Integer> positionIds = extraIdsAsIntegers(safeHistoryPositionRows, 0);
-        List<Integer> queryPositionIds = positionIds.isEmpty() ? List.of(-1) : positionIds;
+
 
 
         Set<Integer> positionTokenIds = new LinkedHashSet<>(extraIdsAsIntegers(safeHistoryPositionRows, 1));
 
 
-        List<Object[]> onlinePositionTokenRows = onlinePositionRepository.findTokenByPositionIds(queryPositionIds);
-        if (onlinePositionTokenRows != null) {
-            for (Object[] row : onlinePositionTokenRows) {
-                if (row.length > 1 && row[0] instanceof Number tokenId) {
-                    positionTokenIds.add(tokenId.intValue());
+        List<Object[]> safeOnlineByTokenNoPage= List.of();
+        if (searchFromOnline){
+            List<Object[]> onlineByTokenNoPage = onlinePositionRepository.findByTokenNoPage(token, null, null);
+            safeOnlineByTokenNoPage = onlineByTokenNoPage == null ? List.of() : onlineByTokenNoPage;
+
+            if (safeOnlineByTokenNoPage != null) {
+                for (Object[] row : safeOnlineByTokenNoPage) {
+                    if (row.length > 1 && row[1] instanceof Number tokenId && row[2] != null) {
+                        positionTokenIds.add(tokenId.intValue());
+                    }
                 }
             }
+
+
         }
+
         List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionTokenIds);
 
 
-        List<Object[]> onlineRows = onlinePositionRepository.findExtraInfoByToken(
-            queryPositionTokenIds
-        );
+        List<Object[]> onlineRows = searchFromOnline
+            ? onlinePositionRepository.findExtraInfoByToken(queryPositionTokenIds)
+            : List.of();
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
 
         List<Object[]> historyRows = historyPositionRepository.findExtraInfoByToken(
@@ -849,12 +873,15 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> rows = new ArrayList<>(safeOnlineRows);
         rows.addAll(safeHistoryRows);
 
-        String positionNav = safeHistoryPositionRows.stream()
+        List<Object[]> positionRow= new ArrayList<>(safeOnlineByTokenNoPage);
+        positionRow.addAll(safeHistoryPositionRows);
+
+        String positionNav = positionRow.stream()
             .filter(row -> row != null && row.length > 3 && row[3] != null)
             .map(row -> asString(row[3]))
             .findFirst()
             .orElse(null);
-        String positionPa = safeHistoryPositionRows.stream()
+        String positionPa = positionRow.stream()
             .filter(row -> row != null && row.length > 4 && row[4] != null)
             .map(row -> asString(row[4]))
             .findFirst()

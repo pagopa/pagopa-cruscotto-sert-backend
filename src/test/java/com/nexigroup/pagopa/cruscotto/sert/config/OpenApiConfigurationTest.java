@@ -47,6 +47,7 @@ class OpenApiConfigurationTest {
                         String.class,
                         String.class,
                         boolean.class,
+                        boolean.class,
                         LocalDate.class,
                         LocalDate.class,
                         Pageable.class

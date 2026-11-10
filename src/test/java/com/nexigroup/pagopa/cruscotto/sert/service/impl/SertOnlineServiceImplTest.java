@@ -43,8 +43,8 @@ class SertOnlineServiceImplTest {
     void searchesExtraInfoSortsAndPagesMappedRows() {
         var pageable = PageRequest.of(0, 1, Sort.by("nav"));
         when(positionRepository.findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null)).thenReturn(List.<Object[]>of(
-            new Object[] { "NAV-B", "PA-B" },
-            new Object[] { "NAV-A", "PA-A" }
+            new Object[] { "NAV-B", "PA-B", null },
+            new Object[] { "NAV-A", "PA-A", null }
         ));
 
         var result = service.searchExtra(null, null, "reason", LocalDate.now(), LocalDate.now(), pageable);
@@ -54,7 +54,7 @@ class SertOnlineServiceImplTest {
             assertThat(item.getNav()).isEqualTo("NAV-A");
             assertThat(item.getPaEmittente()).isEqualTo("PA-A");
             assertThat(item.getPaEmittenteDsc()).isNull();
-            assertThat(item.getMatch()).isNull();
+            assertThat(item.getMatch()).isEmpty();
         });
         verify(positionRepository).findGroupedByExtraValueAndOptionalNavAndPa("reason", null, null);
     }
@@ -90,7 +90,7 @@ class SertOnlineServiceImplTest {
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
         when(positionRepository.countOkTokensByNavAndPa("NAV-1", "PA-1")).thenReturn(1L);
 
-        var result = service.getPosition("NAV-1", "PA-1", LocalDate.now(), LocalDate.now(), pageable);
+        var result = service.getPosition("NAV-1", "PA-1", true, LocalDate.now(), LocalDate.now(), pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(position -> {
             assertThat(position.getPositionInfo().getNav()).isEqualTo("NAV-1");
@@ -154,7 +154,7 @@ class SertOnlineServiceImplTest {
             "PA-1"
         )).thenReturn(2L);
 
-        var token = service.getTokenInfo(" 61626364 ", DATE_FROM, DATE_TO);
+        var token = service.getTokenInfo(" 61626364 ", true, DATE_FROM, DATE_TO);
 
         assertThat(token.getIsPayedToken()).isTrue();
         assertThat(token.getPositionInfo().getNav()).isEqualTo("351234567890123456");
@@ -181,7 +181,7 @@ class SertOnlineServiceImplTest {
         assertThat(token.getPaymentInfo().getIdCarrello()).isEqualTo("cart-1");
         assertThat(token.getPaymentInfo().getIsDw()).isTrue();
         verify(positionRepository).findTokenDetailRow("61626364");
-        assertThat(service.getTokenInfo(" ", DATE_FROM, DATE_TO)).isNull();
+        assertThat(service.getTokenInfo(" ", true, DATE_FROM, DATE_TO)).isNull();
     }
 
     @Test
@@ -203,7 +203,7 @@ class SertOnlineServiceImplTest {
         when(positionRepository.findTransferDetailRows("NAV-1", "PA-1", "61626364", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(row), pageable, 1));
 
-        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", DATE_FROM, DATE_TO, pageable);
+        var result = service.getTransfers("NAV-1", "PA-1", " 61626364 ", true, DATE_FROM, DATE_TO, pageable);
 
         assertThat(result.getContent()).singleElement().satisfies(transferPage -> {
             assertThat(transferPage.getToken()).isEqualTo("abcd");
@@ -216,7 +216,7 @@ class SertOnlineServiceImplTest {
                 assertThat(transfer.getAmount()).isEqualTo(25.0);
             });
         });
-        assertThat(service.getTransfers(null, "PA-1", "token", DATE_FROM, DATE_TO, pageable)).isNull();
+        assertThat(service.getTransfers(null, "PA-1", "token", true, DATE_FROM, DATE_TO, pageable)).isNull();
     }
 
     @Test
@@ -234,7 +234,7 @@ class SertOnlineServiceImplTest {
         event[8] = "id-1";
         when(positionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(event), pageable, 1));
-        var workflows = service.getWorkflows("NAV-1", "PA-1", DATE_FROM, DATE_TO, pageable);
+        var workflows = service.getWorkflows("NAV-1", "PA-1", true, DATE_FROM, DATE_TO, pageable);
         assertThat(workflows.getContent()).singleElement().satisfies(response -> {
             assertThat(response.getEventsPosition()).singleElement().satisfies(item -> {
                 assertThat(item.getSottotipoevento()).isEqualTo("REQ");
@@ -253,7 +253,7 @@ class SertOnlineServiceImplTest {
         when(positionRepository.findExtraInfoByToken("token", pageable))
             .thenReturn(new PageImpl<>(List.<Object[]>of(visible, nameless), pageable, 2));
 
-        var extraInfo = service.getExtraInfo("token", DATE_FROM, DATE_TO, pageable);
+        var extraInfo = service.getExtraInfo("token", true, DATE_FROM, DATE_TO, pageable);
         assertThat(extraInfo.getContent()).singleElement().satisfies(response -> {
             assertThat(response.getCount()).isEqualTo(2L);
             assertThat(response.getResults()).singleElement().satisfies(item -> {

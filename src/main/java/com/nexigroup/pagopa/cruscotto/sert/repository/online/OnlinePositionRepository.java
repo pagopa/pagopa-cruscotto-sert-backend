@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -67,24 +68,17 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
     Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(
-        value = """
-            SELECT DISTINCT
-                p.nav AS nav,
-                p.pa_emittente AS paEmittente
-            FROM sert_ingestor.extra_info ei
-            JOIN sert_ingestor.position_tokens pt
-                ON pt.id = ei.fk_token
-            JOIN sert_ingestor.position p
-                ON p.id = pt.fk_position
-            WHERE ei.info_value = :searchValue
-              AND (:nav IS NULL OR p.nav = :nav)
-              AND (:pa IS NULL OR p.pa_emittente = :pa)
-            ORDER BY p.pa_emittente DESC
-        """,
-        nativeQuery = true
+        value = "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description " +
+            "FROM PositionTokens pt " +
+            "LEFT JOIN Position p ON pt.fkPosition = p.id " +
+            "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+            "WHERE (CAST(:token AS string) IS NULL " +
+            "OR pt.token = FUNCTION('convert_to', CAST(:token AS string), 'UTF8')) " +
+            "AND (:nav IS NULL OR p.nav = :nav) " +
+            "AND (:pa IS NULL OR p.paEmittente = :pa)"
     )
-    List<Object[]> findGroupedByExtraValueAndOptionalNavAndPa(
-        @Param("searchValue") String searchValue,
+    List<Object[]> findByTokenNoPage(
+        @Param("token") String token,
         @Param("nav") String nav,
         @Param("pa") String pa
     );
