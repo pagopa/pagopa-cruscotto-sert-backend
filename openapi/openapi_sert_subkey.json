@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API - Subscription Key",
     "description": "API Cruscotto Sert con Subscription Key",
-    "version": "2.1.23-4-recupero_db_svecchiato_gestionesalti"
+    "version": "1.0.0"
   },
   "servers": [
     {
@@ -33,6 +33,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "fromOnline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
             }
           },
           {
@@ -98,8 +107,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -108,8 +117,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -166,9 +175,17 @@
             }
           },
           {
+            "name": "fromOnline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
             "name": "fromHistory",
             "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -229,8 +246,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -239,8 +256,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -278,9 +295,17 @@
             }
           },
           {
+            "name": "fromOnline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
             "name": "fromHistory",
             "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -307,8 +332,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -317,8 +342,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -396,16 +421,6 @@
             }
           },
           {
-            "name": "fromHistory",
-            "in": "query",
-            "description": "Search online payment records; defaults to true.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
             "name": "fromOnline",
             "in": "query",
             "required": false,
@@ -415,9 +430,17 @@
             }
           },
           {
+            "name": "fromHistory",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "dateFrom",
             "in": "query",
-            "description": "Inclusive date_event lower bound (required when search_old_payment=true).",
             "required": false,
             "schema": {
               "type": "string",
@@ -427,7 +450,6 @@
           {
             "name": "dateTo",
             "in": "query",
-            "description": "Inclusive date_event upper bound (required when search_old_payment=true).",
             "required": false,
             "schema": {
               "type": "string",
@@ -470,8 +492,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -480,8 +502,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -530,9 +552,17 @@
             }
           },
           {
+            "name": "fromOnline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
             "name": "fromHistory",
             "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -593,8 +623,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -603,8 +633,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -642,9 +672,17 @@
             }
           },
           {
+            "name": "fromOnline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
             "name": "fromHistory",
             "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -705,8 +743,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -715,8 +753,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -902,10 +940,6 @@
           "token": {
             "type": "string"
           },
-          "payment-born": {
-            "type": "string",
-            "format": "date-time"
-          },
           "payed-date": {
             "type": "string",
             "format": "date-time"
@@ -935,6 +969,9 @@
           },
           "is-cart": {
             "type": "boolean"
+          },
+          "id-carrello": {
+            "type": "string"
           }
         }
       },
@@ -955,6 +992,10 @@
           },
           "is-payed-token": {
             "type": "boolean"
+          },
+          "token-born": {
+            "type": "string",
+            "format": "date-time"
           },
           "payment-info": {
             "$ref": "#/components/schemas/PaymentInfoDTO"
@@ -1008,6 +1049,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "token-born": {
+            "type": "string",
+            "format": "date-time"
           },
           "payment-info": {
             "$ref": "#/components/schemas/PaymentInfoDTO"
