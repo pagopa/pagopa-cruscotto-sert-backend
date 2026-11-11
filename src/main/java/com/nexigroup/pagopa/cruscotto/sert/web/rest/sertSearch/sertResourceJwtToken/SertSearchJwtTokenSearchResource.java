@@ -62,7 +62,8 @@ public class SertSearchJwtTokenSearchResource extends SertSearchCommonResource {
     public ResponseEntity<PositionPaymentDTO> getPosition(
         @PathVariable("nav") String nav,
         @PathVariable("pa-emittente") String paEmittente,
-        boolean searchFromOnline, @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
+        @RequestParam(required = false, name = "fromOnline", defaultValue = "true") boolean searchFromOnline,
+        @RequestParam(required = false, name = "fromHistory", defaultValue = "false") boolean searchFromHistory,
         @RequestParam(required = false, name = "dateFrom") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false, name = "dateTo") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @Parameter(description = "Pageable", required = true) @ParameterObject Pageable pageable
