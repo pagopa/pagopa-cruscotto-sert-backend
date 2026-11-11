@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopacruscottosertbackend
 description: Microservice description
 type: application
-version: 0.341.0
-appVersion: 2.1.23-6-recupero_db_svecchiato_gestionesalti
+version: 0.342.0
+appVersion: 2.1.23-7-recupero_db_svecchiato_gestionesalti
 dependencies:
   - name: microservice-chart
     version: 7.5.0
