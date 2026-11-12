@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "OpenAPI definition",
-    "version": "2.1.23-7-recupero_db_svecchiato_gestionesalti"
+    "version": "2.1.23-8-recupero_db_svecchiato_gestionesalti"
   },
   "servers": [
     {
