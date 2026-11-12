@@ -1,5 +1,7 @@
 package com.nexigroup.pagopa.cruscotto.sert.service.util;
 
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.ExtraInfoObjectDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.dto.PositionPaymentExtraDTO;
 import io.undertow.util.BadRequestException;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
@@ -152,6 +154,18 @@ public final class PaymentUtil {
         "paFiscalCode", "paTransfer"
     );
 
+    public  static Object transferSortValue(Object[] row, String property) {
+        return switch (property) {
+            case "idTransfer" -> row[10];
+            case "typeTransfer" -> Boolean.TRUE.equals(row[11]) ? "bollo" : "sepa";
+            case "isBollo" -> row[11];
+            case "iban", "ibanTransfer" -> row[12];
+            case "amount", "amountTransfer" -> row[13];
+            case "paFiscalCode", "paTransfer" -> row[14];
+            case "transferDateEvent", "dateEvent" -> row.length > 15 ? row[15] : null;
+            default -> null;
+        };
+    }
 
     public  static final Map<String, String> POSITION_TOKEN_SORT_MAPPING = Map.of(
         "tokenDateEvent", "tokenDateEvent",
@@ -166,6 +180,20 @@ public final class PaymentUtil {
 
     );
 
+    public  static Object positionSortValue(Object[] row, String property) {
+        return switch (property) {
+            case "tokenDateEvent" -> toInstantFromDate(row[8]);
+            case "paymentDate" -> toInstant(row[9]);
+            case "psp" -> asString(row[13]);
+            case "ptPsp" -> asString(row[15]);
+            case "amount" -> row[11] instanceof Number number ? number.doubleValue() : null;
+            case "paymentMethod" -> asString(row[19]);
+            case "touchpoint" -> asString(row[18]);
+            case "pt-pa-description", "ptPaDesc" -> asString(row[22]);
+            case "tokenHex" -> asString(row[7]);
+            default -> null;
+        };
+    }
 
     public static final Map<String, String> EXTRA_INFO_SORT_MAPPING = Map.of(
         "nav", "nav",
@@ -175,12 +203,35 @@ public final class PaymentUtil {
         "value", "infoValue",
         "tipoevento", "tipoEvento"
     );
+
+    public static String extraInfoSortValue(ExtraInfoObjectDTO result, String property) {
+        return switch (property) {
+            case "nav" -> result.getNav();
+            case "paEmittente", "pa-emittente" -> result.getPaEmittente();
+            case "token" -> result.getToken();
+            case "name", "infoName" -> result.getName();
+            case "value", "infoValue" -> result.getValue();
+            case "tipoevento", "tipoEvento" -> result.getTipoevento();
+            default -> null;
+        };
+
+    }
+
     public static final Map<String, String> SEARCH_SORT_MAPPING = Map.of(
         "nav", "nav",
         "pa-emittente", "paEmittente",
         "pa-emittente-desc", "paEmittenteDesc",
         "paEmittente", "paEmittente"
     );
+
+    public static String extraSortValue(PositionPaymentExtraDTO row, String property) {
+        return switch (property) {
+            case "nav" -> row.getNav();
+            case "pa-emittente", "paEmittente" -> row.getPaEmittente();
+            case "pa-emittente-desc", "paEmittenteDesc" -> row.getPaEmittenteDsc();
+            default -> null;
+        };
+    }
 
     public static final Map<String, String> SEARCH_INSTANCE_SORT_MAPPINGS = Map.ofEntries(
         Map.entry("id", "id"),
@@ -202,6 +253,21 @@ public final class PaymentUtil {
         "token", "token",
         "corr-id","id"
     );
+
+    public static Object workflowSortValue(Object[] row, String property) {
+        return switch (property) {
+            case "insertedtimestamp", "insertedTimestamp" -> row[0];
+            case "nomeevento", "tipoEvento" -> row[1];
+            case "tipoevento", "sottotipoEvento" -> row[2];
+            case "outcome" -> row[3];
+            case "eventId", "event-id" -> row[4];
+            case "faultcode", "faultCode" -> row[5];
+            case "token" -> row[6];
+            case "corr-id","id" -> row[8];
+            default -> null;
+
+        };
+    }
 
     public  static ResponseEntity<String> validatePageable(Pageable pageable, Map<String, String> mapAttribute) throws BadRequestException {
         if (pageable.getSort().isSorted()) {

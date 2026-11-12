@@ -233,14 +233,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         return new PageImpl<PositionPaymentExtraDTO>(pageContent, pageable, allRows.size());
     }
 
-    private String extraSortValue(PositionPaymentExtraDTO row, String property) {
-        return switch (property) {
-            case "nav" -> row.getNav();
-            case "pa-emittente", "paEmittente" -> row.getPaEmittente();
-            case "pa-emittente-desc", "paEmittenteDesc" -> row.getPaEmittenteDsc();
-            default -> null;
-        };
-    }
+
 
     @Override
     public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
@@ -367,20 +360,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         });
     }
 
-    private Object positionSortValue(Object[] row, String property) {
-        return switch (property) {
-            case "tokenDateEvent" -> toInstantFromDate(row[8]);
-            case "paymentDate" -> toInstant(row[9]);
-            case "psp" -> asString(row[13]);
-            case "ptPsp" -> asString(row[15]);
-            case "amount" -> row[11] instanceof Number number ? number.doubleValue() : null;
-            case "paymentMethod" -> asString(row[19]);
-            case "touchpoint" -> asString(row[18]);
-            case "ptPaDesc" -> asString(row[22]);
-            case "tokenHex" -> asString(row[7]);
-            default -> null;
-        };
-    }
+
 
     private int comparePositionSortValues(Object left, Object right) {
         if (left instanceof java.time.Instant leftInstant && right instanceof java.time.Instant rightInstant) {
@@ -629,18 +609,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         });
     }
 
-    private Object transferSortValue(Object[] row, String property) {
-        return switch (property) {
-            case "idTransfer" -> row[10];
-            case "typeTransfer" -> Boolean.TRUE.equals(row[11]) ? "bollo" : "sepa";
-            case "isBollo" -> row[11];
-            case "iban", "ibanTransfer" -> row[12];
-            case "amount", "amountTransfer" -> row[13];
-            case "paFiscalCode", "paTransfer" -> row[14];
-            case "transferDateEvent", "dateEvent" -> row.length > 15 ? row[15] : null;
-            default -> null;
-        };
-    }
+
 
     private int compareTransferSortValues(Object left, Object right) {
         if (left instanceof Number leftNumber && right instanceof Number rightNumber) {
@@ -808,19 +777,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         });
     }
 
-    private Object workflowSortValue(Object[] row, String property) {
-        return switch (property) {
-            case "insertedtimestamp", "insertedTimestamp" -> row[0];
-            case "tipoevento", "tipoEvento" -> row[1];
-            case "sottotipoevento", "sottotipoEvento" -> row[2];
-            case "outcome" -> row[3];
-            case "eventId", "event-id" -> row[4];
-            case "faultcode", "faultCode" -> row[5];
-            case "token" -> row[6];
-            case "id" -> row[8];
-            default -> null;
-        };
-    }
+
 
     @Override
     public Page<ExtraInfoResponseDTO> getExtraInfo(String token, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
@@ -952,15 +909,5 @@ public class SertHistoryDataServiceImpl implements SertService {
         });
     }
 
-    private String extraInfoSortValue(ExtraInfoObjectDTO result, String property) {
-        return switch (property) {
-            case "nav" -> result.getNav();
-            case "paEmittente", "pa-emittente" -> result.getPaEmittente();
-            case "token" -> result.getToken();
-            case "name", "infoName" -> result.getName();
-            case "value", "infoValue" -> result.getValue();
-            case "tipoevento", "tipoEvento" -> result.getTipoevento();
-            default -> null;
-        };
-    }
+
 }
