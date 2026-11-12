@@ -3,6 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.errors;
 import static org.springframework.core.annotation.AnnotatedElementUtils.findMergedAnnotation;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.exception.GenericServiceException;
+import com.nexigroup.pagopa.cruscotto.sert.service.exception.HistoryDatabaseUnavailableException;
 import com.nexigroup.pagopa.cruscotto.sert.service.exception.UsernameAlreadyUsedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -261,6 +262,8 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     }
 
     private String getCustomizedErrorDetails(Throwable err) {
+        if (err instanceof HistoryDatabaseUnavailableException) return err.getMessage();
+
         Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
         if (activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_PRODUCTION)) {
             if (err instanceof HttpMessageConversionException) return "Unable to convert http message";

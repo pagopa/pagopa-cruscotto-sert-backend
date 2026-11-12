@@ -17,6 +17,7 @@ import com.nexigroup.pagopa.cruscotto.sert.service.dto.TokenInfoDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.TransferPaymentDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowObjectDTO;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.WorkflowResponseDTO;
+import com.nexigroup.pagopa.cruscotto.sert.service.exception.HistoryDatabaseUnavailableException;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -270,6 +272,68 @@ class SertSearchCommonResourceTest {
         ).getBody()).isSameAs(extraInfo);
 
         verifyNoInteractions(service);
+    }
+
+    @Test
+    void translatesHistoryDatabaseAccessFailuresFromAllSearchEndpoints() {
+        DataAccessResourceFailureException unavailable = new DataAccessResourceFailureException("database unavailable");
+        when(freezeDataService.searchByNav(
+            eq("nav-1"), eq("pa-1"), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
+            .thenThrow(unavailable);
+        when(freezeDataService.getPosition(
+            eq("nav-1"), eq("pa-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
+            .thenThrow(unavailable);
+        when(freezeDataService.getTokenInfo("token-1", false, VALID_DATE_FROM, VALID_DATE_TO)).thenThrow(unavailable);
+        when(freezeDataService.getTransfers(
+            eq("nav-1"), eq("pa-1"), eq("token-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
+            .thenThrow(unavailable);
+        when(freezeDataService.getWorkflows(
+            eq("nav-1"), eq("pa-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
+            .thenThrow(unavailable);
+        when(freezeDataService.getExtraInfo(
+            eq("token-1"), eq(false), eq(VALID_DATE_FROM), eq(VALID_DATE_TO), any(Pageable.class)
+        ))
+            .thenThrow(unavailable);
+
+        assertHistoryUnavailable(
+            () -> resource.search(
+                "pa-1", "nav-1", null, null, null, null, true, false, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            ),
+            unavailable
+        );
+        assertHistoryUnavailable(
+            () -> resource.getPosition("nav-1", "pa-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)),
+            unavailable
+        );
+        assertHistoryUnavailable(
+            () -> resource.getTokenInfo("token-1", false, true, VALID_DATE_FROM, VALID_DATE_TO),
+            unavailable
+        );
+        assertHistoryUnavailable(
+            () -> resource.getTransfers(
+                "nav-1", "pa-1", "token-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)
+            ),
+            unavailable
+        );
+        assertHistoryUnavailable(
+            () -> resource.getWorkflows("nav-1", "pa-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)),
+            unavailable
+        );
+        assertHistoryUnavailable(
+            () -> resource.getExtraInfo("token-1", false, true, VALID_DATE_FROM, VALID_DATE_TO, Pageable.ofSize(10)),
+            unavailable
+        );
+    }
+
+    private void assertHistoryUnavailable(Runnable request, DataAccessResourceFailureException expected) {
+        assertThatThrownBy(request::run)
+            .isInstanceOf(HistoryDatabaseUnavailableException.class)
+            .hasMessage("DB History unavailable")
+            .hasCause(expected);
     }
 
     private PositionPaymentExtraDTO positionExtra(String nav) {

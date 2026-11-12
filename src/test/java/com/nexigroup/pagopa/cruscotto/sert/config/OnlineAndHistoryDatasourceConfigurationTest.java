@@ -71,4 +71,18 @@ class OnlineAndHistoryDatasourceConfigurationTest {
                 .containsEntry("hibernate.default_schema", "sert_history");
         });
     }
+
+    @Test
+    void startsWhenHistoryDatasourceIsUnavailable() {
+        contextRunner
+            .withPropertyValues(
+                "spring.datasource.history.url=jdbc:postgresql://127.0.0.1:1/history",
+                "spring.datasource.history.hikari.connection-timeout=1000"
+            )
+            .run(context -> {
+                assertThat(context).hasNotFailed();
+                assertThat(context).hasBean("historyEntityManagerFactory");
+                assertThat(context).hasBean("historyPositionRepository");
+            });
+    }
 }

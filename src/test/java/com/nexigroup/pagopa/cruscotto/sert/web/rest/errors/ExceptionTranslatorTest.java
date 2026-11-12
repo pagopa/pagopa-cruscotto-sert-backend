@@ -3,8 +3,10 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.errors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.nexigroup.pagopa.cruscotto.sert.config.RequestLoggingFilter;
+import com.nexigroup.pagopa.cruscotto.sert.service.exception.HistoryDatabaseUnavailableException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -37,5 +39,18 @@ class ExceptionTranslatorTest {
         );
 
         assertThat(problem.getProperties()).containsEntry("correlationId", correlationId);
+    }
+
+    @Test
+    void respondsWithServiceUnavailableWhenHistoryDatabaseIsUnavailable() {
+        ResponseEntity<Object> response = exceptionTranslator.handleAnyException(
+            new HistoryDatabaseUnavailableException(new IllegalStateException("connection failed")),
+            new ServletWebRequest(new MockHttpServletRequest(), new MockHttpServletResponse())
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(response.getBody()).isInstanceOf(ProblemDetailWithCause.class);
+        ProblemDetailWithCause problem = (ProblemDetailWithCause) response.getBody();
+        assertThat(problem.getDetail()).isEqualTo("DB History unavailable");
     }
 }

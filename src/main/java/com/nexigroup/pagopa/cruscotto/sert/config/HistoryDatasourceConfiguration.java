@@ -53,7 +53,16 @@ public class HistoryDatasourceConfiguration {
             .dataSource(dataSource)
             .packages("com.nexigroup.pagopa.cruscotto.sert.domain")
             .persistenceUnit("history")
-            .properties(Map.of("hibernate.default_schema", schema))
+            .properties(
+                Map.of(
+                    "hibernate.default_schema",
+                    schema,
+                    "hibernate.boot.allow_jdbc_metadata_access",
+                    false,
+                    "hibernate.dialect",
+                    "org.hibernate.dialect.PostgreSQLDialect"
+                )
+            )
             .build();
     }
 

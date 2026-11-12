@@ -2,17 +2,21 @@ package com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
+import com.nexigroup.pagopa.cruscotto.sert.service.exception.HistoryDatabaseUnavailableException;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertHistoryDataServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.service.impl.SertOnlineServiceImpl;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil;
+import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.PaginationUtil;
@@ -146,7 +150,25 @@ public class SertSearchCommonResource {
             }
 
             if (searchFromHistory) {
-                Page<PositionPaymentExtraDTO> oldPage = searchPositionPayment(pa, nav, iuv, token, idCarrello, info, presentGroups, page, searchPageable,sertHistoryDataService, dateFrom, dateTo);
+                Page<PositionPaymentExtraDTO> oldPage;
+                try {
+                    oldPage = searchPositionPayment(
+                        pa,
+                        nav,
+                        iuv,
+                        token,
+                        idCarrello,
+                        info,
+                        presentGroups,
+                        page,
+                        searchPageable,
+                        sertHistoryDataService,
+                        dateFrom,
+                        dateTo
+                    );
+                } catch (Exception e) {
+                    throw handleRequestException("search", e, true);
+                }
                 if (page == null) {
                     page = new PageImpl<>(List.of(), searchPageable, 0);
                 }
@@ -162,14 +184,8 @@ public class SertSearchCommonResource {
 
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
             return ResponseEntity.ok().headers(headers).body(page.getContent());
-        } catch (ResponseStatusException e) {
-                throw e;
-        }catch (Exception e) {
-            log.error("Error occurred during search operation. ", e);
-            throw new ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An error occurred while processing your request. Please try again later."
-            );
+        } catch (Exception e) {
+            throw handleRequestException("search", e, false);
         }
     }
 
@@ -313,13 +329,8 @@ public class SertSearchCommonResource {
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 
-        } catch (ResponseStatusException e) {
-            throw e;
         } catch (Exception e) {
-            log.error("Error in getPosition ", e);
-            throw new ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An error occurred while processing your request. Please try again later.");
+            throw handleRequestException("getPosition", e, searchFromHistory);
         }
     }
 
@@ -336,13 +347,8 @@ public class SertSearchCommonResource {
                 );
             }
             return ResponseEntity.ok(tokenInfo);
-        } catch (ResponseStatusException e) {
-            throw e;
-        }catch (Exception e) {
-            log.error("Error in getTokenInfo ", e);
-            throw new ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An error occurred while processing your request. Please try again later.");
+        } catch (Exception e) {
+            throw handleRequestException("getTokenInfo", e, searchFromHistory);
         }
     }
 
@@ -377,14 +383,8 @@ public class SertSearchCommonResource {
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 
-        } catch (ResponseStatusException e) {
-            throw e;
         } catch (Exception e) {
-            log.error("Error in getTransfers ", e);
-
-            throw new ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An error occurred while processing your request. Please try again later.");
+            throw handleRequestException("getTransfers", e, searchFromHistory);
         }
     }
 
@@ -429,14 +429,8 @@ public class SertSearchCommonResource {
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0).getEventsPosition());
 
 
-        } catch (ResponseStatusException e) {
-            throw e;
         } catch (Exception e) {
-            log.error("Error in getWorkflows ", e);
-
-            throw new ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An error occurred while processing your request. Please try again later.");
+            throw handleRequestException("getWorkflows", e, searchFromHistory);
         }
     }
 
@@ -467,14 +461,39 @@ public class SertSearchCommonResource {
 
             return ResponseEntity.ok().headers(headers).body(page.getContent().get(0));
 
-        } catch (ResponseStatusException e) {
-            throw e;
         } catch (Exception e) {
-            log.error("Error in getExtraInfo ", e);
-
-            throw new ResponseStatusException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An error occurred while processing your request. Please try again later.");
+            throw handleRequestException("getExtraInfo", e, searchFromHistory);
         }
+    }
+
+    private RuntimeException handleRequestException(String operation, Exception exception, boolean historyRequest) {
+        if (exception instanceof ResponseStatusException responseStatusException) return responseStatusException;
+        if (exception instanceof HistoryDatabaseUnavailableException historyException) return historyException;
+        if (historyRequest && isHistoryDatabaseException(exception)) {
+            log.error("History database unavailable during {} ", operation, exception);
+            return new HistoryDatabaseUnavailableException(exception);
+        }
+
+        log.error("Error in {} ", operation, exception);
+        return new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "An error occurred while processing your request. Please try again later.",
+            exception
+        );
+    }
+
+    private boolean isHistoryDatabaseException(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            if (
+                current instanceof DataAccessException ||
+                current instanceof PersistenceException ||
+                current instanceof TransactionException
+            ) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }
