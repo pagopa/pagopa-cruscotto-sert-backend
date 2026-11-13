@@ -5,6 +5,9 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.parseInfoMatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +15,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
@@ -31,6 +35,8 @@ import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.*;
  */
 @Service
 public class SertOnlineServiceImpl implements SertService {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Logger log = LoggerFactory.getLogger(SertOnlineServiceImpl.class);
 
@@ -355,7 +361,28 @@ public class SertOnlineServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
-        Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(nav, paEmittente, pageable);
+        List<Object[]> positionRows = positionRepository.findPositionIdsAndDateEvents(nav, paEmittente);
+        Set<Integer> positionIds = new LinkedHashSet<>();
+        Set<LocalDate> positionDateEvents = new LinkedHashSet<>();
+        if (positionRows != null) {
+            for (Object[] row : positionRows) {
+                if (row != null && row.length > 0 && row[0] instanceof Number positionId) {
+                    positionIds.add(positionId.intValue());
+                    if (row.length > 1) {
+                        addPositionDateEvents(positionDateEvents, row[1], row.length > 2 ? row[2] : null, positionId);
+                    }
+                }
+            }
+        }
+        if (positionIds.isEmpty() || positionDateEvents.isEmpty()) {
+            return null;
+        }
+
+        Page<Object[]> workflowEvents = positionRepository.findPositionWorkflows(
+            new ArrayList<>(positionIds),
+            new ArrayList<>(positionDateEvents),
+            pageable
+        );
 
         if (workflowEvents == null || workflowEvents.isEmpty()) {
             return null;
@@ -367,19 +394,16 @@ public class SertOnlineServiceImpl implements SertService {
         int offset = (int) pageable.getOffset();
         for (int i = 0; i < rows.size(); i++) {
             Object[] row = rows.get(i);
-            // In case of a LEFT JOIN where there are no events at all, all event fields would be null.
-            if (row[0] == null && row[4] == null) {
-                continue;
-            }
 
-            String token = tokenAsHex(row[6]);
+
+            String token = row[6] !=null ? tokenAsHex(row[6]):null;
             String faultcode =  (row[5] != null ? String.valueOf(row[5]) : null);
             if ((asString(row[2]).equals("REQ/RESP"))&& asString(row[7]).equals("REQ")){
                 faultcode=null;
             }
 
             WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
-                .insertedtimestamp(toInstant(row[0]))
+                .insertedtimestamp(row[0] !=null ? toInstant(row[0]):null)
                 .tipoevento(asString(row[1]))
                 .sottotipoevento(asString(row[2]).equals("REQ/RESP")?asString(row[7]):asString(row[2]))
                 .outcome(asString(row[3]))
@@ -399,6 +423,43 @@ public class SertOnlineServiceImpl implements SertService {
             .build();
 
         return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);
+    }
+
+    private void addPositionDateEvents(
+        Set<LocalDate> positionDateEvents,
+        Object dateEvent,
+        Object dateEvents,
+        Object positionId
+    ) {
+        if (dateEvent instanceof LocalDate eventDate) {
+            positionDateEvents.add(eventDate);
+        } else if (dateEvent instanceof java.sql.Date eventDate) {
+            positionDateEvents.add(eventDate.toLocalDate());
+        } else if (dateEvent instanceof String eventDate && !eventDate.isBlank()) {
+            positionDateEvents.add(LocalDate.parse(eventDate));
+        }
+
+        if (dateEvents == null) {
+            return;
+        }
+
+        try {
+            JsonNode dates = OBJECT_MAPPER.readTree(dateEvents.toString());
+            if (dates.isArray()) {
+                for (JsonNode date : dates) {
+                    if (!date.isNull()) {
+                        positionDateEvents.add(LocalDate.parse(date.asText()));
+                    }
+                }
+            } else if (dates.isTextual()) {
+                positionDateEvents.add(LocalDate.parse(dates.asText()));
+            } else {
+                throw new IllegalArgumentException("Expected a JSON date or array of dates for position " + positionId);
+            }
+        } catch (JsonProcessingException exception) {
+            log.error("Invalid dateEvents JSON for position {}", positionId, exception);
+            throw new IllegalStateException("Unable to parse dateEvents for position " + positionId, exception);
+        }
     }
 
     @Override

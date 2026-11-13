@@ -7,8 +7,13 @@ import com.nexigroup.pagopa.cruscotto.sert.service.SertService;
 import com.nexigroup.pagopa.cruscotto.sert.service.dto.*;
 import com.nexigroup.pagopa.cruscotto.sert.service.util.PageCustomImpl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -24,7 +29,8 @@ import static com.nexigroup.pagopa.cruscotto.sert.service.util.PaymentUtil.*;
 @Service
 public class SertHistoryDataServiceImpl implements SertService {
 
-    private final Logger log = LoggerFactory.getLogger(SertOnlineServiceImpl.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger log = LoggerFactory.getLogger(SertHistoryDataServiceImpl.class);
 
 
     private final HistoryPositionRepository historyPositionRepository;
@@ -41,7 +47,8 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByNav(String nav, String pa, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to search by NAV: {}, PA: {}, offset: {}, limit: {}", nav, pa, pageable.getOffset(), pageable.getPageSize());
 
-        Page<Object[]> groupRow = historyPositionRepository.searchByNav(nav, pa, dateFrom ,dateTo, pageable);
+        Page<Object[]> groupRow = executeRepositoryQuery("historyPositionRepository.searchByNav",
+            () -> historyPositionRepository.searchByNav(nav, pa, dateFrom, dateTo, pageable));
         if (groupRow == null || groupRow.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -56,12 +63,8 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByIuv(String pa, String nav, String iuv, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by IUV: {}, PA: {}, NAV: {}, offset: {}, limit: {}", iuv, pa, nav, pageable.getOffset(), pageable.getPageSize());
 
-        List<Object[]> onlineRows = onlinePositionRepository.searchByIuv(
-            iuv,
-            nav,
-            pa,
-            Pageable.unpaged()
-        );
+        List<Object[]> onlineRows = executeRepositoryQuery("onlinePositionRepository.searchByIuv",
+            () -> onlinePositionRepository.searchByIuv(iuv, nav, pa, Pageable.unpaged()));
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
         List<Integer> onlinePositionIds = safeOnlineRows.stream()
             .map(row -> ((Number) row[0]).intValue())
@@ -70,16 +73,10 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> ((Number) row[1]).intValue())
             .toList();
 
-        Page<Object[]> groupRow = historyPositionRepository.searchByIuv(
-            iuv,
-            nav,
-            pa,
-            dateFrom,
-            dateTo,
-            onlinePositionIds,
-            onlinePositionTokenIds,
-            pageable
-        );
+        Page<Object[]> groupRow = executeRepositoryQuery("historyPositionRepository.searchByIuv",
+            () -> historyPositionRepository.searchByIuv(
+                iuv, nav, pa, dateFrom, dateTo, onlinePositionIds, onlinePositionTokenIds, pageable
+            ));
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -92,12 +89,8 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentExtraDTO> searchByCart(String pa, String nav, String idCart, LocalDate dateFrom, LocalDate dateTo,Pageable pageable) {
         log.debug("Request to search by Cart: {}, offset: {}, limit: {}", idCart, pageable.getOffset(), pageable.getPageSize());
 
-        List<Object[]> onlineRows = onlinePositionRepository.searchByCart(
-            idCart,
-            nav,
-            pa,
-            Pageable.unpaged()
-        );
+        List<Object[]> onlineRows = executeRepositoryQuery("onlinePositionRepository.searchByCart",
+            () -> onlinePositionRepository.searchByCart(idCart, nav, pa, Pageable.unpaged()));
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
         List<Integer> onlinePositionIds = safeOnlineRows.stream()
             .map(row -> ((Number) row[0]).intValue())
@@ -106,16 +99,10 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> ((Number) row[1]).intValue())
             .toList();
 
-        Page<Object[]> groupRow = historyPositionRepository.searchByCart(
-            idCart,
-            nav,
-            pa,
-            dateFrom,
-            dateTo,
-            onlinePositionIds,
-            onlinePositionTokenIds,
-            pageable
-        );
+        Page<Object[]> groupRow = executeRepositoryQuery("historyPositionRepository.searchByCart",
+            () -> historyPositionRepository.searchByCart(
+                idCart, nav, pa, dateFrom, dateTo, onlinePositionIds, onlinePositionTokenIds, pageable
+            ));
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -134,12 +121,8 @@ public class SertHistoryDataServiceImpl implements SertService {
 
         String normalizedToken = token.trim();
 
-        List<Object[]> onlineRows = onlinePositionRepository.searchByToken(
-            normalizedToken,
-            nav,
-            pa,
-            Pageable.unpaged()
-        );
+        List<Object[]> onlineRows = executeRepositoryQuery("onlinePositionRepository.searchByToken",
+            () -> onlinePositionRepository.searchByToken(normalizedToken, nav, pa, Pageable.unpaged()));
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
         List<Integer> onlinePositionIds = safeOnlineRows.stream()
             .map(row -> ((Number) row[0]).intValue())
@@ -148,16 +131,10 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(row -> ((Number) row[1]).intValue())
             .toList();
 
-        Page<Object[]> groupRow = historyPositionRepository.searchByToken(
-            normalizedToken,
-            nav,
-            pa,
-            dateFrom,
-            dateTo,
-            onlinePositionIds,
-            onlinePositionTokenIds,
-            pageable
-        );
+        Page<Object[]> groupRow = executeRepositoryQuery("historyPositionRepository.searchByToken",
+            () -> historyPositionRepository.searchByToken(
+                normalizedToken, nav, pa, dateFrom, dateTo, onlinePositionIds, onlinePositionTokenIds, pageable
+            ));
 
         return groupRow.map(row -> PositionPaymentExtraDTO.builder()
             .nav(asString(row[0]))
@@ -174,11 +151,8 @@ public class SertHistoryDataServiceImpl implements SertService {
             return Page.empty(pageable);
         }
 
-        List<Object[]> onlineRows = onlinePositionRepository.searchExtra(
-            searchValue,
-            nav,
-            pa
-        );
+        List<Object[]> onlineRows = executeRepositoryQuery("onlinePositionRepository.searchExtra",
+            () -> onlinePositionRepository.searchExtra(searchValue, nav, pa));
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
         String onlinePositionIds = extraIds(safeOnlineRows, 0).stream()
             .map(String::valueOf)
@@ -187,18 +161,10 @@ public class SertHistoryDataServiceImpl implements SertService {
             .map(String::valueOf)
             .collect(Collectors.joining(","));
 
-        log.info(searchValue +" :chiamata alla query in historyPositionRepository");
-
-        List<Object[]> groupedRows = historyPositionRepository.searchExtra(
-            searchValue,
-            nav,
-            pa,
-            dateFrom,
-            dateTo,
-            onlinePositionIds,
-            onlinePositionTokenIds
-        );
-        log.info(searchValue +" :fine chiamata alla query in historyPositionRepository");
+        List<Object[]> groupedRows = executeRepositoryQuery("historyPositionRepository.searchExtra",
+            () -> historyPositionRepository.searchExtra(
+                searchValue, nav, pa, dateFrom, dateTo, onlinePositionIds, onlinePositionTokenIds
+            ));
 
         List<PositionPaymentExtraDTO> allRows = new ArrayList<>(groupedRows.stream()
             .map(row -> PositionPaymentExtraDTO.builder()
@@ -239,9 +205,10 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<PositionPaymentDTO> getPosition(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get position: {}, {}", nav, paEmittente);
 
-        Page<Object[]> historyPositionRows = historyPositionRepository.findPositionDetailRows(
-            nav, paEmittente, dateFrom, dateTo, Pageable.unpaged()
-        );
+        Page<Object[]> historyPositionRows = executeRepositoryQuery("historyPositionRepository.findPositionDetailRows",
+            () -> historyPositionRepository.findPositionDetailRows(
+                nav, paEmittente, dateFrom, dateTo, Pageable.unpaged()
+            ));
         List<Object[]> safeHistoryRows = historyPositionRows == null || historyPositionRows.getContent() == null
             ? List.of()
             : historyPositionRows.getContent();
@@ -249,9 +216,10 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Integer> offlinePositionTokenIds = extraIdsAsIntegers(safeHistoryRows, 1);
 
         Page<Object[]> onlinePositionPage = searchFromOnline
-            ? onlinePositionRepository.findPositionDetailRows(
-                nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
-            )
+            ? executeRepositoryQuery("onlinePositionRepository.findPositionDetailRows",
+                () -> onlinePositionRepository.findPositionDetailRows(
+                    nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
+                ))
             : Page.empty();
         List<Object[]> safeOnlineRows = onlinePositionPage == null || onlinePositionPage.getContent() == null
             ? List.of()
@@ -381,12 +349,14 @@ public class SertHistoryDataServiceImpl implements SertService {
             return null;
         }
         List<Object[]> onlineRows = searchFromOnline
-            ? onlinePositionRepository.findTokenDetailRow(token.trim())
+            ? executeRepositoryQuery("onlinePositionRepository.findTokenDetailRow",
+                () -> onlinePositionRepository.findTokenDetailRow(token.trim()))
             : List.of();
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
         List<Integer> offlinePositionIds = extraIdsAsIntegers(safeOnlineRows, 0);
 
-        List<Object[]> historyPositionRows = historyPositionRepository.findTokenDetailRow(token.trim(), dateFrom, dateTo,offlinePositionIds);
+        List<Object[]> historyPositionRows = executeRepositoryQuery("historyPositionRepository.findTokenDetailRow",
+            () -> historyPositionRepository.findTokenDetailRow(token.trim(), dateFrom, dateTo, offlinePositionIds));
         List<Object[]> safeHistoryRows = historyPositionRows == null ? List.of() : historyPositionRows;
 
 
@@ -503,13 +473,16 @@ public class SertHistoryDataServiceImpl implements SertService {
             return null;
         }
 
-        List<Object[]> byTokenNoPage = historyPositionRepository.findByTokenNoPage(token.trim(), nav, paEmittente, dateFrom, dateTo);
+        List<Object[]> byTokenNoPage = executeRepositoryQuery("historyPositionRepository.findByTokenNoPage",
+            () -> historyPositionRepository.findByTokenNoPage(token.trim(), nav, paEmittente, dateFrom, dateTo));
         List<Object[]> safeTokenRows = byTokenNoPage == null ? List.of() : byTokenNoPage;
         List<Integer> positionTokenIds = extraIdsAsIntegers(safeTokenRows, 1);
         List<Object[]> onlineRows = searchFromOnline
-            ? onlinePositionRepository.findTransferDetailRows(token.trim(), positionTokenIds)
+            ? executeRepositoryQuery("onlinePositionRepository.findTransferDetailRows",
+                () -> onlinePositionRepository.findTransferDetailRows(token.trim(), positionTokenIds))
             : List.of();
-        List<Object[]> historyRows = historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), dateFrom, dateTo);
+        List<Object[]> historyRows = executeRepositoryQuery("historyPositionRepository.findTransferDetailRows",
+            () -> historyPositionRepository.findTransferDetailRows(nav, paEmittente, token.trim(), dateFrom, dateTo));
 
         List<Object[]> rows = new ArrayList<>();
         if (onlineRows != null) {
@@ -647,12 +620,18 @@ public class SertHistoryDataServiceImpl implements SertService {
     public Page<WorkflowResponseDTO> getWorkflows(String nav, String paEmittente, boolean searchFromOnline, LocalDate dateFrom, LocalDate dateTo, Pageable pageable) {
         log.debug("Request to get workflows for: {}, {}", nav, paEmittente);
 
-        List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(null, nav, paEmittente, dateFrom, dateTo);
+        List<Object[]> historyPositionRows = executeRepositoryQuery("historyPositionRepository.findByTokenNoPage",
+            () -> historyPositionRepository.findByTokenNoPage(null, nav, paEmittente, dateFrom, dateTo));
         List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
 
-
-        Set<Integer> positionTokenIds = new LinkedHashSet<>(extraIdsAsIntegers(safeHistoryPositionRows, 1));
-
+        Set<Integer> positionIds = new LinkedHashSet<>();
+        Set<LocalDate> positionDateEvents = new LinkedHashSet<>();
+        for (Object[] row : safeHistoryPositionRows) {
+            if (row.length > 0 && row[0] instanceof Number positionId) {
+                positionIds.add(positionId.intValue());
+                addPositionDateEvents(positionDateEvents, row, positionId);
+            }
+        }
 
         Map<Integer, String> tokenById = new LinkedHashMap<>();
         for (Object[] row : safeHistoryPositionRows) {
@@ -663,47 +642,50 @@ public class SertHistoryDataServiceImpl implements SertService {
 
 
         if (searchFromOnline){
-            List<Object[]> onlineByTokenNoPage = onlinePositionRepository.findByTokenNoPage(null, nav, paEmittente);
+            List<Object[]> onlineByTokenNoPage = executeRepositoryQuery("onlinePositionRepository.findByTokenNoPage",
+                () -> onlinePositionRepository.findByTokenNoPage(
+                    null,
+                    nav,
+                    paEmittente,
+                    positionIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionIds)
+                ));
             List<Object[]> safeOnlineByTokenNoPage = onlineByTokenNoPage == null ? List.of() : onlineByTokenNoPage;
 
-            if (safeOnlineByTokenNoPage != null) {
-                for (Object[] row : safeOnlineByTokenNoPage) {
-                    if (row.length > 2 && row[1] instanceof Number tokenId && row[2] != null) {
-                        positionTokenIds.add(tokenId.intValue());
-                        tokenById.put(tokenId.intValue(), tokenAsHex(row[2]));
-
-                    }
+            for (Object[] row : safeOnlineByTokenNoPage) {
+                if (row.length > 0 && row[0] instanceof Number positionId) {
+                    positionIds.add(positionId.intValue());
+                    addPositionDateEvents(positionDateEvents, row, positionId);
+                }
+                if (row.length > 2 && row[1] instanceof Number tokenId && row[2] != null) {
+                    tokenById.put(tokenId.intValue(), tokenAsHex(row[2]));
                 }
             }
         }
 
-        List<Integer> queryPositionTokenIds = positionTokenIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionTokenIds);
+        if (positionIds.isEmpty() || positionDateEvents.isEmpty()) {
+            return null;
+        }
+        List<Integer> queryPositionIds = new ArrayList<>(positionIds);
+        List<LocalDate> queryPositionDateEvents = new ArrayList<>(positionDateEvents);
 
-        List<Object[]> historyWorkflowEvents = historyPositionRepository.findPositionWorkflows(
-            queryPositionTokenIds,
-            dateFrom,
-            dateTo
-        );
+        List<Object[]> historyWorkflowEvents = executeRepositoryQuery("historyPositionRepository.findPositionWorkflows",
+            () -> historyPositionRepository.findPositionWorkflows(queryPositionIds, queryPositionDateEvents));
         List<Object[]> onlineWorkflowEvents = searchFromOnline
-            ? onlinePositionRepository.findPositionWorkflows(queryPositionTokenIds)
+            ? executeRepositoryQuery("onlinePositionRepository.findPositionWorkflows",
+                () -> onlinePositionRepository.findPositionWorkflows(queryPositionIds, queryPositionDateEvents))
             : List.of();
         List<Object[]> workflowRows = new ArrayList<>();
-        List<Object[]> tokenRows = new ArrayList<>();
         if (historyWorkflowEvents != null) {
             workflowRows.addAll(historyWorkflowEvents.stream().filter(this::hasWorkflowEvent).toList());
-            tokenRows.addAll(historyWorkflowEvents.stream().filter(this::hasTokenWorkflowEvent).toList());
         }
         if (onlineWorkflowEvents != null) {
             workflowRows.addAll(onlineWorkflowEvents.stream().filter(this::hasWorkflowEvent).toList());
-            tokenRows.addAll(onlineWorkflowEvents.stream().filter(this::hasTokenWorkflowEvent).toList());
         }
         if (workflowRows.isEmpty()) {
             return null;
         }
 
-        if (tokenRows.isEmpty()) {
-            return null;
-        }
+
 
         sortWorkflowRows(workflowRows, pageable);
         long totalCount = workflowRows.size();
@@ -713,11 +695,6 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<WorkflowObjectDTO> eventsPositionList = new java.util.ArrayList<>();
 
         for (Object[] row : pageRows) {
-            // In case of a LEFT JOIN where there are no events at all, all event fields would be null.
-            if (row[0] == null && row[4] == null) {
-                continue;
-            }
-
 
             String faultcode =  (row[5] != null ? String.valueOf(row[5]) : null);
             if ("REQ/RESP".equals(asString(row[2])) && "REQ".equals(asString(row[7]))) {
@@ -725,7 +702,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             }
 
             WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
-                .insertedtimestamp(toInstant(row[0]))
+                .insertedtimestamp(row[0] !=null ? toInstant(row[0]):null)
                 .tipoevento(asString(row[1]))
                 .sottotipoevento("REQ/RESP".equals(asString(row[2])) ? asString(row[7]) : asString(row[2]))
                 .outcome(asString(row[3]))
@@ -743,6 +720,41 @@ public class SertHistoryDataServiceImpl implements SertService {
             .build();
 
         return new PageCustomImpl<>(Collections.singletonList(dto), pageable, totalCount);
+    }
+
+    private void addPositionDateEvents(Set<LocalDate> positionDateEvents, Object[] row, Object positionId) {
+        if (row.length > 5) {
+            Object dateEvent = row[5];
+            if (dateEvent instanceof LocalDate eventDate) {
+                positionDateEvents.add(eventDate);
+            } else if (dateEvent instanceof java.sql.Date eventDate) {
+                positionDateEvents.add(eventDate.toLocalDate());
+            } else if (dateEvent instanceof String eventDate && !eventDate.isBlank()) {
+                positionDateEvents.add(LocalDate.parse(eventDate));
+            }
+        }
+
+        if (row.length <= 6 || row[6] == null) {
+            return;
+        }
+
+        try {
+            JsonNode dates = OBJECT_MAPPER.readTree(row[6].toString());
+            if (dates.isArray()) {
+                for (JsonNode date : dates) {
+                    if (!date.isNull()) {
+                        positionDateEvents.add(LocalDate.parse(date.asText()));
+                    }
+                }
+            } else if (dates.isTextual()) {
+                positionDateEvents.add(LocalDate.parse(dates.asText()));
+            } else {
+                throw new IllegalArgumentException("Expected a JSON date or array of dates for position " + positionId);
+            }
+        } catch (JsonProcessingException exception) {
+            log.error("Invalid dateEvents JSON for position {}", positionId, exception);
+            throw new IllegalStateException("Unable to parse dateEvents for position " + positionId, exception);
+        }
     }
 
     private boolean hasWorkflowEvent(Object[] row) {
@@ -788,17 +800,17 @@ public class SertHistoryDataServiceImpl implements SertService {
         }
 
         String normalizedToken = token.trim();
-        List<Object[]> historyPositionRows = historyPositionRepository.findByTokenNoPage(normalizedToken, null, null, dateFrom, dateTo);
+        List<Object[]> historyPositionRows = executeRepositoryQuery("historyPositionRepository.findByTokenNoPage",
+            () -> historyPositionRepository.findByTokenNoPage(normalizedToken, null, null, dateFrom, dateTo));
         List<Object[]> safeHistoryPositionRows = historyPositionRows == null ? List.of() : historyPositionRows;
-
-
 
         Set<Integer> positionTokenIds = new LinkedHashSet<>(extraIdsAsIntegers(safeHistoryPositionRows, 1));
 
 
         List<Object[]> safeOnlineByTokenNoPage= List.of();
         if (searchFromOnline){
-            List<Object[]> onlineByTokenNoPage = onlinePositionRepository.findByTokenNoPage(token, null, null);
+            List<Object[]> onlineByTokenNoPage = executeRepositoryQuery("onlinePositionRepository.findByTokenNoPage",
+                () -> onlinePositionRepository.findByTokenNoPage(token, null, null));
             safeOnlineByTokenNoPage = onlineByTokenNoPage == null ? List.of() : onlineByTokenNoPage;
 
             if (safeOnlineByTokenNoPage != null) {
@@ -816,15 +828,13 @@ public class SertHistoryDataServiceImpl implements SertService {
 
 
         List<Object[]> onlineRows = searchFromOnline
-            ? onlinePositionRepository.findExtraInfoByToken(queryPositionTokenIds)
+            ? executeRepositoryQuery("onlinePositionRepository.findExtraInfoByToken",
+                () -> onlinePositionRepository.findExtraInfoByToken(queryPositionTokenIds))
             : List.of();
         List<Object[]> safeOnlineRows = onlineRows == null ? List.of() : onlineRows;
 
-        List<Object[]> historyRows = historyPositionRepository.findExtraInfoByToken(
-            queryPositionTokenIds,
-            dateFrom,
-            dateTo
-        );
+        List<Object[]> historyRows = executeRepositoryQuery("historyPositionRepository.findExtraInfoByToken",
+            () -> historyPositionRepository.findExtraInfoByToken(queryPositionTokenIds, dateFrom, dateTo));
         List<Object[]> safeHistoryRows = historyRows == null ? List.of() : historyRows;
 
         List<Object[]> rows = new ArrayList<>(safeOnlineRows);
@@ -909,5 +919,17 @@ public class SertHistoryDataServiceImpl implements SertService {
         });
     }
 
+    private <T> T executeRepositoryQuery(String queryName, Supplier<T> query) {
+        Instant startTimestamp = Instant.now();
+        long startNanos = System.nanoTime();
+        log.info("Inizio query {} - timestamp inizio: {}", queryName, startTimestamp);
+        try {
+            return query.get();
+        } finally {
+            Instant endTimestamp = Instant.now();
+            double elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000.0;
+            log.info("Fine query {} - timestamp fine: {} - tempo totale: {} ms", queryName, endTimestamp, elapsedMillis);
+        }
+    }
 
 }

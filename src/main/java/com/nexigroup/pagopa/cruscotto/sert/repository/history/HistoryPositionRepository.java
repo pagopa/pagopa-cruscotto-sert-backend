@@ -112,7 +112,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
 
 
     @Query(
-        value = "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description " +
+        value = "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description, p.dateEvent, p.dateEvents " +
             "FROM Position p  " +
             "LEFT JOIN PositionTokens pt  ON pt.fkPosition = p.id " +
             "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
@@ -347,32 +347,25 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
         @Param("dateTo") LocalDate dateTo);
 
     @Query(
-        "SELECT ew.insertedTimestampResp, ae.nomeEvento, ae.tipoEvento, ew.outcomeResp, ew.eventIdResp, " +
-            "afc.codice, ew.fkTokens , 'RESP', ew.id, pt.id " +
-            "FROM EventsWf ew " +
-            "JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
-            "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
-            "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE pt.id IN :positionTokenIds " +
-            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-            "OR (ew.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "AND pt.dateEvent BETWEEN :dateFrom AND :dateTo)) " +
+            "SELECT ew.insertedTimestampResp, ae.nomeEvento, ae.tipoEvento, ew.outcomeResp, ew.eventIdResp, " +
+                "afc.codice, ew.fkTokens , 'RESP', ew.id " +
+                "FROM EventsWf ew " +
+                "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
+                "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
+                "WHERE ew.fkPosition IN :positionIds " +
+                "AND ew.dateEvent IN :positionDateEvents " +
             "UNION ALL " +
             "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, " +
-                "afc.codice, ew.fkTokens , 'REQ', ew.id, pt.id " +
-            "FROM EventsWf ew " +
-            "JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
-            "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
-            "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE pt.id IN :positionTokenIds " +
-            "AND (CAST(:dateFrom AS date) IS NULL OR CAST(:dateTo AS date) IS NULL " +
-            "OR (ew.dateEvent BETWEEN :dateFrom AND :dateTo " +
-            "AND pt.dateEvent BETWEEN :dateFrom AND :dateTo))"
+                    "afc.codice, ew.fkTokens , 'REQ', ew.id " +
+                "FROM EventsWf ew " +
+                "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
+                "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
+            "WHERE ew.fkPosition IN :positionIds " +
+            "AND ew.dateEvent IN :positionDateEvents"
     )
     List<Object[]> findPositionWorkflows(
-        @Param("positionTokenIds") List<Integer> positionTokenIds,
-        @Param("dateFrom") LocalDate dateFrom,
-        @Param("dateTo") LocalDate dateTo);
+        @Param("positionIds") List<Integer> positionIds,
+        @Param("positionDateEvents") List<LocalDate> positionDateEvents);
 
     @Query(value = "SELECT " +
         "ei.id AS extraInfoId, " +

@@ -668,13 +668,25 @@ class SertHistoryDataServiceImplTest {
         onlineWorkflow[0] = Instant.parse("2026-01-02T00:00:00Z");
         Object[] leftJoinPlaceholder = new Object[9];
         leftJoinPlaceholder[7] = "RESP";
+        var historyDateEvent = LocalDate.of(2026, 1, 10);
+        var historyExtraDateEvent = LocalDate.of(2026, 1, 11);
+        var onlineDateEvent = LocalDate.of(2026, 1, 12);
+        var onlineExtraDateEvent = LocalDate.of(2026, 1, 13);
         when(historyRepository.findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo))
-            .thenReturn(List.<Object[]>of(new Object[] { 10, 20, "history" }));
-        when(onlineRepository.findByTokenNoPage(null, "NAV-1", "PA-1"))
-            .thenReturn(List.<Object[]>of(new Object[] { 11, 22, "online" }));
-        when(historyRepository.findPositionWorkflows(List.of(20, 22), dateFrom, dateTo))
+            .thenReturn(List.<Object[]>of(
+                new Object[] { 10, 20, "history", "NAV-1", "PA-1", historyDateEvent, "[\"2026-01-11\"]" }
+            ));
+        when(onlineRepository.findByTokenNoPage(null, "NAV-1", "PA-1", List.of(10)))
+            .thenReturn(List.<Object[]>of(
+                new Object[] { 11, 22, "online", "NAV-1", "PA-1", onlineDateEvent, "[\"2026-01-13\"]" }
+            ));
+        List<Integer> positionIds = List.of(10, 11);
+        List<LocalDate> positionDateEvents = List.of(
+            historyDateEvent, historyExtraDateEvent, onlineDateEvent, onlineExtraDateEvent
+        );
+        when(historyRepository.findPositionWorkflows(positionIds, positionDateEvents))
             .thenReturn(List.<Object[]>of(historyWorkflow, leftJoinPlaceholder));
-        when(onlineRepository.findPositionWorkflows(List.of(20, 22)))
+        when(onlineRepository.findPositionWorkflows(positionIds, positionDateEvents))
             .thenReturn(List.<Object[]>of(onlineWorkflow, leftJoinPlaceholder));
 
         var result = service.getWorkflows("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
@@ -689,8 +701,9 @@ class SertHistoryDataServiceImplTest {
             .extracting(event -> ((WorkflowTokenObjectDTO) event).getToken())
             .containsExactly("online", "history");
         verify(historyRepository).findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo);
-        verify(historyRepository).findPositionWorkflows(List.of(20, 22), dateFrom, dateTo);
-        verify(onlineRepository).findPositionWorkflows(List.of(20, 22));
+        verify(onlineRepository).findByTokenNoPage(null, "NAV-1", "PA-1", List.of(10));
+        verify(historyRepository).findPositionWorkflows(positionIds, positionDateEvents);
+        verify(onlineRepository).findPositionWorkflows(positionIds, positionDateEvents);
     }
 
     @Test

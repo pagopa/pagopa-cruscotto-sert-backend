@@ -205,6 +205,14 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
         "AND pt.token = FUNCTION('convert_to', :token, 'UTF8') " )
     Page<Object[]> findTransferDetailRows(@Param("nav") String nav, @Param("paEmittente") String paEmittente, @Param("token") String token, Pageable pageable);
 
+    @Query("SELECT p.id, p.dateEvent, p.dateEvents " +
+        "FROM Position p " +
+        "WHERE p.nav = :nav AND p.paEmittente = :paEmittente")
+    List<Object[]> findPositionIdsAndDateEvents(
+        @Param("nav") String nav,
+        @Param("paEmittente") String paEmittente
+    );
+
     @Query(value =
         "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
             "FROM ( " +
@@ -218,12 +226,12 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
             "'RESP' AS reqResp, " +
             "ew.id AS id " +
-            "FROM Position p " +
-            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+            "FROM EventsWf ew " +
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "WHERE ew.fkPosition IN :positionIds " +
+            "AND ew.dateEvent IN :positionDateEvents " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -235,30 +243,30 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "FUNCTION('ENCODE', pt.token, 'hex') AS token, " +
             "'REQ' AS reqResp, " +
             "ew.id AS id " +
-            "FROM Position p " +
-            "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
+            "FROM EventsWf ew " +
             "LEFT JOIN PositionTokens pt ON ew.fkTokens = pt.id " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+            "WHERE ew.fkPosition IN :positionIds " +
+            "AND ew.dateEvent IN :positionDateEvents " +
             " )"
         ,
         countQuery =
             "SELECT COUNT(*) FROM ( " +
                 "SELECT ew.id AS id " +
-                "FROM Position p " +
-                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+                "FROM EventsWf ew " +
+                "WHERE ew.fkPosition IN :positionIds " +
+                "AND ew.dateEvent IN :positionDateEvents " +
                 "UNION ALL " +
                 "SELECT ew.id AS id " +
-                "FROM Position p " +
-                "LEFT JOIN EventsWf ew ON ew.fkPosition = p.id " +
-                "WHERE p.nav = :nav AND p.paEmittente = :paEmittente " +
+                "FROM EventsWf ew " +
+                "WHERE ew.fkPosition IN :positionIds " +
+                "AND ew.dateEvent IN :positionDateEvents " +
                 ") "
     )
     Page<Object[]> findPositionWorkflows(
-        @Param("nav") String nav,
-        @Param("paEmittente") String paEmittente,
+        @Param("positionIds") List<Integer> positionIds,
+        @Param("positionDateEvents") List<LocalDate> positionDateEvents,
         Pageable pageable
     );
 

@@ -232,7 +232,15 @@ class SertOnlineServiceImplTest {
         event[6] = "61626364";
         event[7] = "REQ";
         event[8] = "id-1";
-        when(positionRepository.findPositionWorkflows("NAV-1", "PA-1", pageable))
+        var dateEvent = LocalDate.of(2026, 1, 15);
+        var dateEvents = LocalDate.of(2026, 1, 20);
+        when(positionRepository.findPositionIdsAndDateEvents("NAV-1", "PA-1"))
+            .thenReturn(List.<Object[]>of(new Object[] { 12, dateEvent, "[\"2026-01-20\"]" }));
+        when(positionRepository.findPositionWorkflows(
+            List.of(12),
+            List.of(dateEvent, dateEvents),
+            pageable
+        ))
             .thenReturn(new PageImpl<>(List.<Object[]>of(event), pageable, 1));
         var workflows = service.getWorkflows("NAV-1", "PA-1", true, DATE_FROM, DATE_TO, pageable);
         assertThat(workflows.getContent()).singleElement().satisfies(response -> {
@@ -241,6 +249,12 @@ class SertOnlineServiceImplTest {
                 assertThat(item.getFaultcode()).isNull();
             });
         });
+        verify(positionRepository).findPositionIdsAndDateEvents("NAV-1", "PA-1");
+        verify(positionRepository).findPositionWorkflows(
+            List.of(12),
+            List.of(dateEvent, dateEvents),
+            pageable
+        );
 
         Object[] visible = new Object[6];
         visible[0] = "NAV-1";

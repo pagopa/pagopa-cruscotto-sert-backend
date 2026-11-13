@@ -68,7 +68,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
     Page<Position> findByExtraAndOptionalNavAndPa(@Param("infoName") String infoName, @Param("infoValue") String infoValue, @Param("nav") String nav, @Param("pa") String pa, Pageable pageable);
 
     @Query(
-        value = "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description " +
+        value =         "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description, p.dateEvent, p.dateEvents " +
             "FROM PositionTokens pt " +
             "LEFT JOIN Position p ON pt.fkPosition = p.id " +
             "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
@@ -81,6 +81,21 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         @Param("token") String token,
         @Param("nav") String nav,
         @Param("pa") String pa
+    );
+
+    @Query(value = "SELECT p.id, pt.id, FUNCTION('ENCODE', pt.token, 'hex'), p.nav, ape.description, p.dateEvent, p.dateEvents " +
+        "FROM PositionTokens pt " +
+        "LEFT JOIN Position p ON pt.fkPosition = p.id " +
+        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+        "WHERE (CAST(:token AS string) IS NULL " +
+        "OR pt.token = FUNCTION('convert_to', CAST(:token AS string), 'UTF8')) " +
+        "AND (((:nav IS NULL OR p.nav = :nav) AND (:pa IS NULL OR p.paEmittente = :pa)) " +
+        "OR pt.fkPosition IN :positionIds)")
+    List<Object[]> findByTokenNoPage(
+        @Param("token") String token,
+        @Param("nav") String nav,
+        @Param("pa") String pa,
+        @Param("positionIds") List<Integer> positionIds
     );
 
     @Query(value = "SELECT " +
@@ -199,7 +214,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds);
 
     @Query(value =
-        "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id, positionTokenId  " +
+        "SELECT insertedtimestamp, nomeevento, tipoevento, outcome, eventid, faultcode, token, reqResp, id  " +
             "FROM ( " +
             "SELECT " +
             "ew.insertedTimestampResp AS insertedtimestamp, " +
@@ -210,13 +225,12 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "afc.codice AS faultcode, " +
             "ew.fkTokens  AS token, " +
             "'RESP' AS reqResp, " +
-            "ew.id AS id, " +
-            "pt.id AS positionTokenId " +
+            "ew.id AS id " +
             "FROM EventsWf ew " +
-            "LEFT JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE ew.fkTokens IN :positionTokenIds " +
+            "WHERE ew.fkPosition IN :positionIds " +
+            "AND ew.dateEvent IN :positionDateEvents " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -227,18 +241,18 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "afc.codice AS faultcode, " +
             "ew.fkTokens  AS token, " +
             "'REQ' AS reqResp, " +
-            "ew.id AS id, " +
-            "pt.id AS positionTokenId " +
+            "ew.id AS id " +
             "FROM EventsWf ew " +
-            "LEFT JOIN PositionTokens pt ON pt.id = ew.fkTokens " +
             "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
-            "WHERE ew.fkTokens IN :positionTokenIds " +
+            "WHERE ew.fkPosition IN :positionIds " +
+            "AND ew.dateEvent IN :positionDateEvents " +
             " )"
 
     )
     List<Object[]> findPositionWorkflows(
-        @Param("positionTokenIds") List<Integer> positionTokenIds
+        @Param("positionIds") List<Integer> positionIds,
+        @Param("positionDateEvents") List<LocalDate> positionDateEvents
     );
 
     @Query("SELECT pt.id, FUNCTION('ENCODE', pt.token, 'hex') FROM PositionTokens pt WHERE pt.fkPosition IN :positionIds")
