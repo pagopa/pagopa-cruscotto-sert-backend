@@ -3,6 +3,7 @@ package com.nexigroup.pagopa.cruscotto.sert.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.FdrSearchAdminSubKeyResource;
 import com.nexigroup.pagopa.cruscotto.sert.web.rest.sertSearch.sertResourceSubKey.SertSearchSubKeyResource;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,15 @@ class OpenApiConfigurationTest {
                         LocalDate.class,
                         LocalDate.class,
                         Pageable.class
+                    ))).isTrue();
+                    assertThat(filter.isMethodToInclude(FdrSearchAdminSubKeyResource.class.getDeclaredMethod(
+                        "searchFlows",
+                        String.class,
+                        LocalDate.class,
+                        LocalDate.class,
+                        String.class,
+                        String.class,
+                        org.springframework.data.domain.Pageable.class
                     ))).isTrue();
                 } catch (NoSuchMethodException exception) {
                     throw new AssertionError(exception);

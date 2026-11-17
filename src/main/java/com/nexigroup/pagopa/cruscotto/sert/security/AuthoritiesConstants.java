@@ -82,6 +82,30 @@ public final class AuthoritiesConstants {
 
     public static final String SERT_EXTRA_DETAIL = "GTW.SERT_EXTRA_DETAIL";
 
+    public static final String FDR_SEARCH_FLOWS = "GTW.FDR_SEARCH_FLOWS";
+
+    public static final String FDR_GET_FLOW_REVISION = "GTW.FDR_GET_FLOW_REVISION";
+
+    public static final String FDR_SEARCH_REVISION_PAYMENTS = "GTW.FDR_SEARCH_REVISION_PAYMENTS";
+
+    public static final String FDR_EXPORT_FLOW_REVISION = "GTW.FDR_EXPORT_FLOW_REVISION";
+
+    public static final String FDR_SEARCH_OCCURRENCES_BY_IUV = "GTW.FDR_SEARCH_OCCURRENCES_BY_IUV";
+
+    public static final String FDR_SEARCH_OCCURRENCES_BY_IUR = "GTW.FDR_SEARCH_OCCURRENCES_BY_IUR";
+
+    public static final String FDR_REQUEST_REINGESTION = "GTW.FDR_REQUEST_REINGESTION";
+
+    public static final String FDR_LIST_REINGESTIONS = "GTW.FDR_LIST_REINGESTIONS";
+
+    public static final String FDR_GET_REINGESTION = "GTW.FDR_GET_REINGESTION";
+
+    public static final String FDR_LIST_INGESTION_DAYS = "GTW.FDR_LIST_INGESTION_DAYS";
+
+    public static final String FDR_GET_INGESTION_DAY = "GTW.FDR_GET_INGESTION_DAY";
+
+    public static final String FDR_SEARCH_INGESTION_EVENTS = "GTW.FDR_SEARCH_INGESTION_EVENTS";
+
     public static final String UNKNOWN = "UNKNOWN";
 
 
