@@ -213,17 +213,14 @@ public class SertHistoryDataServiceImpl implements SertService {
             ? List.of()
             : historyPositionRows.getContent();
         List<Integer> offlinePositionIds = extraIdsAsIntegers(safeHistoryRows, 0);
-        List<Integer> offlinePositionTokenIds = extraIdsAsIntegers(safeHistoryRows, 1);
 
-        Page<Object[]> onlinePositionPage = searchFromOnline
+        List<Object[]> onlinePositionRows = searchFromOnline
             ? executeRepositoryQuery("onlinePositionRepository.findPositionDetailRows",
                 () -> onlinePositionRepository.findPositionDetailRows(
-                    nav, paEmittente, offlinePositionIds, offlinePositionTokenIds, Pageable.unpaged()
+                    nav, paEmittente, offlinePositionIds
                 ))
-            : Page.empty();
-        List<Object[]> safeOnlineRows = onlinePositionPage == null || onlinePositionPage.getContent() == null
-            ? List.of()
-            : onlinePositionPage.getContent();
+            : List.of();
+        List<Object[]> safeOnlineRows = onlinePositionRows == null ? List.of() : onlinePositionRows;
 
         List<Object[]> rows = mergePositionRows(safeHistoryRows, safeOnlineRows);
         if (rows.isEmpty()) {
@@ -642,22 +639,15 @@ public class SertHistoryDataServiceImpl implements SertService {
 
 
         if (searchFromOnline){
-            List<Object[]> onlineByTokenNoPage = executeRepositoryQuery("onlinePositionRepository.findByTokenNoPage",
-                () -> onlinePositionRepository.findByTokenNoPage(
-                    null,
-                    nav,
-                    paEmittente,
-                    positionIds.isEmpty() ? List.of(-1) : new ArrayList<>(positionIds)
-                ));
-            List<Object[]> safeOnlineByTokenNoPage = onlineByTokenNoPage == null ? List.of() : onlineByTokenNoPage;
+            List<Object[]> onlinePositionRows = executeRepositoryQuery(
+                "onlinePositionRepository.findPositionsByOptionalNavAndPaNoPage",
+                () -> onlinePositionRepository.findPositionsByOptionalNavAndPaNoPage(nav, paEmittente));
+            List<Object[]> safeOnlinePositionRows = onlinePositionRows == null ? List.of() : onlinePositionRows;
 
-            for (Object[] row : safeOnlineByTokenNoPage) {
+            for (Object[] row : safeOnlinePositionRows) {
                 if (row.length > 0 && row[0] instanceof Number positionId) {
                     positionIds.add(positionId.intValue());
                     addPositionDateEvents(positionDateEvents, row, positionId);
-                }
-                if (row.length > 2 && row[1] instanceof Number tokenId && row[2] != null) {
-                    tokenById.put(tokenId.intValue(), tokenAsHex(row[2]));
                 }
             }
         }
@@ -810,7 +800,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         List<Object[]> safeOnlineByTokenNoPage= List.of();
         if (searchFromOnline){
             List<Object[]> onlineByTokenNoPage = executeRepositoryQuery("onlinePositionRepository.findByTokenNoPage",
-                () -> onlinePositionRepository.findByTokenNoPage(token, null, null));
+                () -> onlinePositionRepository.findByTokenNoPage(token));
             safeOnlineByTokenNoPage = onlineByTokenNoPage == null ? List.of() : onlineByTokenNoPage;
 
             if (safeOnlineByTokenNoPage != null) {

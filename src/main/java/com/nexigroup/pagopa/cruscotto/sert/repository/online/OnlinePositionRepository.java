@@ -73,12 +73,16 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "LEFT JOIN Position p ON pt.fkPosition = p.id " +
             "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
             "WHERE (CAST(:token AS string) IS NULL " +
-            "OR pt.token = FUNCTION('convert_to', CAST(:token AS string), 'UTF8')) " +
-            "AND (:nav IS NULL OR p.nav = :nav) " +
-            "AND (:pa IS NULL OR p.paEmittente = :pa)"
+            "OR pt.token = FUNCTION('convert_to', CAST(:token AS string), 'UTF8'))"
     )
-    List<Object[]> findByTokenNoPage(
-        @Param("token") String token,
+    List<Object[]> findByTokenNoPage(@Param("token") String token);
+
+    @Query(value = "SELECT p.id, null, null, p.nav, ape.description, p.dateEvent, p.dateEvents " +
+        "FROM Position p " +
+        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
+        "WHERE (:nav IS NULL OR p.nav = :nav) " +
+        "AND (:pa IS NULL OR p.paEmittente = :pa)")
+    List<Object[]> findPositionsByOptionalNavAndPaNoPage(
         @Param("nav") String nav,
         @Param("pa") String pa
     );
@@ -98,55 +102,86 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
         @Param("positionIds") List<Integer> positionIds
     );
 
-    @Query(value = "SELECT " +
-        "p.id AS positionId, " +
-        "pt.id AS positionTokenId, " +
-        "p.nav AS nav, " +
-        "ape.description AS paEmittente, " +
-        "p.lastEvent AS lastEvent, " +
-        "pt.iuv AS iuv, " +
-        "pt.creditorRefId AS creditorReferenceId, " +
-        "FUNCTION('ENCODE', pt.token, 'hex') AS tokenHex, " +
-        "pt.insertedTimestamp AS tokenDateEvent, " +
-        "pt.paymentDate AS paymentDate, " +
-        "pt.outcome AS outcome, " +
-        "pt.amount AS amount, " +
-        "pt.fee AS fee, " +
-        "apsp.codice AS psp, " +
-        "aipa.codice AS ptPa, " +
-        "aipsp.codice AS ptPsp, " +
-        "ast.codice AS station, " +
-        "ac.codice AS channel, " +
-        "pt.touchpoint AS touchpoint, " +
-        "pt.paymentMethod AS paymentMethod, " +
-        "pt.idCarrello AS idCarrello, " +
-        "apsp.description AS pspDesc, " +
-        "aipa.description AS ptPaDesc, " +
-        "aipsp.description AS ptPspDesc, " +
-        "pt.isCart AS isCart " +
-        "FROM PositionTokens pt  " +
-        "LEFT JOIN Position p  ON pt.fkPosition = p.id " +
-        "LEFT JOIN AnagPsp apsp ON apsp.id = pt.psp " +
-        "LEFT JOIN AnagIntermediarioPa aipa ON aipa.id = pt.intermediarioPa " +
-        "LEFT JOIN AnagIntermediarioPsp aipsp ON aipsp.id = pt.intermediarioPsp " +
-        "LEFT JOIN AnagStazione ast ON ast.id = pt.stazione " +
-        "LEFT JOIN AnagCanale ac ON ac.id = pt.canale " +
-        "LEFT JOIN AnagPaEmittente ape ON ape.codice = p.paEmittente " +
-        "WHERE ((p.nav = :nav AND p.paEmittente = :paEmittente) " +
-        "OR pt.fkPosition IN (:onlinePositionIds))"+
-        "ORDER BY  p.lastEvent DESC ",
-        countQuery =
-            "SELECT COUNT(pt.id) " +
-                "FROM Position p " +
-                "JOIN PositionTokens pt ON pt.fkPosition = p.id " +
-                "WHERE ((p.nav = :nav AND p.paEmittente = :paEmittente) " +
-                "OR pt.fkPosition IN (:onlinePositionIds))")
-    Page<Object[]> findPositionDetailRows(
+    @Query(value = """
+        SELECT
+            p.id AS positionId,
+            pt.id AS positionTokenId,
+            p.nav AS nav,
+            ape.description AS paEmittente,
+            p.last_event AS lastEvent,
+            pt.iuv AS iuv,
+            pt.creditor_ref_id AS creditorReferenceId,
+            encode(pt.token, 'hex') AS tokenHex,
+            pt.inserted_timestamp AS tokenDateEvent,
+            pt.payment_date AS paymentDate,
+            pt.outcome AS outcome,
+            pt.amount AS amount,
+            pt.fee AS fee,
+            apsp.codice AS psp,
+            aipa.codice AS ptPa,
+            aipsp.codice AS ptPsp,
+            ast.codice AS station,
+            ac.codice AS channel,
+            pt.touchpoint AS touchpoint,
+            pt.payment_method AS paymentMethod,
+            pt.id_carrello AS idCarrello,
+            apsp.description AS pspDesc,
+            aipa.description AS ptPaDesc,
+            aipsp.description AS ptPspDesc,
+            pt.is_cart AS isCart
+        FROM sert_ingestor.position p
+        LEFT JOIN sert_ingestor.position_tokens pt ON pt.fk_position = p.id
+        LEFT JOIN sert_ingestor.anag_psp apsp ON apsp.id = pt.psp
+        LEFT JOIN sert_ingestor.anag_intermediario_pa aipa ON aipa.id = pt.intermediario_pa
+        LEFT JOIN sert_ingestor.anag_intermediario_psp aipsp ON aipsp.id = pt.intermediario_psp
+        LEFT JOIN sert_ingestor.anag_stazione ast ON ast.id = pt.stazione
+        LEFT JOIN sert_ingestor.anag_canale ac ON ac.id = pt.canale
+        LEFT JOIN sert_ingestor.anag_pa_emittente ape ON ape.codice = p.pa_emittente
+        WHERE p.nav = :nav AND p.pa_emittente = :paEmittente
+
+        UNION
+
+        SELECT
+            p.id AS positionId,
+            pt.id AS positionTokenId,
+            p.nav AS nav,
+            ape.description AS paEmittente,
+            p.last_event AS lastEvent,
+            pt.iuv AS iuv,
+            pt.creditor_ref_id AS creditorReferenceId,
+            encode(pt.token, 'hex') AS tokenHex,
+            pt.inserted_timestamp AS tokenDateEvent,
+            pt.payment_date AS paymentDate,
+            pt.outcome AS outcome,
+            pt.amount AS amount,
+            pt.fee AS fee,
+            apsp.codice AS psp,
+            aipa.codice AS ptPa,
+            aipsp.codice AS ptPsp,
+            ast.codice AS station,
+            ac.codice AS channel,
+            pt.touchpoint AS touchpoint,
+            pt.payment_method AS paymentMethod,
+            pt.id_carrello AS idCarrello,
+            apsp.description AS pspDesc,
+            aipa.description AS ptPaDesc,
+            aipsp.description AS ptPspDesc,
+            pt.is_cart AS isCart
+        FROM sert_ingestor.position_tokens pt
+        LEFT JOIN sert_ingestor.position p ON pt.fk_position = p.id
+        LEFT JOIN sert_ingestor.anag_psp apsp ON apsp.id = pt.psp
+        LEFT JOIN sert_ingestor.anag_intermediario_pa aipa ON aipa.id = pt.intermediario_pa
+        LEFT JOIN sert_ingestor.anag_intermediario_psp aipsp ON aipsp.id = pt.intermediario_psp
+        LEFT JOIN sert_ingestor.anag_stazione ast ON ast.id = pt.stazione
+        LEFT JOIN sert_ingestor.anag_canale ac ON ac.id = pt.canale
+        LEFT JOIN sert_ingestor.anag_pa_emittente ape ON ape.codice = p.pa_emittente
+        WHERE pt.fk_position IN (:onlinePositionIds)
+        ORDER BY lastEvent DESC
+        """, nativeQuery = true)
+    List<Object[]> findPositionDetailRows(
         @Param("nav") String nav,
         @Param("paEmittente") String paEmittente,
-        @Param("onlinePositionIds") List<Integer> onlinePositionIds,
-        @Param("onlinePositionTokenIds") List<Integer> onlinePositionTokenIds,
-        Pageable pageable
+        @Param("onlinePositionIds") List<Integer> onlinePositionIds
     );
 
     @Query(value = "SELECT " +

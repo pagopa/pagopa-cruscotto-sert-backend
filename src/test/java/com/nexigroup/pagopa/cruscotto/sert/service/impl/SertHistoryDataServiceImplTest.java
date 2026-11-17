@@ -199,9 +199,7 @@ class SertHistoryDataServiceImplTest {
         verify(onlineRepository).findPositionDetailRows(
             "NAV-1",
             "PA-1",
-            List.of(12),
-            List.of(34),
-            Pageable.unpaged()
+            List.of(12)
         );
     }
 
@@ -229,11 +227,9 @@ class SertHistoryDataServiceImplTest {
         when(onlineRepository.findPositionDetailRows(
             "NAV-1",
             "PA-1",
-            List.of(1),
-            List.of(10, 11),
-            Pageable.unpaged()
+            List.of(1)
         ))
-            .thenReturn(new PageImpl<>(List.of(partialOnline, onlineOnly)));
+            .thenReturn(List.of(partialOnline, onlineOnly));
 
         var result = service.getPosition("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
 
@@ -270,8 +266,8 @@ class SertHistoryDataServiceImplTest {
 
         when(historyRepository.findPositionDetailRows("NAV-1", "PA-1", dateFrom, dateTo, Pageable.unpaged()))
             .thenReturn(new PageImpl<>(List.<Object[]>of()));
-        when(onlineRepository.findPositionDetailRows("NAV-1", "PA-1", List.of(), List.of(), Pageable.unpaged()))
-            .thenReturn(new PageImpl<>(List.<Object[]>of(onlineRow)));
+        when(onlineRepository.findPositionDetailRows("NAV-1", "PA-1", List.of()))
+            .thenReturn(List.<Object[]>of(onlineRow));
 
         var result = service.getPosition("NAV-1", "PA-1", true, dateFrom, dateTo, pageable);
 
@@ -659,7 +655,7 @@ class SertHistoryDataServiceImplTest {
     }
 
     @Test
-    void mergesWorkflowRowsUsingPositionAndTokenIdsFromHistory() {
+    void mergesWorkflowRowsUsingOnlinePositionsMatchedByNavAndPa() {
         var dateFrom = LocalDate.of(2026, 1, 1);
         var dateTo = LocalDate.of(2026, 1, 31);
         var pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("insertedtimestamp")));
@@ -676,9 +672,9 @@ class SertHistoryDataServiceImplTest {
             .thenReturn(List.<Object[]>of(
                 new Object[] { 10, 20, "history", "NAV-1", "PA-1", historyDateEvent, "[\"2026-01-11\"]" }
             ));
-        when(onlineRepository.findByTokenNoPage(null, "NAV-1", "PA-1", List.of(10)))
+        when(onlineRepository.findPositionsByOptionalNavAndPaNoPage("NAV-1", "PA-1"))
             .thenReturn(List.<Object[]>of(
-                new Object[] { 11, 22, "online", "NAV-1", "PA-1", onlineDateEvent, "[\"2026-01-13\"]" }
+                new Object[] { 11, null, null, "NAV-1", "PA-1", onlineDateEvent, "[\"2026-01-13\"]" }
             ));
         List<Integer> positionIds = List.of(10, 11);
         List<LocalDate> positionDateEvents = List.of(
@@ -699,9 +695,9 @@ class SertHistoryDataServiceImplTest {
         );
         assertThat(result.getContent().get(0).getEventsPosition())
             .extracting(event -> ((WorkflowTokenObjectDTO) event).getToken())
-            .containsExactly("online", "history");
+            .containsExactly(null, "history");
         verify(historyRepository).findByTokenNoPage(null, "NAV-1", "PA-1", dateFrom, dateTo);
-        verify(onlineRepository).findByTokenNoPage(null, "NAV-1", "PA-1", List.of(10));
+        verify(onlineRepository).findPositionsByOptionalNavAndPaNoPage("NAV-1", "PA-1");
         verify(historyRepository).findPositionWorkflows(positionIds, positionDateEvents);
         verify(onlineRepository).findPositionWorkflows(positionIds, positionDateEvents);
     }
