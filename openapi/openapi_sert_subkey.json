@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API - Subscription Key",
     "description": "API Cruscotto Sert con Subscription Key",
-    "version": "2.2.3"
+    "version": "1.0.0"
   },
   "servers": [
     {
@@ -12,6 +12,151 @@
     }
   ],
   "paths": {
+    "/sub/api/admin/fdr/reingestions": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "listReingestions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReingestionBatchDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "requestReingestion",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReingestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReingestionBatchDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sub/api/workflows/{nav}/{pa-emittente}": {
       "get": {
         "tags": [
@@ -107,8 +252,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -117,8 +262,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -246,8 +391,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -256,8 +401,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -332,8 +477,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -342,8 +487,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -492,8 +637,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -502,8 +647,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -623,8 +768,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -633,8 +778,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -649,6 +794,613 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PositionPaymentDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/fdr/occurrences/by-iuv": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "searchByIuv",
+        "parameters": [
+          {
+            "name": "iuv",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flowId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxLength": 30,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "creditorInstitutionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "arrivalFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "arrivalTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ONLINE"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OccurrenceResultDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/fdr/occurrences/by-iur": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "searchByIur",
+        "parameters": [
+          {
+            "name": "iur",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "arrivalFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "arrivalTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ONLINE"
+            }
+          },
+          {
+            "name": "creditorInstitutionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OccurrenceResultDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/fdr/flows": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "searchFlows",
+        "parameters": [
+          {
+            "name": "flowId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "arrivalFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "arrivalTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ONLINE"
+            }
+          },
+          {
+            "name": "creditorInstitutionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FlowRevisionSummaryDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/fdr/flow-revisions/{revisionId}": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "getRevision",
+        "parameters": [
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlowRevisionDetailDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/fdr/flow-revisions/{revisionId}/payments": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "searchPayments",
+        "parameters": [
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "iuv",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "iur",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "creditorInstitutionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "matchMode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "EXACT"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReportedPaymentRowDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/fdr/flow-revisions/{revisionId}/export": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "exportRevision",
+        "parameters": [
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamingResponseBody"
                 }
               }
             }
@@ -743,8 +1495,8 @@
           }
         ],
         "responses": {
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -753,8 +1505,8 @@
               }
             }
           },
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -769,6 +1521,326 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ExtraInfoResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/admin/fdr/reingestions/{requestId}": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "getReingestion",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReingestionBatchDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/admin/fdr/ingestion-events": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "searchIngestionEvents",
+        "parameters": [
+          {
+            "name": "arrivalDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "executionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "eventCode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IngestionEventDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/admin/fdr/ingestion-days": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "listIngestionDays",
+        "parameters": [
+          {
+            "name": "arrivalFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "arrivalTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IngestionDayStatusDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sub/api/admin/fdr/ingestion-days/{arrivalDate}": {
+      "get": {
+        "tags": [
+          "fdr-search-admin-sub-key-resource"
+        ],
+        "operationId": "getIngestionDay",
+        "parameters": [
+          {
+            "name": "arrivalDate",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "5XX": {
+            "description": "Server error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Client error codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailWithCause"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionDayStatusDTO"
                 }
               }
             }
@@ -797,6 +1869,111 @@
           }
         },
         "description": "Rappresentazione dettagliata di un problema con causa"
+      },
+      "ReingestionRequest": {
+        "required": [
+          "arrivalDates",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "arrivalDates": {
+            "maxItems": 31,
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 5,
+            "type": "string"
+          }
+        }
+      },
+      "ReingestionBatchDTO": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "RUNNING",
+              "COMPLETED",
+              "COMPLETED_WITH_WARNINGS",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReingestionDayItemDTO"
+            }
+          }
+        }
+      },
+      "ReingestionDayItemDTO": {
+        "type": "object",
+        "properties": {
+          "arrivalDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "REQUESTED",
+              "QUEUED",
+              "DELETING_PARTITIONS",
+              "INGESTING",
+              "VALIDATING",
+              "COMPLETED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          }
+        }
       },
       "WorkflowObjectDTO": {
         "type": "object",
@@ -1059,6 +2236,260 @@
           }
         }
       },
+      "FlowRevisionSummaryDTO": {
+        "type": "object",
+        "properties": {
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flowId": {
+            "type": "string"
+          },
+          "sourceUniqueId": {
+            "type": "string"
+          },
+          "insertedTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "arrivalDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "revisionOrdinal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRevisions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isLatestRevision": {
+            "type": "boolean"
+          },
+          "flowDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "settlementDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "pspId": {
+            "type": "string"
+          },
+          "pspIntermediaryId": {
+            "type": "string"
+          },
+          "paymentCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "paidAmount": {
+            "type": "number"
+          },
+          "dataArea": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "HISTORICAL",
+              "ALL"
+            ]
+          },
+          "creditorInstitutionId": {
+            "type": "string"
+          },
+          "dateInserted": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "OccurrenceResultDTO": {
+        "type": "object",
+        "properties": {
+          "occurrenceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "searchedBy": {
+            "type": "string",
+            "enum": [
+              "IUV",
+              "IUV_AND_FLOW_ID",
+              "IUV_AND_CREDITOR_INSTITUTION",
+              "IUR"
+            ]
+          },
+          "searchedValue": {
+            "type": "string"
+          },
+          "flow": {
+            "$ref": "#/components/schemas/FlowRevisionSummaryDTO"
+          },
+          "reportedPayment": {
+            "$ref": "#/components/schemas/ReportedPaymentRowDTO"
+          },
+          "revisionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalFlowRevisions": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ReportedPaymentRowDTO": {
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flowId": {
+            "type": "string"
+          },
+          "sourceUniqueId": {
+            "type": "string"
+          },
+          "iuv": {
+            "type": "string"
+          },
+          "iur": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "outcomeCode": {
+            "type": "string"
+          },
+          "singlePaymentOutcomeTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idsp": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "flowDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pspId": {
+            "type": "string"
+          },
+          "pspIntermediaryId": {
+            "type": "string"
+          },
+          "insertedTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "creditorInstitutionId": {
+            "type": "string"
+          },
+          "dateInserted": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "FlowRevisionDetailDTO": {
+        "type": "object",
+        "properties": {
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flowId": {
+            "type": "string"
+          },
+          "sourceUniqueId": {
+            "type": "string"
+          },
+          "insertedTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "arrivalDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "revisionOrdinal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRevisions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isLatestRevision": {
+            "type": "boolean"
+          },
+          "flowDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "settlementDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "pspId": {
+            "type": "string"
+          },
+          "pspIntermediaryId": {
+            "type": "string"
+          },
+          "paymentCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "paidAmount": {
+            "type": "number"
+          },
+          "dataArea": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "HISTORICAL",
+              "ALL"
+            ]
+          },
+          "creditorInstitutionId": {
+            "type": "string"
+          },
+          "dateInserted": {
+            "type": "string",
+            "format": "date"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "allDates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "availableFilters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "StreamingResponseBody": {
+        "type": "object"
+      },
       "ExtraInfoObjectDTO": {
         "type": "object",
         "properties": {
@@ -1094,6 +2525,138 @@
             "items": {
               "$ref": "#/components/schemas/ExtraInfoObjectDTO"
             }
+          }
+        }
+      },
+      "IngestionEventDTO": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "arrivalDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "eventCode": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "WARN",
+              "ERROR"
+            ]
+          },
+          "sourceCode": {
+            "type": "string",
+            "enum": [
+              "FLUSSI_RENDICONTAZIONE",
+              "IUV_RENDICONTATI"
+            ]
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "blobEtag": {
+            "type": "string"
+          },
+          "rowsRead": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rowsWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rowsRejected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "IngestionDayStatusDTO": {
+        "type": "object",
+        "properties": {
+          "arrivalDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DISCOVERED",
+              "PROCESSING",
+              "VALIDATING",
+              "COMPLETED",
+              "FAILED",
+              "REINGESTION_REQUESTED",
+              "REINGESTING"
+            ]
+          },
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "flowFiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "iuvFiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "flowRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "iuvRows": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
