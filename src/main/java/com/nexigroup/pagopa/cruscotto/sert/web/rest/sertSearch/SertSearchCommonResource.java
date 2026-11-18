@@ -412,7 +412,7 @@ public class SertSearchCommonResource {
 
             Pageable remappedPageable =PaymentUtil.remapSorting(pageable, orderSecondColumn,
                 PaymentUtil.WORKFLOW_QUERY_TO_DTO_MAPPING,
-                List.of(Sort.Order.asc("insertedtimestamp") ));
+                List.of(Sort.Order.asc("insertedtimestamp") ,Sort.Order.asc("corr-id")));
 
             Page<WorkflowResponseDTO> page = searchFromHistory
                 ? sertHistoryDataService.getWorkflows(nav, paEmittente, searchFromOnline, dateFrom, dateTo, remappedPageable)

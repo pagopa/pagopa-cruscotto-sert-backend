@@ -266,6 +266,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE ew.fkPosition IN :positionIds " +
             "AND ew.dateEvent IN :positionDateEvents " +
+            "AND ew.insertedTimestampResp IS NOT NULL " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -282,6 +283,7 @@ public interface OnlinePositionRepository extends JpaRepository<Position, Intege
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE ew.fkPosition IN :positionIds " +
             "AND ew.dateEvent IN :positionDateEvents " +
+            "AND ew.insertedTimestampReq  IS NOT NULL " +
             " )"
 
     )
