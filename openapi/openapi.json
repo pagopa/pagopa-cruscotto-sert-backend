@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "OpenAPI definition",
-    "version": "2.1.23-12-recupero_db_svecchiato_gestionesalti"
+    "version": "2.2.3"
   },
   "servers": [
     {
@@ -2125,16 +2125,6 @@
             }
           },
           {
-            "name": "fromHistory",
-            "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2235,16 +2225,6 @@
             }
           },
           {
-            "name": "fromHistory",
-            "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2326,16 +2306,6 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
             }
           }
         ],
@@ -2429,46 +2399,6 @@
             }
           },
           {
-            "name": "fromOnline",
-            "in": "query",
-            "description": "Search online payment records; defaults to true.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "search_old_payment",
-            "in": "query",
-            "description": "Include frozen payment records; dateFrom and dateTo are required when true.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "description": "Inclusive date_event lower bound (required when search_old_payment=true).",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "description": "Inclusive date_event upper bound (required when search_old_payment=true).",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -2558,16 +2488,6 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
             }
           }
         ],
@@ -2661,16 +2581,6 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "description": "Read payment details from the freeze data source instead of the online source.",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
             }
           },
           {

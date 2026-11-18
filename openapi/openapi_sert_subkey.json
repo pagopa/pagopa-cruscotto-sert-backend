@@ -1,9 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Cruscotto Sert pagoPA backend service API - Subscription Key",
-    "description": "API Cruscotto Sert con Subscription Key",
-    "version": "2.1.23-12-recupero_db_svecchiato_gestionesalti"
+    "title": "Cruscotto Sert pagoPA backend service API (Subscription Key)",
+    "version": "2.2.3"
   },
   "servers": [
     {
@@ -33,42 +32,6 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "fromOnline",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
             }
           },
           {
@@ -107,8 +70,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -117,8 +80,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -175,42 +138,6 @@
             }
           },
           {
-            "name": "fromOnline",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -246,8 +173,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -256,8 +183,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -293,47 +220,11 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "fromOnline",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -342,8 +233,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -421,42 +312,6 @@
             }
           },
           {
-            "name": "fromOnline",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -492,8 +347,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -502,8 +357,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -552,42 +407,6 @@
             }
           },
           {
-            "name": "fromOnline",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -623,8 +442,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -633,8 +452,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -672,42 +491,6 @@
             }
           },
           {
-            "name": "fromOnline",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "fromHistory",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "dateFrom",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "dateTo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "description": "Zero-based page index (0..N)",
@@ -743,8 +526,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -753,8 +536,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -940,6 +723,10 @@
           "token": {
             "type": "string"
           },
+          "payment-born": {
+            "type": "string",
+            "format": "date-time"
+          },
           "payed-date": {
             "type": "string",
             "format": "date-time"
@@ -969,9 +756,6 @@
           },
           "is-cart": {
             "type": "boolean"
-          },
-          "id-carrello": {
-            "type": "string"
           }
         }
       },
@@ -993,10 +777,6 @@
           "is-payed-token": {
             "type": "boolean"
           },
-          "token-born": {
-            "type": "string",
-            "format": "date-time"
-          },
           "payment-info": {
             "$ref": "#/components/schemas/PaymentInfoDTO"
           }
@@ -1014,13 +794,7 @@
               "type": "string"
             }
           },
-          "fromHistory": {
-            "type": "boolean"
-          },
           "pa-emittente": {
-            "type": "string"
-          },
-          "pa-emittente-desc": {
             "type": "string"
           }
         }
@@ -1030,7 +804,7 @@
         "properties": {
           "tokens": {
             "type": "integer",
-            "format": "int64"
+            "format": "int32"
           },
           "payed": {
             "$ref": "#/components/schemas/PayedDTO"
@@ -1049,10 +823,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "token-born": {
-            "type": "string",
-            "format": "date-time"
           },
           "payment-info": {
             "$ref": "#/components/schemas/PaymentInfoDTO"
