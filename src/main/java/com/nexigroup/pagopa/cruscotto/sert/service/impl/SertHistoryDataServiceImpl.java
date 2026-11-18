@@ -694,7 +694,7 @@ public class SertHistoryDataServiceImpl implements SertService {
             WorkflowTokenObjectDTO tokenDTO = WorkflowTokenObjectDTO.builder()
                 .insertedtimestamp(row[0] !=null ? toInstant(row[0]):null)
                 .tipoevento(asString(row[1]))
-                .sottotipoevento("REQ/RESP".equals(asString(row[2])) ? asString(row[7]) : asString(row[2]))
+                .sottotipoevento( asString(row[7]))
                 .outcome(asString(row[3]))
                 .eventId(asString(row[4]))
                 .faultcode( faultcode)
@@ -758,6 +758,7 @@ public class SertHistoryDataServiceImpl implements SertService {
         if (!pageable.getSort().isSorted()) {
             return;
         }
+
         rows.sort((left, right) -> {
             for (Sort.Order order : pageable.getSort()) {
                 Object leftValue = workflowSortValue(left, order.getProperty());

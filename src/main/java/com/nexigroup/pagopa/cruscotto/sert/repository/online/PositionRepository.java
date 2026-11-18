@@ -232,6 +232,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE ew.fkPosition IN :positionIds " +
             "AND ew.dateEvent IN :positionDateEvents " +
+            "AND ew.insertedTimestampResp IS NOT NULL " +
             "UNION ALL " +
             "SELECT " +
             "ew.insertedTimestampReq AS insertedtimestamp, " +
@@ -249,6 +250,7 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
             "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE ew.fkPosition IN :positionIds " +
             "AND ew.dateEvent IN :positionDateEvents " +
+            "AND ew.insertedTimestampReq IS NOT NULL " +
             " )"
         ,
         countQuery =
@@ -257,11 +259,13 @@ public interface PositionRepository extends JpaRepository<Position, Integer> {
                 "FROM EventsWf ew " +
                 "WHERE ew.fkPosition IN :positionIds " +
                 "AND ew.dateEvent IN :positionDateEvents " +
+                "AND ew.insertedTimestampResp IS NOT NULL " +
                 "UNION ALL " +
                 "SELECT ew.id AS id " +
                 "FROM EventsWf ew " +
                 "WHERE ew.fkPosition IN :positionIds " +
                 "AND ew.dateEvent IN :positionDateEvents " +
+                "AND ew.insertedTimestampReq IS NOT NULL " +
                 ") "
     )
     Page<Object[]> findPositionWorkflows(

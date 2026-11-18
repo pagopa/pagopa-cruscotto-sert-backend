@@ -354,6 +354,7 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
                 "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
                 "WHERE ew.fkPosition IN :positionIds " +
                 "AND ew.dateEvent IN :positionDateEvents " +
+                "AND ew.insertedTimestampResp IS NOT NULL " +
             "UNION ALL " +
             "SELECT ew.insertedTimestampReq, ae.nomeEvento, ae.tipoEvento, ew.outcomeReq, ew.eventIdReq, " +
                     "afc.codice, ew.fkTokens , 'REQ', ew.id " +
@@ -361,7 +362,8 @@ public interface HistoryPositionRepository extends JpaRepository<Position, Integ
                 "LEFT JOIN AnagEvento ae ON ae.id = ew.tipoEvento " +
                 "LEFT JOIN AnagFaultCode afc ON afc.id = ew.faultCode " +
             "WHERE ew.fkPosition IN :positionIds " +
-            "AND ew.dateEvent IN :positionDateEvents"
+            "AND ew.dateEvent IN :positionDateEvents " +
+            "AND ew.insertedTimestampReq IS NOT NULL "
     )
     List<Object[]> findPositionWorkflows(
         @Param("positionIds") List<Integer> positionIds,

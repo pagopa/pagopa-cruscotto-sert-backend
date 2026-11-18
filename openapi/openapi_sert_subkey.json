@@ -3,7 +3,7 @@
   "info": {
     "title": "Cruscotto Sert pagoPA backend service API - Subscription Key",
     "description": "API Cruscotto Sert con Subscription Key",
-    "version": "2.1.23-11-recupero_db_svecchiato_gestionesalti"
+    "version": "2.2.3"
   },
   "servers": [
     {
@@ -107,8 +107,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -117,8 +117,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -246,8 +246,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -256,8 +256,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -332,8 +332,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -342,8 +342,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -492,8 +492,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -502,8 +502,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -623,8 +623,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -633,8 +633,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -743,8 +743,8 @@
           }
         ],
         "responses": {
-          "5XX": {
-            "description": "Server error codes",
+          "4XX": {
+            "description": "Client error codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -753,8 +753,8 @@
               }
             }
           },
-          "4XX": {
-            "description": "Client error codes",
+          "5XX": {
+            "description": "Server error codes",
             "content": {
               "application/json": {
                 "schema": {

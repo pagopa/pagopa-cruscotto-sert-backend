@@ -257,8 +257,8 @@ public final class PaymentUtil {
     public static Object workflowSortValue(Object[] row, String property) {
         return switch (property) {
             case "insertedtimestamp", "insertedTimestamp" -> row[0];
-            case "nomeevento", "tipoEvento" -> row[1];
-            case "tipoevento", "sottotipoEvento" -> row[2];
+            case "nomeevento" -> row[1];
+            case "reqResp", "sottotipoEvento" -> row[7];
             case "outcome" -> row[3];
             case "eventId", "event-id" -> row[4];
             case "faultcode", "faultCode" -> row[5];
