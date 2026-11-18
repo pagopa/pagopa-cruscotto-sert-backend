@@ -66,6 +66,7 @@ microservice-chart:
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
   envConfig:
+    JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
     SPRING_PROFILES_ACTIVE: 'devpagopa'
     SPRING_SERVLET_MULTIPART_MAXFILESIZE: '21MB'
     SPRING_SERVLET_MULTIPART_MAXREQUESTSIZE: '22MB'
